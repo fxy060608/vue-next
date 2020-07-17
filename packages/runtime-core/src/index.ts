@@ -65,8 +65,6 @@ export {
 } from './components/BaseTransition'
 // For using custom directives
 export { withDirectives } from './directives'
-// SFC CSS Modules
-export { useCSSModule } from './helpers/useCssModule'
 // SSR context
 export { useSSRContext, ssrContextKey } from './helpers/useSsrContext'
 
@@ -95,7 +93,10 @@ export {
   getTransitionRawChildren
 } from './components/BaseTransition'
 
-// Types -----------------------------------------------------------------------
+// For devtools
+export { devtools, setDevtoolsHook } from './devtools'
+
+// Types -------------------------------------------------------------------------
 
 import { VNode } from './vnode'
 import { ComponentInternalInstance } from './component'
@@ -122,6 +123,7 @@ export {
   TriggerOpTypes,
   Ref,
   ComputedRef,
+  WritableComputedRef,
   UnwrapRef,
   WritableComputedOptions,
   ToRefs
@@ -226,19 +228,7 @@ export {
   createCommentVNode,
   createStaticVNode
 } from './vnode'
-
-// a bit of ceremony to mark these internal only here because we need to include
-// them in @vue/shared's typings
-import { toDisplayString, camelize } from '@vue/shared'
-/**
- * @private
- */
-const _toDisplayString = toDisplayString
-/**
- * @private
- */
-const _camelize = camelize
-export { _toDisplayString as toDisplayString, _camelize as camelize }
+export { toDisplayString, camelize, capitalize } from '@vue/shared'
 
 // For test-utils
 export { transformVNodeArgs } from './vnode'

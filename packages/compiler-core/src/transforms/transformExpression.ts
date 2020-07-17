@@ -1,8 +1,8 @@
 // - Parse expressions in templates into compound expressions so that each
 //   identifier gets more accurate source-map locations.
 //
-// - Prefix identifiers with `_ctx.` so that they are accessed from the render
-//   context
+// - Prefix identifiers with `_ctx.` or `$xxx` (for known binding types) so that
+//   they are accessed from the right source
 //
 // - This transform is only applied in non-browser builds because it relies on
 //   an additional JavaScript parser. In the browser, there is no source-map
@@ -22,7 +22,12 @@ import {
   parseJS,
   walkJS
 } from '../utils'
-import { isGloballyWhitelisted, makeMap } from '@vue/shared'
+import {
+  isGloballyWhitelisted,
+  makeMap,
+  babelParserDefautPlugins,
+  hasOwn
+} from '@vue/shared'
 import { createCompilerError, ErrorCodes } from '../errors'
 import { Node, Function, Identifier, ObjectProperty } from '@babel/types'
 import { validateBrowserExpression } from '../validateExpression'
@@ -95,6 +100,14 @@ export function processExpression(
     return node
   }
 
+  const { bindingMetadata } = context
+  const prefix = (raw: string) => {
+    const source = hasOwn(bindingMetadata, raw)
+      ? `$` + bindingMetadata[raw]
+      : `_ctx`
+    return `${source}.${raw}`
+  }
+
   // fast path if expression is a simple identifier.
   const rawExp = node.content
   // bail on parens to prevent any possible function invocations.
@@ -106,7 +119,7 @@ export function processExpression(
       !isGloballyWhitelisted(rawExp) &&
       !isLiteralWhitelisted(rawExp)
     ) {
-      node.content = `_ctx.${rawExp}`
+      node.content = prefix(rawExp)
     } else if (!context.identifiers[rawExp] && !bailConstant) {
       // mark node constant for hoisting unless it's referring a scope variable
       node.isConstant = true
@@ -125,15 +138,7 @@ export function processExpression(
     : `(${rawExp})${asParams ? `=>{}` : ``}`
   try {
     ast = parseJS(source, {
-      plugins: [
-        ...context.expressionPlugins,
-        // by default we enable proposals slated for ES2020.
-        // full list at https://babeljs.io/docs/en/next/babel-parser#plugins
-        // this will need to be updated as the spec moves forward.
-        'bigInt',
-        'optionalChaining',
-        'nullishCoalescingOperator'
-      ]
+      plugins: [...context.expressionPlugins, ...babelParserDefautPlugins]
     }).program
   } catch (e) {
     context.onError(
@@ -152,7 +157,7 @@ export function processExpression(
   const isDuplicate = (node: Node & PrefixMeta): boolean =>
     ids.some(id => id.start === node.start)
 
-  // walk the AST and look for identifiers that need to be prefixed with `_ctx.`.
+  // walk the AST and look for identifiers that need to be prefixed.
   walkJS(ast, {
     enter(node: Node & PrefixMeta, parent) {
       if (node.type === 'Identifier') {
@@ -164,7 +169,7 @@ export function processExpression(
               // rewrite the value
               node.prefix = `${node.name}: `
             }
-            node.name = `_ctx.${node.name}`
+            node.name = prefix(node.name)
             ids.push(node)
           } else if (!isStaticPropertyKey(node, parent)) {
             // The identifier is considered constant unless it's pointing to a
@@ -267,8 +272,9 @@ export function processExpression(
   return ret
 }
 
-const isFunction = (node: Node): node is Function =>
-  /Function(Expression|Declaration)$/.test(node.type)
+const isFunction = (node: Node): node is Function => {
+  return /Function(?:Expression|Declaration)$|Method$/.test(node.type)
+}
 
 const isStaticProperty = (node: Node): node is ObjectProperty =>
   node &&

@@ -11,12 +11,14 @@ import {
   transformVNodeArgs
 } from '../src/vnode'
 import { Data } from '../src/component'
-import { ShapeFlags, PatchFlags } from '@vue/shared'
+import { ShapeFlags, PatchFlags, mockWarn } from '@vue/shared'
 import { h, reactive, isReactive } from '../src'
 import { createApp, nodeOps, serializeInner } from '@vue/runtime-test'
 import { setCurrentRenderingInstance } from '../src/componentRenderUtils'
 
 describe('vnode', () => {
+  mockWarn()
+
   test('create with just tag', () => {
     const vnode = createVNode('p')
     expect(vnode.type).toBe('p')
@@ -62,6 +64,7 @@ describe('vnode', () => {
     }
     expect(createVNode('div').key).toBe(null)
     expect(createVNode('div', { key: undefined }).key).toBe(null)
+    expect(`VNode created with invalid key (NaN)`).toHaveBeenWarned()
   })
 
   test('create with class component', () => {
@@ -254,7 +257,7 @@ describe('vnode', () => {
 
     // cloning with new ref, but with same context instance
     const cloned5 = cloneVNode(original, { ref: 'bar' })
-    // new ref should use current context instance and overwrite orgiinal
+    // new ref should use current context instance and overwrite original
     expect(cloned5.ref).toEqual([mockInstance2, 'bar'])
 
     // cloning and adding ref to original that has no ref
