@@ -2163,7 +2163,7 @@ function baseCreateRenderer(
   return {
     render,
     hydrate,
-    createApp: createAppAPI(render, hydrate)
+    createApp: createAppAPI(/*render, hydrate*/) // fixed by xxxxxx
   }
 }
 
