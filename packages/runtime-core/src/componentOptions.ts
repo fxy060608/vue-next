@@ -607,6 +607,10 @@ export function applyOptions(
   if (unmounted) {
     onUnmounted(unmounted.bind(publicThis))
   }
+  // fixed by xxxxxx
+  if (instance.ctx.$onApplyOptions) {
+    ;(instance.ctx.$onApplyOptions as Function)(options, instance, publicThis)
+  }
 }
 
 function callSyncHook(

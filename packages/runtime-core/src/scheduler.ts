@@ -5,8 +5,8 @@ export interface Job {
   (): void
   id?: number
 }
-
-const queue: (Job | null)[] = []
+// fixed by xxxxxx
+export const queue: (Job | null)[] = []
 const postFlushCbs: Function[] = []
 const p = Promise.resolve()
 

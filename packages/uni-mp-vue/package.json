@@ -1,0 +1,29 @@
+{
+  "name": "@dcloudio/uni-mp-vue",
+  "version": "3.0.0",
+  "description": "@dcloudio/uni-mp-vue",
+  "main": "dist/vue.esm.js",
+  "module": "dist/vue.runtime.esm.js",
+  "types": "dist/vue.runtime.d.ts",
+  "files": [
+    "dist"
+  ],
+  "buildOptions": {
+    "formats": [
+      "esm-bundler-vue"
+    ]
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcloudio/uni-app.git",
+    "directory": "packages/uni-mp-vue"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/dcloudio/uni-app/issues"
+  },
+  "dependencies": {
+    "@vue/shared": "^3.0.0-beta.17"
+  }
+}

@@ -1,4 +1,4 @@
-import { VNode, VNodeChild, isVNode } from './vnode'
+import { VNode, VNodeChild /* isVNode*/ } from './vnode'
 import {
   reactive,
   ReactiveEffect,
@@ -17,10 +17,10 @@ import {
 } from './componentProxy'
 import {
   ComponentPropsOptions,
-  NormalizedPropsOptions,
-  initProps
+  NormalizedPropsOptions
+  // initProps
 } from './componentProps'
-import { Slots, initSlots, InternalSlots } from './componentSlots'
+import { Slots, /* initSlots,*/ InternalSlots } from './componentSlots'
 import { warn } from './warning'
 import { ErrorCodes, callWithErrorHandling } from './errorHandling'
 import { AppContext, createAppContext, AppConfig } from './apiCreateApp'
@@ -431,10 +431,10 @@ export function setupComponent(
 ) {
   isInSSRComponentSetup = isSSR
 
-  const { props, children, shapeFlag } = instance.vnode
+  const { /*props, children, */ shapeFlag } = instance.vnode
   const isStateful = shapeFlag & ShapeFlags.STATEFUL_COMPONENT
-  initProps(instance, props, isStateful, isSSR)
-  initSlots(instance, children)
+  // initProps(instance, props, isStateful, isSSR)
+  // initSlots(instance, children) // fixed by xxxxxx
 
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
@@ -524,12 +524,12 @@ export function handleSetupResult(
     // setup returned an inline render function
     instance.render = setupResult as InternalRenderFunction
   } else if (isObject(setupResult)) {
-    if (__DEV__ && isVNode(setupResult)) {
-      warn(
-        `setup() should not return VNodes directly - ` +
-          `return a render function instead.`
-      )
-    }
+    // if (__DEV__ && isVNode(setupResult)) {
+    //   warn(
+    //     `setup() should not return VNodes directly - ` +
+    //       `return a render function instead.`
+    //   )
+    // }
     // setup returned bindings.
     // assuming a render function compiled from template is present.
     instance.setupState = reactive(setupResult)

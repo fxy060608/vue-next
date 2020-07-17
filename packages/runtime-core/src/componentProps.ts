@@ -30,7 +30,7 @@ import {
   Component
 } from './component'
 import { isEmitListener } from './componentEmits'
-import { InternalObjectKey } from './vnode'
+// import { InternalObjectKey } from './vnode'
 
 export type ComponentPropsOptions<P = Data> =
   | ComponentObjectPropsOptions<P>
@@ -117,7 +117,8 @@ export function initProps(
 ) {
   const props: Data = {}
   const attrs: Data = {}
-  def(attrs, InternalObjectKey, 1)
+  // def(attrs, InternalObjectKey, 1) // fixed by xxxxx
+  def(attrs, '__vInternal', 1)
   setFullProps(instance, rawProps, props, attrs)
   // validation
   if (__DEV__) {
