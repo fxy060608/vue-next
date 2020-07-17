@@ -13,6 +13,7 @@ import { isFunction, NO, isObject } from '@vue/shared'
 import { warn } from './warning'
 // import { createVNode, cloneVNode, VNode } from './vnode'
 // import { RootHydrateFunction } from './hydration'
+// import { initApp, appUnmounted } from './devtools'
 import { version } from '.'
 
 export interface App<HostElement = any> {
@@ -31,7 +32,7 @@ export interface App<HostElement = any> {
   unmount(rootContainer: HostElement | string): void
   provide<T>(key: InjectionKey<T> | string, value: T): this
 
-  // internal. We need to expose these for the server-renderer
+  // internal. We need to expose these for the server-renderer and devtools
   _component: Component
   _props: Data | null
   _container: HostElement | null
@@ -73,6 +74,9 @@ export interface AppContext {
   directives: Record<string, Directive>
   provides: Record<string | symbol, any>
   reload?: () => void // HMR only
+
+  // internal for devtools
+  __app?: App
 }
 
 type PluginInstallFunction = (app: App, ...options: any[]) => any
@@ -106,10 +110,8 @@ export type CreateAppFunction<HostElement> = (
   rootComponent: PublicAPIComponent,
   rootProps?: Data | null
 ) => App<HostElement>
-
-export function createAppAPI<HostElement>(): // render: RootRenderFunction,
-// hydrate?: RootHydrateFunction
-CreateAppFunction<HostElement> {
+// fixed by xxxxxx
+export function createAppAPI<HostElement>(): CreateAppFunction<HostElement> {
   return function createApp(rootComponent, rootProps = null) {
     if (rootProps != null && !isObject(rootProps)) {
       __DEV__ && warn(`root props passed to app.mount() must be an object.`)
@@ -118,7 +120,7 @@ CreateAppFunction<HostElement> {
 
     const context = createAppContext()
     const installedPlugins = new Set()
-
+    // fixed by xxxxxx
     // let isMounted = false
 
     const app: App = {
@@ -203,44 +205,10 @@ CreateAppFunction<HostElement> {
         context.directives[name] = directive
         return app
       },
-
-      mount(/*rootContainer: HostElement, isHydrate?: boolean*/): any {
-        // if (!isMounted) {
-        //   const vnode = createVNode(rootComponent as Component, rootProps)
-        //   // store app context on the root VNode.
-        //   // this will be set on the root instance on initial mount.
-        //   vnode.appContext = context
-        //   // HMR root reload
-        //   if (__DEV__) {
-        //     context.reload = () => {
-        //       render(cloneVNode(vnode), rootContainer)
-        //     }
-        //   }
-        //   if (isHydrate && hydrate) {
-        //     hydrate(vnode as VNode<Node, Element>, rootContainer as any)
-        //   } else {
-        //     render(vnode, rootContainer)
-        //   }
-        //   isMounted = true
-        //   app._container = rootContainer
-        //   return vnode.component!.proxy
-        // } else if (__DEV__) {
-        //   warn(
-        //     `App has already been mounted.\n` +
-        //       `If you want to remount the same app, move your app creation logic ` +
-        //       `into a factory function and create fresh app instances for each ` +
-        //       `mount - e.g. \`const createMyApp = () => createApp(App)\``
-        //   )
-        // }
-      },
-
-      unmount() {
-        // if (isMounted) {
-        //   render(null, app._container)
-        // } else if (__DEV__) {
-        //   warn(`Cannot unmount an app that is not mounted.`)
-        // }
-      },
+      // fixed by xxxxxx
+      mount(): any {},
+      // fixed by xxxxxx
+      unmount() {},
 
       provide(key, value) {
         if (__DEV__ && key in context.provides) {
@@ -256,6 +224,8 @@ CreateAppFunction<HostElement> {
         return app
       }
     }
+
+    context.__app = app
 
     return app
   }
