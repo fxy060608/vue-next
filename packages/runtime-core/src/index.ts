@@ -126,7 +126,8 @@ export {
   WritableComputedRef,
   UnwrapRef,
   WritableComputedOptions,
-  ToRefs
+  ToRefs,
+  DeepReadonly
 } from '@vue/reactivity'
 export {
   // types
@@ -158,7 +159,9 @@ export {
   Component,
   FunctionalComponent,
   ComponentInternalInstance,
-  SetupContext
+  SetupContext,
+  ComponentCustomProps,
+  AllowedComponentProps
 } from './component'
 export {
   ComponentOptions,
