@@ -175,13 +175,13 @@ const publicPropertiesMap: PublicPropertiesMap = extend(Object.create(null), {
   $props: i => (__DEV__ ? shallowReadonly(i.props) : i.props),
   $attrs: i => (__DEV__ ? shallowReadonly(i.attrs) : i.attrs),
   $slots: i => (__DEV__ ? shallowReadonly(i.slots) : i.slots),
-  $refs: i => (__DEV__ ? shallowReadonly(i.refs) : i.refs),
+  // $refs: i => (__DEV__ ? shallowReadonly(i.refs) : i.refs), // fixed by xxxxxx
   $parent: i => i.parent && i.parent.proxy,
   $root: i => i.root && i.root.proxy,
   $emit: i => i.emit,
   $options: i => (__FEATURE_OPTIONS__ ? resolveMergedOptions(i) : i.type),
   $forceUpdate: i => () => queueJob(i.update),
-  $nextTick: () => nextTick,
+  // $nextTick: () => nextTick, // fixed by xxxxxx
   $watch: __FEATURE_OPTIONS__ ? i => instanceWatch.bind(i) : NOOP
 } as PublicPropertiesMap)
 

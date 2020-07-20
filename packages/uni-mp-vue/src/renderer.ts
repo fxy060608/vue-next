@@ -61,6 +61,7 @@ function mountComponent(
 
   if (__FEATURE_OPTIONS__) {
     instance.ctx.$onApplyOptions = onApplyOptions
+    instance.ctx.$children = []
   }
 
   if (options.mpType === 'app') {
@@ -75,6 +76,13 @@ function mountComponent(
     pushWarningContext(initialVNode)
   }
   setupComponent(instance)
+  if (__FEATURE_OPTIONS__) {
+    // $children
+    if (options.parentComponent && instance.proxy) {
+      ;(options.parentComponent.ctx
+        .$children as ComponentPublicInstance[]).push(instance.proxy)
+    }
+  }
   setupRenderEffect(instance)
   if (__DEV__) {
     popWarningContext()

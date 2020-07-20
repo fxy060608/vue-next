@@ -107,7 +107,7 @@ export function handleError(
     // the exposed instance is the render proxy to keep it consistent with 2.x
     const exposedInstance = instance.proxy
     // in production the hook receives only the error code
-    const errorInfo = __DEV__ ? ErrorTypeStrings[type] : type
+    const errorInfo = __DEV__ ? ErrorTypeStrings[type] || type : type // fixed by xxxxxx
     while (cur) {
       const errorCapturedHooks = cur.ec
       if (errorCapturedHooks) {
@@ -139,11 +139,15 @@ let forceRecover = false
 export function setErrorRecovery(value: boolean) {
   forceRecover = value
 }
-
-function logError(err: unknown, type: ErrorTypes, contextVNode: VNode | null) {
+// fixed by xxxxxx
+export function logError(
+  err: unknown,
+  type: ErrorTypes,
+  contextVNode: VNode | null
+) {
   // default behavior is crash in prod & test, recover in dev.
   if (__DEV__ && (forceRecover || !__TEST__)) {
-    const info = ErrorTypeStrings[type]
+    const info = ErrorTypeStrings[type] || type // fixed by xxxxxx
     if (contextVNode) {
       pushWarningContext(contextVNode)
     }
