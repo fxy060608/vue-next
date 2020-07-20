@@ -1,10 +1,4 @@
-import { isFunction } from '@vue/shared'
-
-import {
-  ComponentInternalInstance,
-  ComponentPublicInstance,
-  ComponentOptions
-} from '@vue/runtime-core'
+import { ComponentInternalInstance } from '@vue/runtime-core'
 
 import { injectHook } from '../../runtime-core/src/apiLifecycle'
 
@@ -120,35 +114,3 @@ export const onNavigationBarSearchInputConfirmed = /*#__PURE__*/ createHook(
 export const onNavigationBarSearchInputFocusChanged = /*#__PURE__*/ createHook(
   UniLifecycleHooks.ON_NAVIGATION_BAR_SEARCH_INPUT_FOCUS_CHANGED
 )
-
-export function callHook(
-  this: ComponentPublicInstance,
-  name: UniLifecycleHooks,
-  args: unknown
-) {
-  const hooks = (this.$ as any)[name]
-  let ret
-  if (hooks) {
-    for (let i = 0; i < hooks.length; i++) {
-      ret = hooks[i](args)
-    }
-  }
-  return ret
-}
-
-export function onApplyOptions(
-  options: ComponentOptions,
-  instance: ComponentInternalInstance,
-  publicThis: ComponentPublicInstance
-) {
-  Object.keys(options).forEach(name => {
-    if (name.indexOf('on') === 0) {
-      const hook = options[name]
-      if (isFunction(hook)) {
-        injectHook(name as LifecycleHooks, hook.bind(publicThis), instance)
-      }
-    }
-  })
-  // remove
-  delete instance.ctx.$onApplyOptions
-}

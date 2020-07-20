@@ -1,8 +1,8 @@
-import { ShapeFlags, invokeArrayFns, isArray, NOOP } from '@vue/shared'
+import { ShapeFlags, invokeArrayFns, NOOP } from '@vue/shared'
 
 import { stop, ReactiveEffectOptions, effect } from '@vue/reactivity'
 
-import { warn } from '@vue/runtime-core'
+import { warn, VNodeProps } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
 import { queuePostFlushCb } from '@vue/runtime-core'
 import { ComponentInternalInstance } from '@vue/runtime-core'
@@ -22,7 +22,8 @@ import {
 import { queueJob } from '../../runtime-core/src/scheduler'
 
 import { patch } from './patch'
-import { callHook, onApplyOptions } from './apiLifecycle'
+import { initAppConfig } from './appConfig'
+import { onApplyOptions } from './componentOptions'
 
 export enum MPType {
   APP = 'app',
@@ -38,8 +39,12 @@ export interface CreateComponentOptions {
   mpType: MPType
   mpInstance: any
   slots: string[]
+  props: VNodeProps | null
   parentComponent: ComponentInternalInstance | null
-  onBeforeSetup?: (instance: ComponentInternalInstance) => void
+  onBeforeSetup?: (
+    instance: ComponentInternalInstance,
+    options: CreateComponentOptions
+  ) => void
 }
 
 export const queuePostRenderEffect = queuePostFlushCb
@@ -54,36 +59,16 @@ function mountComponent(
     null
   ))
 
-  // mp
-  if (options.mpType) {
-    const ctx = instance.ctx
-    ctx.mpType = options.mpType
-    ctx.$scope = options.mpInstance
-    if (__FEATURE_OPTIONS__) {
-      ctx.$onApplyOptions = onApplyOptions
-    }
-    if (options.mpType === 'app') {
-      instance.render = NOOP
-    }
-    const oldEmit = instance.emit
-    instance.emit = function(event, ...args) {
-      if (ctx.$scope && event) {
-        ;(ctx.$scope as any).triggerEvent(event, { __args__: args })
-      }
-      return oldEmit.apply(this, [event, ...args])
-    }
+  if (__FEATURE_OPTIONS__) {
+    instance.ctx.$onApplyOptions = onApplyOptions
   }
 
-  // slots
-  instance.slots = {}
-  if (isArray(options.slots) && options.slots.length) {
-    options.slots.forEach(name => {
-      instance.slots[name] = true as any
-    })
+  if (options.mpType === 'app') {
+    instance.render = NOOP
   }
 
   if (options.onBeforeSetup) {
-    options.onBeforeSetup(instance)
+    options.onBeforeSetup(instance, options)
   }
 
   if (__DEV__) {
@@ -163,15 +148,11 @@ function unmountComponent(instance: ComponentInternalInstance) {
 
 const oldCreateApp = createAppAPI()
 
-function initGlobalProperties(globalProperties: Record<string, any>) {
-  globalProperties.$callHook = callHook
-}
-
 export function createApp(rootComponent: PublicAPIComponent, rootProps = null) {
   const app = oldCreateApp(rootComponent, rootProps)
   const appContext = app._context
 
-  initGlobalProperties(appContext.config.globalProperties)
+  initAppConfig(appContext.config)
 
   const createVNode: (initialVNode: VNode) => VNode = initialVNode => {
     initialVNode.appContext = appContext
@@ -200,14 +181,16 @@ export function createApp(rootComponent: PublicAPIComponent, rootProps = null) {
       createVNode({ type: rootComponent } as VNode),
       {
         mpType: MPType.APP,
-        mpInstance: null, // TODO
+        mpInstance: null,
         parentComponent: null,
-        slots: []
+        slots: [],
+        props: null
       }
     )
     ;(instance as any).$app = app
     ;(instance as any).$createComponent = createComponent
     ;(instance as any).$destroyComponent = destroyComponent
+    ;(appContext as any).$appInstance = instance
 
     createMiniProgramApp(instance)
 

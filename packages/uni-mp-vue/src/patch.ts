@@ -9,6 +9,10 @@ export interface MPInstance {
   is: string
   route: string
   setData: (data: Record<string, any>, callback?: () => void) => void
+  createSelectorQuery: Function
+  createIntersectionObserver: Function
+  selectAllComponents: Function
+  selectComponent: Function
 }
 
 function getMPInstanceData(instance: MPInstance, keys: Set<string>) {
@@ -22,20 +26,31 @@ function getMPInstanceData(instance: MPInstance, keys: Set<string>) {
 }
 
 function getVueInstanceData(instance: ComponentInternalInstance) {
-  const { data, setupState } = instance
+  const { data, setupState, ctx } = instance
   const keys = new Set<string>()
   const ret = Object.create(null)
   Object.keys(setupState).forEach(key => {
     keys.add(key)
     ret[key] = setupState[key]
   })
-  data &&
+  if (data) {
     Object.keys(data).forEach(key => {
       if (!keys.has(key)) {
         keys.add(key)
         ret[key] = data[key]
       }
     })
+  }
+  if (__FEATURE_OPTIONS__) {
+    if (ctx.$computedKeys) {
+      ;(ctx.$computedKeys as string[]).forEach((key: string) => {
+        if (!keys.has(key)) {
+          keys.add(key)
+          ret[key] = ctx[key]
+        }
+      })
+    }
+  }
   // track
   return { keys, data: JSON.parse(JSON.stringify(ret)) }
 }

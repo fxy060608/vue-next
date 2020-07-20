@@ -17,8 +17,8 @@ import {
 } from './componentProxy'
 import {
   ComponentPropsOptions,
-  NormalizedPropsOptions
-  // initProps
+  NormalizedPropsOptions,
+  initProps
 } from './componentProps'
 import { Slots, /* initSlots,*/ InternalSlots } from './componentSlots'
 import { warn } from './warning'
@@ -445,9 +445,9 @@ export function setupComponent(
 ) {
   isInSSRComponentSetup = isSSR
 
-  const { /*props, children, */ shapeFlag } = instance.vnode
+  const { props, /* children, */ shapeFlag } = instance.vnode
   const isStateful = shapeFlag & ShapeFlags.STATEFUL_COMPONENT
-  // initProps(instance, props, isStateful, isSSR)
+  initProps(instance, props, isStateful, isSSR)
   // initSlots(instance, children) // fixed by xxxxxx
 
   const setupResult = isStateful
