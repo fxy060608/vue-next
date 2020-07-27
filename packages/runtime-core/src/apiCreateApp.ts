@@ -13,7 +13,7 @@ import { isFunction, NO, isObject } from '@vue/shared'
 import { warn } from './warning'
 // import { createVNode, cloneVNode, VNode } from './vnode'
 // import { RootHydrateFunction } from './hydration'
-// import { initApp, appUnmounted } from './devtools'
+// import { devtoolsInitApp, devtoolsUnmountApp } from './devtools'
 import { version } from '.'
 
 export interface App<HostElement = any> {
@@ -32,7 +32,7 @@ export interface App<HostElement = any> {
   unmount(rootContainer: HostElement | string): void
   provide<T>(key: InjectionKey<T> | string, value: T): this
 
-  // internal. We need to expose these for the server-renderer and devtools
+  // internal, but we need to expose these for the server-renderer and devtools
   _component: Component
   _props: Data | null
   _container: HostElement | null
@@ -50,7 +50,6 @@ export interface AppConfig {
   // @private
   readonly isNativeTag?: (tag: string) => boolean
 
-  devtools: boolean
   performance: boolean
   optionMergeStrategies: Record<string, OptionMergeFunction>
   globalProperties: Record<string, any>
@@ -68,15 +67,13 @@ export interface AppConfig {
 }
 
 export interface AppContext {
+  app: App // for devtools
   config: AppConfig
   mixins: ComponentOptions[]
   components: Record<string, PublicAPIComponent>
   directives: Record<string, Directive>
   provides: Record<string | symbol, any>
   reload?: () => void // HMR only
-
-  // internal for devtools
-  __app?: App
 }
 
 type PluginInstallFunction = (app: App, ...options: any[]) => any
@@ -89,9 +86,9 @@ export type Plugin =
 
 export function createAppContext(): AppContext {
   return {
+    app: null as any,
     config: {
       isNativeTag: NO,
-      devtools: true,
       performance: false,
       globalProperties: {},
       optionMergeStrategies: {},
@@ -111,7 +108,9 @@ export type CreateAppFunction<HostElement> = (
   rootProps?: Data | null
 ) => App<HostElement>
 // fixed by xxxxxx
-export function createAppAPI<HostElement>(): CreateAppFunction<HostElement> {
+export function createAppAPI<HostElement>(): // render: RootRenderFunction,
+// hydrate?: RootHydrateFunction
+CreateAppFunction<HostElement> {
   return function createApp(rootComponent, rootProps = null) {
     if (rootProps != null && !isObject(rootProps)) {
       __DEV__ && warn(`root props passed to app.mount() must be an object.`)
@@ -123,7 +122,7 @@ export function createAppAPI<HostElement>(): CreateAppFunction<HostElement> {
     // fixed by xxxxxx
     // let isMounted = false
 
-    const app: App = {
+    const app: App = (context.app = {
       _component: rootComponent as Component,
       _props: rootProps,
       _container: null,
@@ -162,7 +161,7 @@ export function createAppAPI<HostElement>(): CreateAppFunction<HostElement> {
       },
 
       mixin(mixin: ComponentOptions) {
-        if (__FEATURE_OPTIONS__) {
+        if (__FEATURE_OPTIONS_API__) {
           if (!context.mixins.includes(mixin)) {
             context.mixins.push(mixin)
           } else if (__DEV__) {
@@ -223,9 +222,7 @@ export function createAppAPI<HostElement>(): CreateAppFunction<HostElement> {
 
         return app
       }
-    }
-
-    context.__app = app
+    })
 
     return app
   }

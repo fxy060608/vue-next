@@ -59,7 +59,7 @@ function mountComponent(
     null
   ))
 
-  if (__FEATURE_OPTIONS__) {
+  if (__FEATURE_OPTIONS_API__) {
     instance.ctx.$onApplyOptions = onApplyOptions
     instance.ctx.$children = []
   }
@@ -76,7 +76,7 @@ function mountComponent(
     pushWarningContext(initialVNode)
   }
   setupComponent(instance)
-  if (__FEATURE_OPTIONS__) {
+  if (__FEATURE_OPTIONS_API__) {
     // $children
     if (options.parentComponent && instance.proxy) {
       ;(options.parentComponent.ctx

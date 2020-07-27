@@ -41,7 +41,7 @@ function getVueInstanceData(instance: ComponentInternalInstance) {
       }
     })
   }
-  if (__FEATURE_OPTIONS__) {
+  if (__FEATURE_OPTIONS_API__) {
     if (ctx.$computedKeys) {
       ;(ctx.$computedKeys as string[]).forEach((key: string) => {
         if (!keys.has(key)) {

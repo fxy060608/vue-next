@@ -50,6 +50,7 @@ const outputConfigs = {
     format: 'iife'
   },
   'esm-bundler-vue': {
+    // fixed by xxxxxx
     file: resolve(`dist/vue.runtime.esm.js`),
     format: `es`
   }
@@ -216,8 +217,13 @@ function createReplacePlugin(
     __ESM_BROWSER__: isBrowserESMBuild,
     // is targeting Node (SSR)?
     __NODE_JS__: isNodeBuild,
-    __FEATURE_OPTIONS__: '__FEATURE_OPTIONS__',
-    __FEATURE_SUSPENSE__: false,
+
+    // feature flags
+    __FEATURE_SUSPENSE__: false, // fixed by xxxxxx
+    __FEATURE_OPTIONS_API__: isBundlerESMBuild ? `__VUE_OPTIONS_API__` : true,
+    __FEATURE_PROD_DEVTOOLS__: isBundlerESMBuild
+      ? `__VUE_PROD_DEVTOOLS__`
+      : false,
     ...(isProduction && isBrowserBuild
       ? {
           'context.onError(': `/*#__PURE__*/ context.onError(`,
