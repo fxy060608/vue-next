@@ -106,13 +106,7 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
   // create reactive effect for rendering
   instance.update = effect(function componentEffect() {
     if (!instance.isMounted) {
-      const { bm } = instance
-      // beforeMount hook
-      if (bm) {
-        invokeArrayFns(bm)
-      }
       patch(instance)
-      instance.isMounted = true
     } else {
       // updateComponent
       const { bu, u } = instance

@@ -78,7 +78,11 @@ export function nextTick(
   }
   ;(ctx.__next_tick_callbacks as Function[]).push(() => {
     if (fn) {
-      callWithErrorHandling(fn, instance, ErrorCodes.SCHEDULER)
+      callWithErrorHandling(
+        fn.bind(instance.proxy),
+        instance,
+        ErrorCodes.SCHEDULER
+      )
     } else if (_resolve) {
       _resolve(instance.proxy)
     }
