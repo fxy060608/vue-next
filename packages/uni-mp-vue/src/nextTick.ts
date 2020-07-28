@@ -58,7 +58,7 @@ export function nextTick(
           ']:nextVueTick'
       )
     }
-    return nextVueTick(fn)
+    return nextVueTick(fn && fn.bind(instance.proxy))
   }
   if (process.env.VUE_APP_DEBUG) {
     const mpInstance = ctx.$scope as MPInstance
