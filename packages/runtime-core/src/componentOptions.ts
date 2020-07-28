@@ -433,8 +433,8 @@ export function applyOptions(
   // - data (deferred since it relies on `this` access)
   // - computed
   // - watch (deferred since it relies on `this` access)
-
-  if (injectOptions) {
+  // fixed by xxxxxx
+  if (!__VUE_CREATED_DEFERRED__ && injectOptions) {
     if (isArray(injectOptions)) {
       for (let i = 0; i < injectOptions.length; i++) {
         const key = injectOptions[i]
@@ -557,8 +557,8 @@ export function applyOptions(
       }
     })
   }
-
-  if (provideOptions) {
+  // fixed by xxxxxx
+  if (!__VUE_CREATED_DEFERRED__ && provideOptions) {
     const provides = isFunction(provideOptions)
       ? provideOptions.call(publicThis)
       : provideOptions
@@ -566,9 +566,13 @@ export function applyOptions(
       provide(key, provides[key])
     }
   }
-
+  // fixed by xxxxxx
   // lifecycle options
-  if (!asMixin) {
+  if (__VUE_CREATED_DEFERRED__) {
+    ctx.$callSyncHook = function(name: 'created') {
+      return callSyncHook(name, options, publicThis, globalMixins)
+    }
+  } else if (!asMixin) {
     callSyncHook('created', options, publicThis, globalMixins)
   }
   if (beforeMount) {
