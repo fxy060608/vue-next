@@ -106,8 +106,10 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
   // create reactive effect for rendering
   instance.update = effect(function componentEffect() {
     if (!instance.isMounted) {
+      instance.render && (instance.render as any).call(instance.proxy)
       patch(instance)
     } else {
+      instance.render && (instance.render as any).call(instance.proxy)
       // updateComponent
       const { bu, u } = instance
       // beforeUpdate hook

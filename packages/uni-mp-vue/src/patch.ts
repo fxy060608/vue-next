@@ -1,8 +1,10 @@
+import { extend } from '@vue/shared'
+
 import { ComponentInternalInstance } from '@vue/runtime-core'
+import { MPType } from './renderer'
 
 import diff from './diff'
 import { flushCallbacks } from './nextTick'
-import { MPType } from './renderer'
 
 export interface MPInstance {
   data: any
@@ -51,6 +53,11 @@ function getVueInstanceData(instance: ComponentInternalInstance) {
       })
     }
   }
+  if (ctx.$mp) {
+    // TODO
+    extend(ret, (ctx.$mp as any).data || {})
+  }
+  // TODO form-field
   // track
   return { keys, data: JSON.parse(JSON.stringify(ret)) }
 }
