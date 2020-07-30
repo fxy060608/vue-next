@@ -1,9 +1,6 @@
 import { createApp, ref, nextTick } from '../src'
-import { mockWarn } from '@vue/shared'
 
 describe('compiler + runtime integration', () => {
-  mockWarn()
-
   it('should support runtime template compilation', () => {
     const container = document.createElement('div')
     const App = {

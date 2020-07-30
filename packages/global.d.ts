@@ -14,3 +14,11 @@ declare var __FEATURE_OPTIONS_API__: boolean
 declare var __FEATURE_PROD_DEVTOOLS__: boolean
 declare var __FEATURE_SUSPENSE__: boolean
 declare var __VUE_CREATED_DEFERRED__: boolean // fixed by xxxxxx
+// for tests
+declare namespace jest {
+  interface Matchers<R, T> {
+    toHaveBeenWarned(): R
+    toHaveBeenWarnedLast(): R
+    toHaveBeenWarnedTimes(n: number): R
+  }
+}

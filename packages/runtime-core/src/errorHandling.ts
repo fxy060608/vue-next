@@ -107,7 +107,7 @@ export function handleError(
     // the exposed instance is the render proxy to keep it consistent with 2.x
     const exposedInstance = instance.proxy
     // in production the hook receives only the error code
-    const errorInfo = __DEV__ ? ErrorTypeStrings[type] || type : type // fixed by xxxxxx
+    const errorInfo = __DEV__ ? ErrorTypeStrings[type] || type : type // fixed by xxxxxxx
     while (cur) {
       const errorCapturedHooks = cur.ec
       if (errorCapturedHooks) {
@@ -133,30 +133,25 @@ export function handleError(
   }
   logError(err, type, contextVNode)
 }
-
-// Test-only toggle for testing the unhandled warning behavior
-let forceRecover = false
-export function setErrorRecovery(value: boolean) {
-  forceRecover = value
-}
 // fixed by xxxxxx
 export function logError(
   err: unknown,
   type: ErrorTypes,
   contextVNode: VNode | null
 ) {
-  // default behavior is crash in prod & test, recover in dev.
-  if (__DEV__ && (forceRecover || !__TEST__)) {
+  if (__DEV__) {
     const info = ErrorTypeStrings[type] || type // fixed by xxxxxx
     if (contextVNode) {
       pushWarningContext(contextVNode)
     }
     warn(`Unhandled error${info ? ` during execution of ${info}` : ``}`)
-    console.error(err)
     if (contextVNode) {
       popWarningContext()
     }
-  } else {
+    // crash in dev so it's more noticeable
     throw err
+  } else {
+    // recover in prod to reduce the impact on end-user
+    console.error(err)
   }
 }
