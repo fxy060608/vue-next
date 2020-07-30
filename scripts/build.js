@@ -153,6 +153,9 @@ function checkAllSizes(targets) {
 function checkSize(target) {
   const pkgDir = path.resolve(`packages/${target}`)
   checkFileSize(`${pkgDir}/dist/${target}.global.prod.js`)
+  if (target === 'uni-mp-vue') {
+    checkFileSize(`${pkgDir}/dist/vue.runtime.esm.js`)
+  }
 }
 
 function checkFileSize(filePath) {
