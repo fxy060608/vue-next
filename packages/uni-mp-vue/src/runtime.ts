@@ -1,6 +1,6 @@
 export { createApp } from './renderer'
-export * from './apiLifecycle'
-
+//lifecycle
+export * from 'packages/uni-vue/src/apiLifecycle'
 // @vue/reactivity
 export {
   customRef,

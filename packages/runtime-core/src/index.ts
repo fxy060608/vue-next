@@ -266,3 +266,8 @@ const _ssrUtils = {
  * @internal
  */
 export const ssrUtils = (__NODE_JS__ ? _ssrUtils : null) as typeof _ssrUtils
+
+// extra
+export { logError } from './errorHandling'
+export { injectHook } from './apiLifecycle'
+export { isInSSRComponentSetup } from './component'
