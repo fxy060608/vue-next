@@ -4,14 +4,16 @@ import {
   ComponentPublicInstance
 } from '@vue/runtime-core'
 
-import { applyOptions } from '@vue/uni-vue'
-
 export function onApplyOptions(
   options: ComponentOptions,
   instance: ComponentInternalInstance,
   publicThis: ComponentPublicInstance
 ) {
-  applyOptions(options, instance, publicThis)
+  instance.appContext.config.globalProperties.$applyOptions(
+    options,
+    instance,
+    publicThis
+  )
   const computedOptions = options.computed
   if (computedOptions) {
     const keys = Object.keys(computedOptions)

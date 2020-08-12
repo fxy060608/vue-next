@@ -1,6 +1,9 @@
-export { createApp } from './renderer'
-//lifecycle
-export * from 'packages/uni-vue/src/apiLifecycle'
+export { createVueApp } from './renderer'
+
+export { logError } from 'packages/runtime-core/src/errorHandling'
+export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
+export { isInSSRComponentSetup } from 'packages/runtime-core/src/component'
+
 // @vue/reactivity
 export {
   customRef,

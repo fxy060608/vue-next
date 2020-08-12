@@ -2,7 +2,7 @@ import { ShapeFlags, invokeArrayFns, NOOP } from '@vue/shared'
 
 import { stop, ReactiveEffectOptions, effect } from '@vue/reactivity'
 
-import { warn, VNodeProps } from '@vue/runtime-core'
+import { warn, VNodeProps, ComponentOptions } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
 import { queuePostFlushCb } from '@vue/runtime-core'
 import { ComponentInternalInstance } from '@vue/runtime-core'
@@ -152,7 +152,10 @@ function unmountComponent(instance: ComponentInternalInstance) {
 
 const oldCreateApp = createAppAPI()
 
-export function createApp(rootComponent: PublicAPIComponent, rootProps = null) {
+export function createVueApp(
+  rootComponent: PublicAPIComponent,
+  rootProps = null
+) {
   const app = oldCreateApp(rootComponent, rootProps)
   const appContext = app._context
 
@@ -181,6 +184,8 @@ export function createApp(rootComponent: PublicAPIComponent, rootProps = null) {
   }
 
   app.mount = function mount() {
+    // App.vue
+    ;(rootComponent as ComponentOptions).render = NOOP
     const instance = mountComponent(
       createVNode({ type: rootComponent } as VNode),
       {
@@ -195,9 +200,6 @@ export function createApp(rootComponent: PublicAPIComponent, rootProps = null) {
     ;(instance as any).$createComponent = createComponent
     ;(instance as any).$destroyComponent = destroyComponent
     ;(appContext as any).$appInstance = instance
-
-    createMiniProgramApp(instance)
-
     return instance
   }
 
