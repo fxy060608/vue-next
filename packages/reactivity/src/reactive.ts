@@ -1,4 +1,4 @@
-import { isObject, toRawType, def, hasOwn, makeMap } from '@vue/shared'
+import { isObject, toRawType, def } from '@vue/shared'
 import {
   mutableHandlers,
   readonlyHandlers,
@@ -16,31 +16,44 @@ export const enum ReactiveFlags {
   SKIP = '__v_skip',
   IS_REACTIVE = '__v_isReactive',
   IS_READONLY = '__v_isReadonly',
-  RAW = '__v_raw',
-  REACTIVE = '__v_reactive',
-  READONLY = '__v_readonly'
+  RAW = '__v_raw'
 }
 
-interface Target {
+export interface Target {
   [ReactiveFlags.SKIP]?: boolean
   [ReactiveFlags.IS_REACTIVE]?: boolean
   [ReactiveFlags.IS_READONLY]?: boolean
   [ReactiveFlags.RAW]?: any
-  [ReactiveFlags.REACTIVE]?: any
-  [ReactiveFlags.READONLY]?: any
 }
 
-const collectionTypes = new Set<Function>([Set, Map, WeakMap, WeakSet])
-const isObservableType = /*#__PURE__*/ makeMap(
-  'Object,Array,Map,Set,WeakMap,WeakSet'
-)
+export const reactiveMap = new WeakMap<Target, any>()
+export const readonlyMap = new WeakMap<Target, any>()
 
-const canObserve = (value: Target): boolean => {
-  return (
-    !value[ReactiveFlags.SKIP] &&
-    isObservableType(toRawType(value)) &&
-    Object.isExtensible(value)
-  )
+const enum TargetType {
+  INVALID = 0,
+  COMMON = 1,
+  COLLECTION = 2
+}
+
+function targetTypeMap(rawType: string) {
+  switch (rawType) {
+    case 'Object':
+    case 'Array':
+      return TargetType.COMMON
+    case 'Map':
+    case 'Set':
+    case 'WeakMap':
+    case 'WeakSet':
+      return TargetType.COLLECTION
+    default:
+      return TargetType.INVALID
+  }
+}
+
+function getTargetType(value: Target) {
+  return value[ReactiveFlags.SKIP] || !Object.isExtensible(value)
+    ? TargetType.INVALID
+    : targetTypeMap(toRawType(value))
 }
 
 // only unwrap nested ref
@@ -141,22 +154,22 @@ function createReactiveObject(
     return target
   }
   // target already has corresponding Proxy
-  const reactiveFlag = isReadonly
-    ? ReactiveFlags.READONLY
-    : ReactiveFlags.REACTIVE
-  if (hasOwn(target, reactiveFlag)) {
-    return target[reactiveFlag]
+  const proxyMap = isReadonly ? readonlyMap : reactiveMap
+  const existingProxy = proxyMap.get(target)
+  if (existingProxy) {
+    return existingProxy
   }
   // only a whitelist of value types can be observed.
-  if (!canObserve(target)) {
+  const targetType = getTargetType(target)
+  if (targetType === TargetType.INVALID) {
     return target
   }
-  const observed = new Proxy(
+  const proxy = new Proxy(
     target,
-    collectionTypes.has(target.constructor) ? collectionHandlers : baseHandlers
+    targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
-  def(target, reactiveFlag, observed)
-  return observed
+  proxyMap.set(target, proxy)
+  return proxy
 }
 
 export function isReactive(value: unknown): boolean {

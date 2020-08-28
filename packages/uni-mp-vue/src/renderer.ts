@@ -16,7 +16,7 @@ import {
 import {
   createComponentInstance,
   setupComponent,
-  PublicAPIComponent
+  Component
 } from '../../runtime-core/src/component'
 
 import { queueJob } from '../../runtime-core/src/scheduler'
@@ -152,10 +152,7 @@ function unmountComponent(instance: ComponentInternalInstance) {
 
 const oldCreateApp = createAppAPI()
 
-export function createVueApp(
-  rootComponent: PublicAPIComponent,
-  rootProps = null
-) {
+export function createVueApp(rootComponent: Component, rootProps = null) {
   const app = oldCreateApp(rootComponent, rootProps)
   const appContext = app._context
 

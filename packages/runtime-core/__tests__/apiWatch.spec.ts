@@ -7,7 +7,7 @@ import {
   ref,
   h
 } from '../src/index'
-import { render, nodeOps, serializeInner } from '@vue/runtime-test'
+import { render, nodeOps, serializeInner, TestElement } from '@vue/runtime-test'
 import {
   ITERATE_KEY,
   DebuggerEvent,
@@ -74,6 +74,21 @@ describe('api: watch', () => {
     await nextTick()
     expect(spy).toBeCalledTimes(1)
     expect(spy).toBeCalledWith([1], expect.anything(), expect.anything())
+  })
+
+  it('should not fire if watched getter result did not change', async () => {
+    const spy = jest.fn()
+    const n = ref(0)
+    watch(() => n.value % 2, spy)
+
+    n.value++
+    await nextTick()
+    expect(spy).toBeCalledTimes(1)
+
+    n.value += 2
+    await nextTick()
+    // should not be called again because getter result did not change
+    expect(spy).toBeCalledTimes(1)
   })
 
   it('watching single source: computed ref', async () => {
@@ -483,6 +498,37 @@ describe('api: watch', () => {
     expect(calls).toEqual(['render', 'watcher 1', 'watcher 2', 'render'])
   })
 
+  // #1852
+  it('flush: post watcher should fire after template refs updated', async () => {
+    const toggle = ref(false)
+    let dom: TestElement | null = null
+
+    const App = {
+      setup() {
+        const domRef = ref<TestElement | null>(null)
+
+        watch(
+          toggle,
+          () => {
+            dom = domRef.value
+          },
+          { flush: 'post' }
+        )
+
+        return () => {
+          return toggle.value ? h('p', { ref: domRef }) : null
+        }
+      }
+    }
+
+    render(h(App), nodeOps.createElement('div'))
+    expect(dom).toBe(null)
+
+    toggle.value = true
+    await nextTick()
+    expect(dom!.tag).toBe('p')
+  })
+
   it('deep', async () => {
     const state = reactive({
       nested: {
@@ -525,6 +571,25 @@ describe('api: watch', () => {
     state.set.delete(1)
     await nextTick()
     expect(dummy).toEqual([1, 2, 2, false])
+  })
+
+  it('watching deep ref', async () => {
+    const count = ref(0)
+    const double = computed(() => count.value * 2)
+    const state = reactive([count, double])
+
+    let dummy
+    watch(
+      () => state,
+      state => {
+        dummy = [state[0].value, state[1].value]
+      },
+      { deep: true }
+    )
+
+    count.value++
+    await nextTick()
+    expect(dummy).toEqual([1, 2])
   })
 
   it('immediate', async () => {
@@ -660,6 +725,7 @@ describe('api: watch', () => {
       newValue: 2
     })
 
+    // @ts-ignore
     delete obj.foo
     await nextTick()
     expect(dummy).toBeUndefined()

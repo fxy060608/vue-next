@@ -8,11 +8,12 @@ import {
   isFunction,
   extend
 } from '@vue/shared'
-import { ComponentInternalInstance, Component } from './component'
+import { ComponentInternalInstance, ConcreteComponent } from './component'
 import { callWithAsyncErrorHandling, ErrorCodes } from './errorHandling'
 import { warn } from './warning'
 import { normalizePropsOptions } from './componentProps'
 import { UnionToIntersection } from './helpers/typeUtils'
+import { devtoolsComponentEmit } from './devtools'
 
 export type ObjectEmitsOptions = Record<
   string,
@@ -67,6 +68,10 @@ export function emit(
     }
   }
 
+  if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+    devtoolsComponentEmit(instance, event, args)
+  }
+
   let handlerName = `on${capitalize(event)}`
   let handler = props[handlerName]
   // for v-model update:xxx events, also trigger kebab-case equivalent
@@ -94,7 +99,7 @@ export function emit(
 }
 
 function normalizeEmitsOptions(
-  comp: Component
+  comp: ConcreteComponent
 ): ObjectEmitsOptions | undefined {
   if (hasOwn(comp, '__emits')) {
     return comp.__emits
@@ -131,7 +136,7 @@ function normalizeEmitsOptions(
 // Check if an incoming prop key is a declared emit event listener.
 // e.g. With `emits: { click: null }`, props named `onClick` and `onclick` are
 // both considered matched listeners.
-export function isEmitListener(comp: Component, key: string): boolean {
+export function isEmitListener(comp: ConcreteComponent, key: string): boolean {
   let emits: ObjectEmitsOptions | undefined
   if (!isOn(key) || !(emits = normalizeEmitsOptions(comp))) {
     return false

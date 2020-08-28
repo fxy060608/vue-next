@@ -16,7 +16,7 @@ import {
 import {
   CreateComponentPublicInstance,
   ComponentPublicInstanceConstructor
-} from './componentProxy'
+} from './componentPublicInstance'
 import { ExtractPropTypes, ComponentPropsOptions } from './componentProps'
 import { EmitsOptions } from './componentEmits'
 import { isFunction } from '@vue/shared'
@@ -189,7 +189,8 @@ export function defineComponent<
     Extends,
     E,
     VNodeProps & AllowedComponentProps & ComponentCustomProps
-  >
+  > &
+    Readonly<ExtractPropTypes<PropsOptions>>
 > &
   ComponentOptionsWithObjectProps<
     PropsOptions,
