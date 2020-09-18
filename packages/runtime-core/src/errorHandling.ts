@@ -99,7 +99,8 @@ export function callWithAsyncErrorHandling(
 export function handleError(
   err: unknown,
   instance: ComponentInternalInstance | null,
-  type: ErrorTypes
+  type: ErrorTypes,
+  throwInDev = true
 ) {
   const contextVNode = instance ? instance.vnode : null
   if (instance) {
@@ -131,13 +132,14 @@ export function handleError(
       return
     }
   }
-  logError(err, type, contextVNode)
+  logError(err, type, contextVNode, throwInDev)
 }
 // fixed by xxxxxx
 export function logError(
   err: unknown,
   type: ErrorTypes,
-  contextVNode: VNode | null
+  contextVNode: VNode | null,
+  throwInDev = true
 ) {
   if (__DEV__) {
     const info = ErrorTypeStrings[type] || type // fixed by xxxxxx
@@ -148,8 +150,12 @@ export function logError(
     if (contextVNode) {
       popWarningContext()
     }
-    // crash in dev so it's more noticeable
-    throw err
+    // crash in dev by default so it's more noticeable
+    if (throwInDev) {
+      throw err
+    } else if (!__TEST__) {
+      console.error(err)
+    }
   } else {
     // recover in prod to reduce the impact on end-user
     console.error(err)
