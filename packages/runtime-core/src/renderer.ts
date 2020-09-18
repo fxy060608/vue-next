@@ -10,7 +10,8 @@ import {
   isSameVNodeType,
   Static,
   VNodeNormalizedRef,
-  VNodeHook
+  VNodeHook,
+  VNodeNormalizedRefAtom
 } from './vnode'
 import {
   ComponentInternalInstance,
@@ -19,6 +20,7 @@ import {
   setupComponent
 } from './component'
 import {
+  filterSingleRoot,
   renderComponentRoot,
   shouldUpdateComponent,
   updateHOCHostEl
@@ -42,7 +44,6 @@ import {
   flushPostFlushCbs,
   invalidateJob,
   flushPreFlushCbs,
-  SchedulerJob,
   SchedulerCb
 } from './scheduler'
 import { effect, stop, ReactiveEffectOptions, isRef } from '@vue/reactivity'
@@ -259,7 +260,9 @@ export const enum MoveType {
 }
 
 const prodEffectOptions = {
-  scheduler: queueJob
+  scheduler: queueJob,
+  // #1801, #2043 component render effects should allow recursive updates
+  allowRecurse: true
 }
 
 function createDevEffectOptions(
@@ -267,6 +270,7 @@ function createDevEffectOptions(
 ): ReactiveEffectOptions {
   return {
     scheduler: queueJob,
+    allowRecurse: true,
     onTrack: instance.rtc ? e => invokeArrayFns(instance.rtc!, e) : void 0,
     onTrigger: instance.rtg ? e => invokeArrayFns(instance.rtg!, e) : void 0
   }
@@ -283,6 +287,19 @@ export const setRef = (
   parentSuspense: SuspenseBoundary | null,
   vnode: VNode | null
 ) => {
+  if (isArray(rawRef)) {
+    rawRef.forEach((r, i) =>
+      setRef(
+        r,
+        oldRawRef && (isArray(oldRawRef) ? oldRawRef[i] : oldRawRef),
+        parentComponent,
+        parentSuspense,
+        vnode
+      )
+    )
+    return
+  }
+
   let value: ComponentPublicInstance | RendererNode | null
   if (!vnode) {
     value = null
@@ -294,7 +311,7 @@ export const setRef = (
     }
   }
 
-  const [owner, ref] = rawRef
+  const { i: owner, r: ref } = rawRef
   if (__DEV__ && !owner) {
     warn(
       `Missing ref owner context. ref cannot be used on hoisted vnodes. ` +
@@ -302,7 +319,7 @@ export const setRef = (
     )
     return
   }
-  const oldRef = oldRawRef && oldRawRef[1]
+  const oldRef = oldRawRef && (oldRawRef as VNodeNormalizedRefAtom).r
   const refs = owner.refs === EMPTY_OBJ ? (owner.refs = {}) : owner.refs
   const setupState = owner.setupState
 
@@ -746,30 +763,6 @@ function baseCreateRenderer(
       }
       // scopeId
       setScopeId(el, scopeId, vnode, parentComponent)
-      // if (scopeId) {
-      //   hostSetScopeId(el, scopeId)
-      // }
-      // if (parentComponent) {
-      //   const treeOwnerId = parentComponent.type.__scopeId
-      //   // vnode's own scopeId and the current patched component's scopeId is
-      //   // different - this is a slot content node.
-      //   if (treeOwnerId && treeOwnerId !== scopeId) {
-      //     hostSetScopeId(el, treeOwnerId + '-s')
-      //   }
-      //   const parentScopeId =
-      //     vnode === parentComponent.subTree && parentComponent.vnode.scopeId
-      //   if (parentScopeId) {
-      //     hostSetScopeId(el, parentScopeId)
-      //     if (parentComponent.parent) {
-      //       const treeOwnerId = parentComponent.parent.type.__scopeId
-      //       // vnode's own scopeId and the current patched component's scopeId is
-      //       // different - this is a slot content node.
-      //       if (treeOwnerId && treeOwnerId !== parentScopeId) {
-      //         hostSetScopeId(el, treeOwnerId + '-s')
-      //       }
-      //     }
-      //   }
-      // }
     }
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       Object.defineProperty(el, '__vnode', {
@@ -787,7 +780,7 @@ function baseCreateRenderer(
     // #1583 For inside suspense + suspense not resolved case, enter hook should call when suspense resolved
     // #1689 For inside suspense + suspense resolved case, just call it
     const needCallTransitionHooks =
-      (!parentSuspense || (parentSuspense && parentSuspense!.isResolved)) &&
+      (!parentSuspense || (parentSuspense && !parentSuspense.pendingBranch)) &&
       transition &&
       !transition.persisted
     if (needCallTransitionHooks) {
@@ -823,7 +816,12 @@ function baseCreateRenderer(
       if (treeOwnerId && treeOwnerId !== scopeId) {
         hostSetScopeId(el, treeOwnerId + '-s')
       }
-      if (vnode === parentComponent.subTree) {
+      let subTree = parentComponent.subTree
+      if (__DEV__ && subTree.type === Fragment) {
+        subTree =
+          filterSingleRoot(subTree.children as VNodeArrayChildren) || subTree
+      }
+      if (vnode === subTree) {
         setScopeId(
           el,
           parentComponent.vnode.scopeId,
@@ -1159,6 +1157,15 @@ function baseCreateRenderer(
         )
         if (__DEV__ && parentComponent && parentComponent.type.__hmrId) {
           traverseStaticChildren(n1, n2)
+        } else if (
+          // #2080 if the stable fragment has a key, it's a <template v-for> that may
+          //  get moved around. Make sure all root level vnodes inherit el.
+          // #2134 or if it's a component root, it may also get moved around
+          // as the component is being moved.
+          n2.key != null ||
+          (parentComponent && n2 === parentComponent.subTree)
+        ) {
+          traverseStaticChildren(n1, n2, true /* shallow */)
         }
       } else {
         // keyed / unkeyed, or manual fragments.
@@ -1255,14 +1262,10 @@ function baseCreateRenderer(
     // setup() is async. This component relies on async logic to be resolved
     // before proceeding
     if (__FEATURE_SUSPENSE__ && instance.asyncDep) {
-      if (!parentSuspense) {
-        if (__DEV__) warn('async setup() is used without a suspense boundary!')
-        return
-      }
-
-      parentSuspense.registerDep(instance, setupRenderEffect)
+      parentSuspense && parentSuspense.registerDep(instance, setupRenderEffect)
 
       // Give it a placeholder if this is not hydration
+      // TODO handle self-defined fallback
       if (!initialVNode.el) {
         const placeholder = (instance.subTree = createVNode(Comment))
         processCommentNode(null, placeholder, container!, anchor)
@@ -1495,8 +1498,6 @@ function baseCreateRenderer(
         }
       }
     }, __DEV__ ? createDevEffectOptions(instance) : prodEffectOptions)
-    // #1801 mark it to allow recursive updates
-    ;(instance.update as SchedulerJob).allowRecurse = true
   }
 
   const updateComponentPreRender = (
@@ -2126,10 +2127,11 @@ function baseCreateRenderer(
     if (
       __FEATURE_SUSPENSE__ &&
       parentSuspense &&
-      !parentSuspense.isResolved &&
+      parentSuspense.pendingBranch &&
       !parentSuspense.isUnmounted &&
       instance.asyncDep &&
-      !instance.asyncResolved
+      !instance.asyncResolved &&
+      instance.suspenseId === parentSuspense.pendingId
     ) {
       parentSuspense.deps--
       if (parentSuspense.deps === 0) {
@@ -2170,9 +2172,12 @@ function baseCreateRenderer(
    * inside a block also inherit the DOM element from the previous tree so that
    * HMR updates (which are full updates) can retrieve the element for patching.
    *
-   * Dev only.
+   * #2080
+   * Inside keyed `template` fragment static children, if a fragment is moved,
+   * the children will always moved so that need inherit el form previous nodes
+   * to ensure correct moved position.
    */
-  const traverseStaticChildren = (n1: VNode, n2: VNode) => {
+  const traverseStaticChildren = (n1: VNode, n2: VNode, shallow = false) => {
     const ch1 = n1.children
     const ch2 = n2.children
     if (isArray(ch1) && isArray(ch2)) {
@@ -2185,7 +2190,10 @@ function baseCreateRenderer(
           if (c2.patchFlag <= 0 || c2.patchFlag === PatchFlags.HYDRATE_EVENTS) {
             c2.el = c1.el
           }
-          traverseStaticChildren(c1, c2)
+          if (!shallow) traverseStaticChildren(c1, c2)
+        }
+        if (__DEV__ && c2.type === Comment) {
+          c2.el = c1.el
         }
       }
     }
