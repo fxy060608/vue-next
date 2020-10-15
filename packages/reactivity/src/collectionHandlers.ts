@@ -21,7 +21,7 @@ const toReactive = <T extends unknown>(value: T): T =>
   isObject(value) ? reactive(value) : value
 
 const toReadonly = <T extends unknown>(value: T): T =>
-  isObject(value) ? readonly(value) : value
+  isObject(value) ? readonly(value as Record<any, any>) : value
 
 const toShallow = <T extends unknown>(value: T): T => value
 
@@ -350,7 +350,7 @@ function checkIdentityKeys(
     const type = toRawType(target)
     console.warn(
       `Reactive ${type} contains both the raw and reactive ` +
-        `versions of the same object${type === `Map` ? `as keys` : ``}, ` +
+        `versions of the same object${type === `Map` ? ` as keys` : ``}, ` +
         `which can lead to inconsistencies. ` +
         `Avoid differentiating between the raw and reactive versions ` +
         `of an object and only use the reactive version if possible.`

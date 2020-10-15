@@ -213,7 +213,7 @@ const publicPropertiesMap: PublicPropertiesMap = extend(Object.create(null), {
   $emit: i => i.emit,
   $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
   $forceUpdate: i => () => queueJob(i.update),
-  // $nextTick: () => nextTick, // fixed by xxxxxx
+  // $nextTick: i => nextTick.bind(i.proxy!), // fixed by xxxxxx
   $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP)
 } as PublicPropertiesMap)
 
@@ -244,6 +244,11 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
 
     // let @vue/reactivity know it should never observe Vue public instances.
     if (key === ReactiveFlags.SKIP) {
+      return true
+    }
+
+    // for internal formatters to know that this is a Vue instance
+    if (__DEV__ && key === '__isVue') {
       return true
     }
 

@@ -123,7 +123,7 @@ describe('compiler: parse', () => {
       })
     })
 
-    test('lonly "<" don\'t separate nodes', () => {
+    test('lonely "<" doesn\'t separate nodes', () => {
       const ast = baseParse('a < b', {
         onError: err => {
           if (err.code !== ErrorCodes.INVALID_FIRST_CHARACTER_OF_TAG_NAME) {
@@ -144,7 +144,7 @@ describe('compiler: parse', () => {
       })
     })
 
-    test('lonly "{{" don\'t separate nodes', () => {
+    test('lonely "{{" doesn\'t separate nodes', () => {
       const ast = baseParse('a {{ b', {
         onError: error => {
           if (error.code !== ErrorCodes.X_MISSING_INTERPOLATION_END) {
@@ -377,12 +377,33 @@ describe('compiler: parse', () => {
 
     test('comments option', () => {
       __DEV__ = false
-      const astNoComment = baseParse('<!--abc-->')
+      const astDefaultComment = baseParse('<!--abc-->')
+      const astNoComment = baseParse('<!--abc-->', { comments: false })
       const astWithComments = baseParse('<!--abc-->', { comments: true })
       __DEV__ = true
 
+      expect(astDefaultComment.children).toHaveLength(0)
       expect(astNoComment.children).toHaveLength(0)
       expect(astWithComments.children).toHaveLength(1)
+    })
+
+    // #2217
+    test('comments in the <pre> tag should be removed in production mode', () => {
+      __DEV__ = false
+      const rawText = `<p/><!-- foo --><p/>`
+      const ast = baseParse(`<pre>${rawText}</pre>`)
+      __DEV__ = true
+
+      expect((ast.children[0] as ElementNode).children).toMatchObject([
+        {
+          type: NodeTypes.ELEMENT,
+          tag: 'p'
+        },
+        {
+          type: NodeTypes.ELEMENT,
+          tag: 'p'
+        }
+      ])
     })
   })
 
@@ -549,7 +570,7 @@ describe('compiler: parse', () => {
       })
     })
 
-    test('v-is without `isNativeTag`', () => {
+    test('v-is with `isNativeTag`', () => {
       const ast = baseParse(
         `<div></div><div v-is="'foo'"></div><Comp></Comp>`,
         {
@@ -576,7 +597,7 @@ describe('compiler: parse', () => {
       })
     })
 
-    test('v-is with `isNativeTag`', () => {
+    test('v-is without `isNativeTag`', () => {
       const ast = baseParse(`<div></div><div v-is="'foo'"></div><Comp></Comp>`)
 
       expect(ast.children[0]).toMatchObject({
@@ -614,6 +635,40 @@ describe('compiler: parse', () => {
         type: NodeTypes.ELEMENT,
         tag: 'comp',
         tagType: ElementTypes.ELEMENT
+      })
+    })
+
+    test('built-in component', () => {
+      const ast = baseParse('<div></div><comp></comp>', {
+        isBuiltInComponent: tag => (tag === 'comp' ? Symbol() : void 0)
+      })
+
+      expect(ast.children[0]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT
+      })
+
+      expect(ast.children[1]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'comp',
+        tagType: ElementTypes.COMPONENT
+      })
+    })
+
+    test('slot element', () => {
+      const ast = baseParse('<slot></slot><Comp></Comp>')
+
+      expect(ast.children[0]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'slot',
+        tagType: ElementTypes.SLOT
+      })
+
+      expect(ast.children[1]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'Comp',
+        tagType: ElementTypes.COMPONENT
       })
     })
 
@@ -1660,6 +1715,14 @@ foo
   })
 
   describe('decodeEntities option', () => {
+    test('use default map', () => {
+      const ast: any = baseParse('&gt;&lt;&amp;&apos;&quot;&foo;')
+
+      expect(ast.children.length).toBe(1)
+      expect(ast.children[0].type).toBe(NodeTypes.TEXT)
+      expect(ast.children[0].content).toBe('><&\'"&foo;')
+    })
+
     test('use the given map', () => {
       const ast: any = baseParse('&amp;&cups;', {
         decodeEntities: text => text.replace('&cups;', '\u222A\uFE00'),
@@ -1726,6 +1789,27 @@ foo
     it('should condense consecutive whitespaces in text', () => {
       const ast = baseParse(`   foo  \n    bar     baz     `)
       expect((ast.children[0] as TextNode).content).toBe(` foo bar baz `)
+    })
+
+    it('should remove leading newline character immediately following the pre element start tag', () => {
+      const ast = baseParse(`<pre>\n  foo  bar  </pre>`, {
+        isPreTag: tag => tag === 'pre'
+      })
+      expect(ast.children).toHaveLength(1)
+      const preElement = ast.children[0] as ElementNode
+      expect(preElement.children).toHaveLength(1)
+      expect((preElement.children[0] as TextNode).content).toBe(`  foo  bar  `)
+    })
+
+    it('should NOT remove leading newline character immediately following child-tag of pre element', () => {
+      const ast = baseParse(`<pre><span></span>\n  foo  bar  </pre>`, {
+        isPreTag: tag => tag === 'pre'
+      })
+      const preElement = ast.children[0] as ElementNode
+      expect(preElement.children).toHaveLength(2)
+      expect((preElement.children[1] as TextNode).content).toBe(
+        `\n  foo  bar  `
+      )
     })
   })
 
@@ -2203,6 +2287,15 @@ foo
               loc: { offset: 0, line: 1, column: 1 }
             }
           ]
+        },
+        {
+          code: '<div></div',
+          errors: [
+            {
+              type: ErrorCodes.EOF_IN_TAG,
+              loc: { offset: 10, line: 1, column: 11 }
+            }
+          ]
         }
       ],
       INCORRECTLY_CLOSED_COMMENT: [
@@ -2369,6 +2462,15 @@ foo
             {
               type: ErrorCodes.NESTED_COMMENT,
               loc: { offset: 20, line: 1, column: 21 }
+            }
+          ]
+        },
+        {
+          code: '<template><!--a<!--b<!----></template>',
+          errors: [
+            {
+              type: ErrorCodes.NESTED_COMMENT,
+              loc: { offset: 15, line: 1, column: 16 }
             }
           ]
         },

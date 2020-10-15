@@ -324,6 +324,36 @@ describe('api: options', () => {
     expect(renderToString(h(Root))).toBe(`11112345`)
   })
 
+  test('provide accessing data in extends', () => {
+    const Base = defineComponent({
+      data() {
+        return {
+          a: 1
+        }
+      },
+      provide() {
+        return {
+          a: this.a
+        }
+      }
+    })
+
+    const Child = {
+      inject: ['a'],
+      render() {
+        return (this as any).a
+      }
+    }
+
+    const Root = defineComponent({
+      extends: Base,
+      render() {
+        return h(Child)
+      }
+    })
+    expect(renderToString(h(Root))).toBe(`1`)
+  })
+
   test('lifecycle', async () => {
     const count = ref(0)
     const root = nodeOps.createElement('div')
@@ -856,6 +886,56 @@ describe('api: options', () => {
     vm.mixin3Data = 'hello'
     await nextTick()
     expect(watchSpy.mock.calls[0].slice(0, 2)).toEqual(['hello', 'mixin3'])
+  })
+
+  test('injection from closest ancestor', () => {
+    const Root = defineComponent({
+      provide: {
+        a: 'root'
+      },
+      render() {
+        return [h(Mid), ' ', h(MidWithProvide), ' ', h(MidWithMixinProvide)]
+      }
+    })
+
+    const Mid = {
+      render() {
+        return h(Child)
+      }
+    } as any
+
+    const MidWithProvide = {
+      provide: {
+        a: 'midWithProvide'
+      },
+      render() {
+        return h(Child)
+      }
+    } as any
+
+    const mixin = {
+      provide: {
+        a: 'midWithMixinProvide'
+      }
+    }
+
+    const MidWithMixinProvide = {
+      mixins: [mixin],
+      render() {
+        return h(Child)
+      }
+    } as any
+
+    const Child = {
+      inject: ['a'],
+      render() {
+        return this.a
+      }
+    } as any
+
+    expect(renderToString(h(Root))).toBe(
+      'root midWithProvide midWithMixinProvide'
+    )
   })
 
   describe('warnings', () => {
