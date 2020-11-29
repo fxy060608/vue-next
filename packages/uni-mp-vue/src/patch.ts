@@ -6,6 +6,8 @@ import { MPType } from './renderer'
 import diff from './diff'
 import { flushCallbacks } from './nextTick'
 
+import { flushPreFlushCbs } from '../../runtime-core/src/scheduler'
+
 export interface MPInstance {
   data: any
   is: string
@@ -91,6 +93,8 @@ export function patch(instance: ComponentInternalInstance) {
         ctx.__next_tick_pending = false
         flushCallbacks(instance)
       })
+      // props update may have triggered pre-flush watchers.
+      flushPreFlushCbs(undefined, instance.update)
     } else {
       flushCallbacks(instance)
     }
