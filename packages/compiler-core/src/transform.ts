@@ -15,14 +15,18 @@ import {
   CacheExpression,
   createCacheExpression,
   TemplateLiteral,
-  createVNodeCall
+  createVNodeCall,
+  ConstantTypes
 } from './ast'
 import {
   isString,
   isArray,
   NOOP,
   PatchFlags,
-  PatchFlagNames
+  PatchFlagNames,
+  EMPTY_OBJ,
+  capitalize,
+  camelize
 } from '@vue/shared'
 import { defaultOnError } from './errors'
 import {
@@ -77,7 +81,9 @@ export interface ImportItem {
   path: string
 }
 
-export interface TransformContext extends Required<TransformOptions> {
+export interface TransformContext
+  extends Required<Omit<TransformOptions, 'filename'>> {
+  selfName: string | null
   root: RootNode
   helpers: Set<symbol>
   components: Set<string>
@@ -110,6 +116,7 @@ export interface TransformContext extends Required<TransformOptions> {
 export function createTransformContext(
   root: RootNode,
   {
+    filename = '',
     prefixIdentifiers = false,
     hoistStatic = false,
     cacheHandlers = false,
@@ -122,12 +129,16 @@ export function createTransformContext(
     scopeId = null,
     ssr = false,
     ssrCssVars = ``,
-    bindingMetadata = {},
+    bindingMetadata = EMPTY_OBJ,
+    inline = false,
+    isTS = false,
     onError = defaultOnError
   }: TransformOptions
 ): TransformContext {
+  const nameMatch = filename.replace(/\?.*$/, '').match(/([^/\\]+)\.\w+$/)
   const context: TransformContext = {
     // options
+    selfName: nameMatch && capitalize(camelize(nameMatch[1])),
     prefixIdentifiers,
     hoistStatic,
     cacheHandlers,
@@ -141,6 +152,8 @@ export function createTransformContext(
     ssr,
     ssrCssVars,
     bindingMetadata,
+    inline,
+    isTS,
     onError,
 
     // state
@@ -240,7 +253,7 @@ export function createTransformContext(
         `_hoisted_${context.hoists.length}`,
         false,
         exp.loc,
-        true
+        ConstantTypes.CAN_HOIST
       )
       identifier.hoisted = exp
       return identifier
@@ -308,14 +321,23 @@ function createRootCodegen(root: RootNode, context: TransformContext) {
     }
   } else if (children.length > 1) {
     // root has multiple nodes - return a fragment block.
+    let patchFlag = PatchFlags.STABLE_FRAGMENT
+    let patchFlagText = PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
+    // check if the fragment actually contains a single valid child with
+    // the rest being comments
+    if (
+      __DEV__ &&
+      children.filter(c => c.type !== NodeTypes.COMMENT).length === 1
+    ) {
+      patchFlag |= PatchFlags.DEV_ROOT_FRAGMENT
+      patchFlagText += `, ${PatchFlagNames[PatchFlags.DEV_ROOT_FRAGMENT]}`
+    }
     root.codegenNode = createVNodeCall(
       context,
       helper(FRAGMENT),
       undefined,
       root.children,
-      `${PatchFlags.STABLE_FRAGMENT} /* ${
-        PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
-      } */`,
+      patchFlag + (__DEV__ ? ` /* ${patchFlagText} */` : ``),
       undefined,
       undefined,
       true
