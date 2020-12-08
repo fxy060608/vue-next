@@ -30,6 +30,9 @@ export {
   callWithErrorHandling,
   camelize,
   computed,
+  defineComponent,
+  defineEmit,
+  defineProps,
   inject,
   nextTick,
   onActivated,
@@ -44,8 +47,10 @@ export {
   onUnmounted,
   onUpdated,
   provide,
+  resolveDirective,
   version,
   warn,
   watch,
-  watchEffect
+  watchEffect,
+  withDirectives
 } from '@vue/runtime-core'
