@@ -52,5 +52,6 @@ export {
   warn,
   watch,
   watchEffect,
-  withDirectives
+  withDirectives,
+  getCurrentInstance
 } from '@vue/runtime-core'
