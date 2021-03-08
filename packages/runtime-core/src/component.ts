@@ -1,4 +1,4 @@
-import { VNode, VNodeChild /* isVNode*/ } from './vnode'
+import { VNode, VNodeChild, isVNode } from './vnode'
 import {
   ReactiveEffect,
   pauseTracking,
@@ -21,7 +21,7 @@ import {
   initProps,
   normalizePropsOptions
 } from './componentProps'
-import { Slots, /* initSlots,*/ InternalSlots } from './componentSlots'
+import { Slots, /*initSlots, */ InternalSlots } from './componentSlots'
 import { warn } from './warning'
 import { ErrorCodes, callWithErrorHandling } from './errorHandling'
 import { AppContext, createAppContext, AppConfig } from './apiCreateApp'
@@ -51,12 +51,9 @@ import {
 } from '@vue/shared'
 import { SuspenseBoundary } from './components/Suspense'
 import { CompilerOptions } from '@vue/compiler-core'
-import {
-  currentRenderingInstance,
-  markAttrsAccessed
-} from './componentRenderUtils'
+import { markAttrsAccessed } from './componentRenderUtils'
+import { currentRenderingInstance } from './componentRenderContext'
 import { startMeasure, endMeasure } from './profiling'
-import { devtoolsComponentAdded } from './devtools'
 
 export type Data = Record<string, unknown>
 
@@ -261,7 +258,7 @@ export interface ComponentInternalInstance {
    */
   directives: Record<string, Directive> | null
   /**
-   * reoslved props options
+   * resolved props options
    * @internal
    */
   propsOptions: NormalizedPropsOptions
@@ -486,10 +483,6 @@ export function createComponentInstance(
   instance.root = parent ? parent.root : instance
   instance.emit = emit.bind(null, instance)
 
-  if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
-    devtoolsComponentAdded(instance)
-  }
-
   return instance
 }
 
@@ -515,6 +508,10 @@ export function validateComponentName(name: string, config: AppConfig) {
   }
 }
 
+export function isStatefulComponent(instance: ComponentInternalInstance) {
+  return instance.vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
+}
+
 export let isInSSRComponentSetup = false
 
 export function setupComponent(
@@ -523,8 +520,8 @@ export function setupComponent(
 ) {
   isInSSRComponentSetup = isSSR
 
-  const { props, /* children, */ shapeFlag } = instance.vnode
-  const isStateful = shapeFlag & ShapeFlags.STATEFUL_COMPONENT
+  const { props /*, children*/ } = instance.vnode
+  const isStateful = isStatefulComponent(instance)
   initProps(instance, props, isStateful, isSSR)
   // initSlots(instance, children) // fixed by xxxxxx
 
@@ -622,12 +619,12 @@ export function handleSetupResult(
       instance.render = setupResult as InternalRenderFunction
     }
   } else if (isObject(setupResult)) {
-    // if (__DEV__ && isVNode(setupResult)) {
-    //   warn(
-    //     `setup() should not return VNodes directly - ` +
-    //       `return a render function instead.`
-    //   )
-    // }
+    if (__DEV__ && isVNode(setupResult)) {
+      warn(
+        `setup() should not return VNodes directly - ` +
+          `return a render function instead.`
+      )
+    }
     // setup returned bindings.
     // assuming a render function compiled from template is present.
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
@@ -653,6 +650,9 @@ type CompileFunction = (
 ) => InternalRenderFunction
 
 let compile: CompileFunction | undefined
+
+// dev only
+export const isRuntimeOnly = () => !compile
 
 /**
  * For runtime-dom to register the compiler.

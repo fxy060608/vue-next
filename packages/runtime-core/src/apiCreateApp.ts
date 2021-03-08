@@ -27,9 +27,10 @@ export interface App<HostElement = any> {
   directive(name: string, directive: Directive): this
   mount(
     rootContainer: HostElement | string,
-    isHydrate?: boolean
+    isHydrate?: boolean,
+    isSVG?: boolean
   ): ComponentPublicInstance
-  unmount(rootContainer: HostElement | string): void
+  unmount(): void
   provide<T>(key: InjectionKey<T> | string, value: T): this
 
   // internal, but we need to expose these for the server-renderer and devtools
