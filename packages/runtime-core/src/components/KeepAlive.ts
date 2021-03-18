@@ -41,6 +41,11 @@ export interface KeepAliveProps {
   include?: MatchPattern
   exclude?: MatchPattern
   max?: number | string
+  cache?: (
+    key: CacheKey,
+    cache: Cache,
+    pruneCacheEntry: (key: CacheKey) => void
+  ) => void // fixed by xxxxxx
 }
 
 type CacheKey = string | number | ConcreteComponent
@@ -73,7 +78,8 @@ const KeepAliveImpl = {
   props: {
     include: [String, RegExp, Array],
     exclude: [String, RegExp, Array],
-    max: [String, Number]
+    max: [String, Number],
+    cache: Function // fixed by xxxxxx
   },
 
   setup(props: KeepAliveProps, { slots }: SetupContext) {
@@ -159,7 +165,11 @@ const KeepAliveImpl = {
 
     function pruneCacheEntry(key: CacheKey) {
       const cached = cache.get(key) as VNode
-      if (!current || cached.type !== current.type) {
+      if (
+        !current ||
+        cached.type !== current.type ||
+        cached.key !== current.key
+      ) {
         unmount(cached)
       } else if (current) {
         // current active instance should no longer be kept-alive.
@@ -246,6 +256,11 @@ const KeepAliveImpl = {
       }
 
       const key = vnode.key == null ? comp : vnode.key
+      // fixed by xxxxxx
+      if (typeof props.cache === 'function') {
+        props.cache(key, cache, pruneCacheEntry)
+      }
+
       const cachedVNode = cache.get(key)
 
       // clone vnode if it's reused because we are going to mutate it

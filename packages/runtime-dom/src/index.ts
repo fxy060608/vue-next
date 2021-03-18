@@ -51,7 +51,7 @@ export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
 
-export const createVueApp = ((...args) => {
+export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 
   if (__DEV__) {

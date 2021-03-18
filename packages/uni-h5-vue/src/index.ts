@@ -3,7 +3,9 @@
 import { initDev } from 'packages/vue/src/dev'
 import { warn } from '@vue/runtime-dom'
 
-__DEV__ && initDev()
+if (__DEV__) {
+  initDev()
+}
 
 export * from '@vue/runtime-dom'
 
@@ -21,3 +23,8 @@ export const compile = () => {
     )
   }
 }
+
+export {
+  createApp as createVueApp,
+  createSSRApp as createVueSSRApp
+} from '@vue/runtime-dom'

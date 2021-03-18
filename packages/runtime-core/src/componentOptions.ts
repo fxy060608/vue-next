@@ -516,6 +516,12 @@ export function applyOptions(
     instance.render = render as InternalRenderFunction
   }
 
+  // fixed by xxxxxx
+  const customApplyOptions = ctx.$applyOptions as Function
+  if (customApplyOptions) {
+    customApplyOptions(options, instance, publicThis)
+  }
+
   // applyOptions is called non-as-mixin once per instance
   if (!asMixin) {
     isInBeforeCreate = true
