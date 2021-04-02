@@ -31,7 +31,9 @@ import {
   onRenderTracked,
   onBeforeUnmount,
   onUnmounted,
+  onBeforeActivate,
   onActivated,
+  onBeforeDeactivate,
   onDeactivated,
   onRenderTriggered,
   DebuggerHook,
@@ -410,7 +412,9 @@ interface LegacyOptions<
   mounted?(): void
   beforeUpdate?(): void
   updated?(): void
+  beforeActivate?(): void
   activated?(): void
+  beforeDeactivate?(): void
   deactivated?(): void
   /** @deprecated use `beforeUnmount` instead */
   beforeDestroy?(): void
@@ -424,6 +428,16 @@ interface LegacyOptions<
 
   // runtime compile only
   delimiters?: [string, string]
+
+  /**
+   * #3468
+   *
+   * type-only, used to assist Mixin's type inference,
+   * typescript will try to simplify the inferred `Mixin` type,
+   * with the `__differenciator`, typescript won't be able to combine different mixins,
+   * because the `__differenciator` will be different
+   */
+  __differentiator?: keyof D | keyof C | keyof M
 }
 
 export type OptionTypesKeys = 'P' | 'B' | 'D' | 'C' | 'M' | 'Defaults'
@@ -494,7 +508,9 @@ export function applyOptions(
     mounted,
     beforeUpdate,
     updated,
+    beforeActivate,
     activated,
+    beforeDeactivate,
     deactivated,
     beforeDestroy,
     beforeUnmount,
@@ -771,8 +787,14 @@ export function applyOptions(
   if (updated) {
     onUpdated(updated.bind(publicThis))
   }
+  if (beforeActivate) {
+    onBeforeActivate(beforeActivate.bind(publicThis))
+  }
   if (activated) {
     onActivated(activated.bind(publicThis))
+  }
+  if (beforeDeactivate) {
+    onBeforeDeactivate(beforeDeactivate.bind(publicThis))
   }
   if (deactivated) {
     onDeactivated(deactivated.bind(publicThis))
