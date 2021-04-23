@@ -112,11 +112,14 @@ function createInvoker(
     // AFTER it was attached.
     const timeStamp = e.timeStamp || _getNow()
     if (timeStamp >= invoker.attached - 1) {
+      // fixed by xxxxxx
+      const proxy = instance && instance.proxy
+      const normalizeNativeEvent = proxy && (proxy as any).$nne
       callWithAsyncErrorHandling(
         patchStopImmediatePropagation(e, invoker.value),
         instance,
         ErrorCodes.NATIVE_EVENT_HANDLER,
-        [e]
+        [normalizeNativeEvent ? normalizeNativeEvent(e) : e]
       )
     }
   }

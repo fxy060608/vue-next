@@ -88,6 +88,10 @@ function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
 // upx,rpx
 const rpxRE = /\b([+-]?\d+(\.\d+)?)[r|u]px\b/g
 const normalizeRpx = (val: string) => {
+  // @ts-ignore
+  if (typeof rpx2px !== 'function') {
+    return val
+  }
   if (isString(val)) {
     return val.replace(rpxRE, (a, b) => {
       // @ts-ignore
