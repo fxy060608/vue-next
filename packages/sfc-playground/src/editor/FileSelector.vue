@@ -45,8 +45,12 @@ function focus({ el }: VNode) {
 function doneAddFile() {
   const filename = pendingFilename.value
 
-  if (!filename.endsWith('.vue') && !filename.endsWith('.js')) {
-    store.errors = [`Playground only supports .vue or .js files.`]
+  if (
+    !filename.endsWith('.vue') &&
+    !filename.endsWith('.js') &&
+    filename !== 'import-map.json'
+  ) {
+    store.errors = [`Playground only supports *.vue, *.js files or import-map.json.`]
     return
   }
 
@@ -101,14 +105,9 @@ function doneAddFile() {
   padding-left: 0;
 }
 .add {
-  margin: 0;
   font-size: 20px;
   font-family: var(--font-code);
   color: #999;
-  border: none;
-  outline: none;
-  background-color: transparent;
-  cursor: pointer;
   vertical-align: middle;
   margin-left: 6px;
 }

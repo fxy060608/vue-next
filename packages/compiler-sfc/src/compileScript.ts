@@ -20,8 +20,8 @@ import {
   Statement,
   Expression,
   LabeledStatement,
-  TSUnionType,
-  CallExpression
+  CallExpression,
+  RestElement
 } from '@babel/types'
 import { walk } from 'estree-walker'
 import { RawSourceMap } from 'source-map'
@@ -184,7 +184,7 @@ export function compileScript(
   let propsTypeDecl: TSTypeLiteral | undefined
   let propsIdentifier: string | undefined
   let emitRuntimeDecl: Node | undefined
-  let emitTypeDecl: TSFunctionType | TSUnionType | undefined
+  let emitTypeDecl: TSFunctionType | TSTypeLiteral | undefined
   let emitIdentifier: string | undefined
   let hasAwait = false
   let hasInlinedSsrRenderFn = false
@@ -300,13 +300,13 @@ export function compileScript(
         const typeArg = node.typeParameters.params[0]
         if (
           typeArg.type === 'TSFunctionType' ||
-          typeArg.type === 'TSUnionType'
+          typeArg.type === 'TSTypeLiteral'
         ) {
           emitTypeDecl = typeArg
         } else {
           error(
             `type argument passed to ${DEFINE_EMIT}() must be a function type ` +
-              `or a union of function types.`,
+              `or a literal type with call signatures.`,
             typeArg
           )
         }
@@ -1304,20 +1304,25 @@ function toRuntimeTypeString(types: string[]) {
 }
 
 function extractRuntimeEmits(
-  node: TSFunctionType | TSUnionType,
+  node: TSFunctionType | TSTypeLiteral,
   emits: Set<string>
 ) {
-  if (node.type === 'TSUnionType') {
-    for (let t of node.types) {
-      if (t.type === 'TSParenthesizedType') t = t.typeAnnotation
-      if (t.type === 'TSFunctionType') {
-        extractRuntimeEmits(t, emits)
+  if (node.type === 'TSTypeLiteral') {
+    for (let t of node.members) {
+      if (t.type === 'TSCallSignatureDeclaration') {
+        extractEventNames(t.parameters[0], emits)
       }
     }
     return
+  } else {
+    extractEventNames(node.parameters[0], emits)
   }
+}
 
-  const eventName = node.parameters[0]
+function extractEventNames(
+  eventName: Identifier | RestElement,
+  emits: Set<string>
+) {
   if (
     eventName.type === 'Identifier' &&
     eventName.typeAnnotation &&
@@ -1389,13 +1394,11 @@ export function walkIdentifiers(
         if (node.body.type === 'BlockStatement') {
           node.body.body.forEach(p => {
             if (p.type === 'VariableDeclaration') {
-              ;(walk as any)(p, {
-                enter(child: Node) {
-                  if (child.type === 'Identifier') {
-                    markScopeIdentifier(node, child, knownIds)
-                  }
-                }
-              })
+              for (const decl of p.declarations) {
+                extractIdentifiers(decl.id).forEach(id => {
+                  markScopeIdentifier(node, id, knownIds)
+                })
+              }
             }
           })
         }
@@ -1588,6 +1591,12 @@ function analyzeScriptBindings(ast: Statement[]): BindingMetadata {
 
 function analyzeBindingsFromOptions(node: ObjectExpression): BindingMetadata {
   const bindings: BindingMetadata = {}
+  // #3270, #3275
+  // mark non-script-setup so we don't resolve components/directives from these
+  Object.defineProperty(bindings, '__isScriptSetup', {
+    enumerable: false,
+    value: false
+  })
   for (const property of node.properties) {
     if (
       property.type === 'ObjectProperty' &&
@@ -1691,4 +1700,49 @@ function getObjectOrArrayExpressionKeys(value: Node): string[] {
     return getObjectExpressionKeys(value)
   }
   return []
+}
+
+function extractIdentifiers(
+  param: Node,
+  nodes: Identifier[] = []
+): Identifier[] {
+  switch (param.type) {
+    case 'Identifier':
+      nodes.push(param)
+      break
+
+    case 'MemberExpression':
+      let object: any = param
+      while (object.type === 'MemberExpression') {
+        object = object.object
+      }
+      nodes.push(object)
+      break
+
+    case 'ObjectPattern':
+      param.properties.forEach(prop => {
+        if (prop.type === 'RestElement') {
+          extractIdentifiers(prop.argument, nodes)
+        } else {
+          extractIdentifiers(prop.value, nodes)
+        }
+      })
+      break
+
+    case 'ArrayPattern':
+      param.elements.forEach(element => {
+        if (element) extractIdentifiers(element, nodes)
+      })
+      break
+
+    case 'RestElement':
+      extractIdentifiers(param.argument, nodes)
+      break
+
+    case 'AssignmentPattern':
+      extractIdentifiers(param.left, nodes)
+      break
+  }
+
+  return nodes
 }

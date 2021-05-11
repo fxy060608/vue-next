@@ -1,3 +1,83 @@
+# [3.1.0-beta.2](https://github.com/vuejs/vue-next/compare/v3.1.0-beta.1...v3.1.0-beta.2) (2021-05-08)
+
+
+### Bug Fixes
+
+* **compat:** handle and warn config.optionMergeStrategies ([94e69fd](https://github.com/vuejs/vue-next/commit/94e69fd3896214da6ff8b9fb09ad942c598053c7))
+
+
+
+# [3.1.0-beta.1](https://github.com/vuejs/vue-next/compare/v3.0.11...v3.1.0-beta.1) (2021-05-08)
+
+
+### Bug Fixes
+
+* **compiler-core:** preserve comment content in production when comments option is enabled ([e486254](https://github.com/vuejs/vue-next/commit/e4862544310a4187dfc8b3a49944700888bb60e3))
+* **hmr:** don't remove __file key from component type ([9db3cbb](https://github.com/vuejs/vue-next/commit/9db3cbbfc1a072675a8d0e53edf3869af115dc60))
+* **hydration:** fix update before async component is hydrated ([#3563](https://github.com/vuejs/vue-next/issues/3563)) ([c8d9683](https://github.com/vuejs/vue-next/commit/c8d96837b871d7ad34cd73b4669338be5fdd59fd)), closes [#3560](https://github.com/vuejs/vue-next/issues/3560)
+* **reactivity:** fix tracking for readonly + reactive Map ([#3604](https://github.com/vuejs/vue-next/issues/3604)) ([5036c51](https://github.com/vuejs/vue-next/commit/5036c51cb78435c145ffea5e82cd620d0d056ff7)), closes [#3602](https://github.com/vuejs/vue-next/issues/3602)
+* **runtime-core:** ensure declare prop keys are always present ([4fe4de0](https://github.com/vuejs/vue-next/commit/4fe4de0a49ffc2461b0394e74674af38ff5e2a20)), closes [#3288](https://github.com/vuejs/vue-next/issues/3288)
+* **runtime-core:** watching multiple sources: computed ([#3066](https://github.com/vuejs/vue-next/issues/3066)) ([e7300eb](https://github.com/vuejs/vue-next/commit/e7300eb47960a153311d568d7976ac5256eb6297)), closes [#3068](https://github.com/vuejs/vue-next/issues/3068)
+* **Teleport:** avoid changing the reference of vnode.dynamicChildren ([#3642](https://github.com/vuejs/vue-next/issues/3642)) ([43f7815](https://github.com/vuejs/vue-next/commit/43f78151bfdff2103a9be25e66e3f3be68d03a08)), closes [#3641](https://github.com/vuejs/vue-next/issues/3641)
+* **watch:** avoid traversing non-plain objects ([62b8f4a](https://github.com/vuejs/vue-next/commit/62b8f4a39ca56b48a8c8fdf7e200cb80735e16ae))
+* **watch:** this.$watch should support watching keypath ([870f2a7](https://github.com/vuejs/vue-next/commit/870f2a7ba35245fd8c008d2ff666ea130a7e4704))
+
+
+### Features
+
+* onServerPrefetch ([#3070](https://github.com/vuejs/vue-next/issues/3070)) ([349eb0f](https://github.com/vuejs/vue-next/commit/349eb0f0ad78f9cb491278eb4c7f9fe0c2e78b79))
+* support component-level `compilerOptions` when using runtime compiler ([ce0bbe0](https://github.com/vuejs/vue-next/commit/ce0bbe053abaf8ba18de8baf535e175048596ee5))
+* **compiler-core:** whitespace handling strategy ([dee3d6a](https://github.com/vuejs/vue-next/commit/dee3d6ab8b4da6653d15eb148c51d9878007f6b6))
+* **config:** support configuring runtime compiler via `app.config.compilerOptions` ([091e6d6](https://github.com/vuejs/vue-next/commit/091e6d67bfcc215227d78be578c68ead542481ad))
+* **devtools:** improved KeepAlive support ([03ae300](https://github.com/vuejs/vue-next/commit/03ae3006e1e678ade4377cd10d206e8f7b4ad0cb))
+* support casting plain element to component via is="vue:xxx" ([af9e699](https://github.com/vuejs/vue-next/commit/af9e6999e1779f56b5cf827b97310d8e4e1fe5ec))
+
+
+### Performance Improvements
+
+* only trigger $attrs update when it has actually changed ([5566d39](https://github.com/vuejs/vue-next/commit/5566d39d467ebdd4e4234bc97d62600ff01ea28e))
+* **compiler:** skip unncessary checks when parsing end tag ([048ac29](https://github.com/vuejs/vue-next/commit/048ac299f35709b25ae1bc1efa67d2abc53dbc3b))
+
+
+
+## [3.0.11](https://github.com/vuejs/vue-next/compare/v3.0.10...v3.0.11) (2021-04-01)
+
+
+### Bug Fixes
+
+* **compiler-sfc:** fix wrong scopeId for nested `<script setup>` components ([7f7dcc9](https://github.com/vuejs/vue-next/commit/7f7dcc9f7d9a036df366453e2bf228f29c0bef82))
+* **runtime-core:** fix render function + optimized slot edge case ([#3523](https://github.com/vuejs/vue-next/issues/3523)) ([995d76b](https://github.com/vuejs/vue-next/commit/995d76bd128c3f4d264f10212f2a8e8946f58a62)), closes [#2893](https://github.com/vuejs/vue-next/issues/2893)
+* **runtime-core:** fix v-on object kebab-case event emit matching ([c1cd42e](https://github.com/vuejs/vue-next/commit/c1cd42e627bdeb561d54e64ea5fea87ccbbae637)), closes [#3527](https://github.com/vuejs/vue-next/issues/3527)
+
+
+
+## [3.0.10](https://github.com/vuejs/vue-next/compare/v3.0.9...v3.0.10) (2021-03-31)
+
+
+### Bug Fixes
+
+* **compiler-core:** allow PascalCase dynamic component tag usage ([#3508](https://github.com/vuejs/vue-next/issues/3508)) ([555b016](https://github.com/vuejs/vue-next/commit/555b016dcb3b347a1d8b3d14df74c175115adb0b)), closes [#3507](https://github.com/vuejs/vue-next/issues/3507)
+* **compiler-core:** properly transform replaced nodes ([#2927](https://github.com/vuejs/vue-next/issues/2927)) ([0fe567a](https://github.com/vuejs/vue-next/commit/0fe567abfcb7c685954231995033d04c86b6ef8a))
+* **compiler-sfc:** do not resolve assets from setup bindings ([f5827fd](https://github.com/vuejs/vue-next/commit/f5827fdf781c97234e9f82095e5e0cdadd404338)), closes [#3270](https://github.com/vuejs/vue-next/issues/3270) [#3275](https://github.com/vuejs/vue-next/issues/3275)
+* **compiler-sfc:** fix function scope variable declaration marking ([69b4727](https://github.com/vuejs/vue-next/commit/69b4727204256795d37a29930be33ab4f864af38))
+* **compiler-sfc:** fix missing whitespace issue in srcsets ([#3132](https://github.com/vuejs/vue-next/issues/3132)) ([42b68c7](https://github.com/vuejs/vue-next/commit/42b68c773d1e1a04af223eb241329df50bac1d15)), closes [#3069](https://github.com/vuejs/vue-next/issues/3069)
+* **compiler-sfc:** support proper type arguments for defineEmit helper ([bb8cdca](https://github.com/vuejs/vue-next/commit/bb8cdcad9f91f099c12ad78afacfc909e6269a7c)), closes [#2874](https://github.com/vuejs/vue-next/issues/2874)
+* **reactivity:** should not trigger when setting value to same proxy ([#2904](https://github.com/vuejs/vue-next/issues/2904)) ([c61e767](https://github.com/vuejs/vue-next/commit/c61e7674221cd51df87aafc92367273c8815af6c))
+* **runtime-core:** avoid unmount teleport's children multiple times ([#3499](https://github.com/vuejs/vue-next/issues/3499)) ([3736496](https://github.com/vuejs/vue-next/commit/3736496006485e61614bef285ea89ea2a33134c4)), closes [#3497](https://github.com/vuejs/vue-next/issues/3497)
+* **runtime-core:** fix dev fragment root flag check ([9cf7525](https://github.com/vuejs/vue-next/commit/9cf75258c866bbdb2023c066cc3579fb86f15f40))
+* **runtime-dom:** fix event listeners call in firefox <= 53 ([#3501](https://github.com/vuejs/vue-next/issues/3501)) ([33ba0e3](https://github.com/vuejs/vue-next/commit/33ba0e3229de02b7f4dda9465e4df16e177ea8cc)), closes [#3485](https://github.com/vuejs/vue-next/issues/3485)
+* **ssr:** fix scopeId inheritance across mixed parent chain ([5e54081](https://github.com/vuejs/vue-next/commit/5e54081d5bfd0412fe4946c80b5c538f2afd7fb8)), closes [#3513](https://github.com/vuejs/vue-next/issues/3513)
+* **types:** add a type-only differentiator to assist Mixin's type infer ([#3481](https://github.com/vuejs/vue-next/issues/3481)) ([5db2b14](https://github.com/vuejs/vue-next/commit/5db2b141dcf20af5c762f7e40580904c43298764)), closes [#3468](https://github.com/vuejs/vue-next/issues/3468)
+* **types/tsx:** make JSX.Element extend VNode ([#3171](https://github.com/vuejs/vue-next/issues/3171)) ([4f26835](https://github.com/vuejs/vue-next/commit/4f26835dac5c345e6ccb2e2c2844f3560daa1de3))
+
+
+### Performance Improvements
+
+* **compiler-sfc:** skip srcset transform if all candidates are external ([b39208c](https://github.com/vuejs/vue-next/commit/b39208cf06a56b115016be18d5ee368a8f9dff74))
+* **runtime-core:** optimize the performance of getTypeIndex ([#3206](https://github.com/vuejs/vue-next/issues/3206)) ([2e50acf](https://github.com/vuejs/vue-next/commit/2e50acfbb89c29a071765d7f3967d2ccaf14f375))
+
+
+
 ## [3.0.9](https://github.com/vuejs/vue-next/compare/v3.0.8...v3.0.9) (2021-03-27)
 
 

@@ -33,13 +33,12 @@ export {
   onUpdated,
   onBeforeUnmount,
   onUnmounted,
-  onBeforeActivate,
   onActivated,
-  onBeforeDeactivate,
   onDeactivated,
   onRenderTracked,
   onRenderTriggered,
-  onErrorCaptured
+  onErrorCaptured,
+  onServerPrefetch
 } from './apiLifecycle'
 export { provide, inject } from './apiInject'
 export { nextTick } from './scheduler'
@@ -181,7 +180,8 @@ export {
   ComponentOptionsBase,
   RenderFunction,
   MethodOptions,
-  ComputedOptions
+  ComputedOptions,
+  RuntimeCompilerOptions
 } from './componentOptions'
 export { EmitsOptions, ObjectEmitsOptions } from './componentEmits'
 export {
@@ -276,11 +276,47 @@ const _ssrUtils = {
   normalizeVNode
 }
 
+// fixed by xxxxxx
+export { injectHook } from './apiLifecycle'
+export { isInSSRComponentSetup } from './component'
+
 /**
  * SSR utils for \@vue/server-renderer. Only exposed in cjs builds.
  * @internal
  */
 export const ssrUtils = (__NODE_JS__ ? _ssrUtils : null) as typeof _ssrUtils
-// fixed by xxxxxx
-export { injectHook } from './apiLifecycle'
-export { isInSSRComponentSetup } from './component'
+
+// 2.x COMPAT ------------------------------------------------------------------
+
+export { DeprecationTypes } from './compat/compatConfig'
+export { CompatVue } from './compat/global'
+export { LegacyConfig } from './compat/globalConfig'
+
+import { warnDeprecation } from './compat/compatConfig'
+import { createCompatVue } from './compat/global'
+import {
+  isCompatEnabled,
+  checkCompatEnabled,
+  softAssertCompatEnabled
+} from './compat/compatConfig'
+import { resolveFilter as _resolveFilter } from './helpers/resolveAssets'
+
+/**
+ * @internal only exposed in compat builds
+ */
+export const resolveFilter = __COMPAT__ ? _resolveFilter : null
+
+const _compatUtils = {
+  warnDeprecation,
+  createCompatVue,
+  isCompatEnabled,
+  checkCompatEnabled,
+  softAssertCompatEnabled
+}
+
+/**
+ * @internal only exposed in compat builds.
+ */
+export const compatUtils = (__COMPAT__
+  ? _compatUtils
+  : null) as typeof _compatUtils
