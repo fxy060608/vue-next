@@ -24,7 +24,4 @@ export const compile = () => {
   }
 }
 
-export {
-  createApp as createVueApp,
-  createSSRApp as createVueSSRApp
-} from '@vue/runtime-dom'
+export { createApp as createVueApp } from '@vue/runtime-dom'

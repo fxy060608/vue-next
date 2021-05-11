@@ -53,6 +53,11 @@ const outputConfigs = {
     // fixed by xxxxxx
     file: resolve(`dist/vue.runtime.esm.js`),
     format: `es`
+  },
+  'cjs-bundler-vue': {
+    // fixed by xxxxxx
+    file: resolve(`dist/vue.runtime.cjs.js`),
+    format: `cjs`
   }
 }
 
@@ -92,7 +97,7 @@ function createConfig(format, output, plugins = []) {
     process.env.__DEV__ === 'false' || /\.prod\.js$/.test(output.file)
   const isBundlerESMBuild = /esm-bundler/.test(format)
   const isBrowserESMBuild = /esm-browser/.test(format)
-  const isNodeBuild = format === 'cjs'
+  const isNodeBuild = format === 'cjs' || format === 'cjs-bundler-vue' // fixed by xxxxxx
   const isGlobalBuild = /global/.test(format)
 
   if (isGlobalBuild) {

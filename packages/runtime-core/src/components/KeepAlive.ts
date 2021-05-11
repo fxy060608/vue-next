@@ -150,7 +150,7 @@ const KeepAliveImpl = {
     // if the internal renderer is not registered, it indicates that this is server-side rendering,
     // for KeepAlive, we just need to render its children
     if (!sharedContext.renderer) {
-      return slots.default
+      return () => slots.default && slots.default()[0] // fixed by xxxxxx ssr
     }
 
     if (__DEV__ && props.cache && hasOwn(props, 'max')) {

@@ -5,6 +5,7 @@ import { patchDOMProp } from './modules/props'
 import { patchEvent } from './modules/events'
 import { isOn, isString, isFunction, isModelListener } from '@vue/shared'
 import { RendererOptions } from '@vue/runtime-core'
+import { patchWxs } from './modules/wxs'
 
 const nativeOnRE = /^on[a-z]/
 
@@ -24,6 +25,10 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   parentSuspense,
   unmountChildren
 ) => {
+  // @ts-expect-error fixed by xxxxxx
+  if (__UNI_FEATURE_WXS__ && key.indexOf('change:') === 0) {
+    return patchWxs(el, key, nextValue, parentComponent)
+  }
   switch (key) {
     // special
     case 'class':

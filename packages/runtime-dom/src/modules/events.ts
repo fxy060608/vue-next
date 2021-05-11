@@ -115,11 +115,28 @@ function createInvoker(
       // fixed by xxxxxx
       const proxy = instance && instance.proxy
       const normalizeNativeEvent = proxy && (proxy as any).$nne
+      if (normalizeNativeEvent && isArray(invoker.value)) {
+        const fns = invoker.value
+        for (let i = 0; i < fns.length; i++) {
+          const fn = fns[i]
+          callWithAsyncErrorHandling(
+            fn,
+            instance,
+            ErrorCodes.NATIVE_EVENT_HANDLER,
+            [!(fn as any).__wwe ? normalizeNativeEvent(e) : e]
+          )
+        }
+        return
+      }
       callWithAsyncErrorHandling(
         patchStopImmediatePropagation(e, invoker.value),
         instance,
         ErrorCodes.NATIVE_EVENT_HANDLER,
-        [normalizeNativeEvent ? normalizeNativeEvent(e) : e]
+        [
+          normalizeNativeEvent && !(invoker.value as any).__wwe
+            ? normalizeNativeEvent(e)
+            : e
+        ]
       )
     }
   }
