@@ -67,7 +67,12 @@ import {
   SuspenseImpl
 } from './components/Suspense'
 import { TeleportImpl, TeleportVNode } from './components/Teleport'
-import { isKeepAlive, KeepAliveContext } from './components/KeepAlive'
+import {
+  isKeepAlive,
+  KeepAliveContext,
+  invokeKeepAliveHooks,
+  resetHookState
+} from './components/KeepAlive'
 import { registerHMR, unregisterHMR, isHmrUpdating } from './hmr'
 import {
   ErrorCodes,
@@ -1515,10 +1520,14 @@ function baseCreateRenderer(
         }
 
         // activated hook for keep-alive roots.
-        // #1742 activated hook must be accessed after first render
+        // #1742 beforeActivate/activated hook must be accessed after first render
         // since the hook may be injected by a child keep-alive
+        const { ba, a } = instance
         if (initialVNode.shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
-          instance.a && queuePostRenderEffect(instance.a, parentSuspense)
+          ba && invokeKeepAliveHooks(ba)
+          a && queuePostRenderEffect(a, parentSuspense)
+          // reset hook state
+          ba && queuePostRenderEffect(() => resetHookState(ba), parentSuspense)
           if (
             __COMPAT__ &&
             isCompatEnabled(DeprecationTypes.INSTANCE_EVENT_HOOKS, instance)
