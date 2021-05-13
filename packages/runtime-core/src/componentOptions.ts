@@ -36,9 +36,7 @@ import {
   onRenderTracked,
   onBeforeUnmount,
   onUnmounted,
-  onBeforeActivate,
   onActivated,
-  onBeforeDeactivate,
   onDeactivated,
   onRenderTriggered,
   DebuggerHook,
@@ -67,7 +65,7 @@ import {
 import { warn } from './warning'
 import { VNodeChild } from './vnode'
 import { callWithAsyncErrorHandling } from './errorHandling'
-import { UnionToIntersection } from './helpers/typeUtils'
+import { LooseRequired, UnionToIntersection } from './helpers/typeUtils'
 import { deepMergeData } from './compat/data'
 import { DeprecationTypes } from './compat/compatConfig'
 import {
@@ -132,9 +130,13 @@ export interface ComponentOptionsBase<
     ComponentCustomOptions {
   setup?: (
     this: void,
-    props: Props &
-      UnionToIntersection<ExtractOptionProp<Mixin>> &
-      UnionToIntersection<ExtractOptionProp<Extends>>,
+    props: Readonly<
+      LooseRequired<
+        Props &
+          UnionToIntersection<ExtractOptionProp<Mixin>> &
+          UnionToIntersection<ExtractOptionProp<Extends>>
+      >
+    >,
     ctx: SetupContext<E>
   ) => Promise<RawBindings> | RawBindings | RenderFunction | void
   name?: string
@@ -450,9 +452,7 @@ interface LegacyOptions<
   mounted?(): void
   beforeUpdate?(): void
   updated?(): void
-  beforeActivate?(): void
   activated?(): void
-  beforeDeactivate?(): void
   deactivated?(): void
   /** @deprecated use `beforeUnmount` instead */
   beforeDestroy?(): void
@@ -550,9 +550,7 @@ export function applyOptions(
     mounted,
     beforeUpdate,
     updated,
-    beforeActivate,
     activated,
-    beforeDeactivate,
     deactivated,
     beforeDestroy,
     beforeUnmount,
@@ -779,61 +777,44 @@ export function applyOptions(
       globalMixins
     )
   }
-  if (beforeMount) {
-    onBeforeMount(beforeMount.bind(publicThis))
+
+  function registerLifecycleHook(
+    register: Function,
+    hook?: Function | Function[]
+  ) {
+    // Array lifecycle hooks are only present in the compat build
+    if (__COMPAT__ && isArray(hook)) {
+      hook.forEach(_hook => register(_hook.bind(publicThis)))
+    } else if (hook) {
+      register((hook as Function).bind(publicThis))
+    }
   }
-  if (mounted) {
-    onMounted(mounted.bind(publicThis))
-  }
-  if (beforeUpdate) {
-    onBeforeUpdate(beforeUpdate.bind(publicThis))
-  }
-  if (updated) {
-    onUpdated(updated.bind(publicThis))
-  }
-  if (beforeActivate) {
-    onBeforeActivate(beforeActivate.bind(publicThis))
-  }
-  if (activated) {
-    onActivated(activated.bind(publicThis))
-  }
-  if (beforeDeactivate) {
-    onBeforeDeactivate(beforeDeactivate.bind(publicThis))
-  }
-  if (deactivated) {
-    onDeactivated(deactivated.bind(publicThis))
-  }
-  if (errorCaptured) {
-    onErrorCaptured(errorCaptured.bind(publicThis))
-  }
-  if (renderTracked) {
-    onRenderTracked(renderTracked.bind(publicThis))
-  }
-  if (renderTriggered) {
-    onRenderTriggered(renderTriggered.bind(publicThis))
-  }
-  if (beforeUnmount) {
-    onBeforeUnmount(beforeUnmount.bind(publicThis))
-  }
-  if (unmounted) {
-    onUnmounted(unmounted.bind(publicThis))
-  }
-  if (serverPrefetch) {
-    onServerPrefetch(serverPrefetch.bind(publicThis))
-  }
+
+  registerLifecycleHook(onBeforeMount, beforeMount)
+  registerLifecycleHook(onMounted, mounted)
+  registerLifecycleHook(onBeforeUpdate, beforeUpdate)
+  registerLifecycleHook(onUpdated, updated)
+  registerLifecycleHook(onActivated, activated)
+  registerLifecycleHook(onDeactivated, deactivated)
+  registerLifecycleHook(onErrorCaptured, errorCaptured)
+  registerLifecycleHook(onRenderTracked, renderTracked)
+  registerLifecycleHook(onRenderTriggered, renderTriggered)
+  registerLifecycleHook(onBeforeUnmount, beforeUnmount)
+  registerLifecycleHook(onUnmounted, unmounted)
+  registerLifecycleHook(onServerPrefetch, serverPrefetch)
 
   if (__COMPAT__) {
     if (
       beforeDestroy &&
       softAssertCompatEnabled(DeprecationTypes.OPTIONS_BEFORE_DESTROY, instance)
     ) {
-      onBeforeUnmount(beforeDestroy.bind(publicThis))
+      registerLifecycleHook(onBeforeUnmount, beforeDestroy)
     }
     if (
       destroyed &&
       softAssertCompatEnabled(DeprecationTypes.OPTIONS_DESTROYED, instance)
     ) {
-      onUnmounted(destroyed.bind(publicThis))
+      registerLifecycleHook(onUnmounted, destroyed)
     }
   }
 
