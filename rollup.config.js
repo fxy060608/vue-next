@@ -59,6 +59,16 @@ const outputConfigs = {
     // fixed by xxxxxx
     file: resolve(`dist/vue.runtime.cjs.js`),
     format: `cjs`
+  },
+  'esm-bundler-vue-compat': {
+    // fixed by xxxxxx
+    file: resolve(`dist/vue.runtime.compat.esm.js`),
+    format: `es`
+  },
+  'cjs-bundler-vue-compat': {
+    // fixed by xxxxxx
+    file: resolve(`dist/vue.runtime.compat.cjs.js`),
+    format: `cjs`
   }
 }
 
@@ -99,10 +109,14 @@ function createConfig(format, output, plugins = []) {
     process.env.__DEV__ === 'false' || /\.prod\.js$/.test(output.file)
   const isBundlerESMBuild = /esm-bundler/.test(format)
   const isBrowserESMBuild = /esm-browser/.test(format)
-  const isNodeBuild = format === 'cjs' || format === 'cjs-bundler-vue' // fixed by xxxxxx
+  const isNodeBuild =
+    format === 'cjs' ||
+    format === 'cjs-bundler-vue' ||
+    format === 'esm-bundler-vue-compat' // fixed by xxxxxx
   const isGlobalBuild = /global/.test(format)
   const isCompatBuild = !!packageOptions.compat
-  const isCompatPackage = pkg.name === '@vue/compat'
+  const isCompatPackage =
+    pkg.name === '@vue/compat' || pkg.name === '@vue/uni-h5-vue-compat'
 
   if (isGlobalBuild) {
     output.name = packageOptions.name

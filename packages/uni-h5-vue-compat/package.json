@@ -1,0 +1,36 @@
+{
+  "name": "@vue/uni-h5-vue-compat",
+  "version": "3.1.0-beta.2",
+  "description": "Vue 3 compatibility build for Vue 2",
+  "main": "index.js",
+  "module": "dist/vue.runtime.esm-bundler.js",
+  "unpkg": "dist/vue.global.js",
+  "jsdelivr": "dist/vue.global.js",
+  "files": [
+    "index.js",
+    "dist"
+  ],
+  "buildOptions": {
+    "compat": true,
+    "formats": [
+      "esm-bundler-vue-compat",
+      "cjs-bundler-vue-compat"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuejs/vue.git"
+  },
+  "keywords": [
+    "vue"
+  ],
+  "author": "Evan You",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vuejs/vue/issues"
+  },
+  "homepage": "https://github.com/vuejs/vue/tree/dev/packages/vue-compat#readme",
+  "peerDependencies": {
+    "vue": "3.1.0-beta.2"
+  }
+}
