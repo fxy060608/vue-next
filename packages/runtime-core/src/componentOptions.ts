@@ -574,7 +574,8 @@ export function applyOptions(
   }
 
   // fixed by xxxxxx
-  const customApplyOptions = ctx.$applyOptions as Function
+  const customApplyOptions = instance.appContext.config.globalProperties
+    .$applyOptions as Function
   if (customApplyOptions) {
     customApplyOptions(options, instance, publicThis)
   }

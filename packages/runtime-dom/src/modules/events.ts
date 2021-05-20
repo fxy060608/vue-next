@@ -121,8 +121,9 @@ function createInvoker(
       // fixed by xxxxxx
       const proxy = instance && instance.proxy
       const normalizeNativeEvent = proxy && (proxy as any).$nne
-      if (normalizeNativeEvent && isArray(invoker.value)) {
-        const fns = invoker.value
+      const { value } = invoker
+      if (normalizeNativeEvent && isArray(value)) {
+        const fns = patchStopImmediatePropagation(e, value) as Function[]
         for (let i = 0; i < fns.length; i++) {
           const fn = fns[i]
           callWithAsyncErrorHandling(
@@ -135,12 +136,12 @@ function createInvoker(
         return
       }
       callWithAsyncErrorHandling(
-        patchStopImmediatePropagation(e, invoker.value),
+        patchStopImmediatePropagation(e, value),
         instance,
         ErrorCodes.NATIVE_EVENT_HANDLER,
         [
           // fixed by xxxxxx
-          normalizeNativeEvent && !(invoker.value as any).__wwe
+          normalizeNativeEvent && !(value as any).__wwe
             ? normalizeNativeEvent(e)
             : e
         ]
@@ -162,7 +163,11 @@ function patchStopImmediatePropagation(
       originalStop.call(e)
       ;(e as any)._stopped = true
     }
-    return value.map(fn => (e: Event) => !(e as any)._stopped && fn(e))
+    return value.map(fn => {
+      const patchedFn = (e: Event) => !(e as any)._stopped && fn(e)
+      patchedFn.__wwe = (fn as any).__wwe
+      return patchedFn
+    })
   } else {
     return value
   }

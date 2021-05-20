@@ -112,7 +112,7 @@ function createConfig(format, output, plugins = []) {
   const isNodeBuild =
     format === 'cjs' ||
     format === 'cjs-bundler-vue' ||
-    format === 'esm-bundler-vue-compat' // fixed by xxxxxx
+    format === 'cjs-bundler-vue-compat' // fixed by xxxxxx
   const isGlobalBuild = /global/.test(format)
   const isCompatBuild = !!packageOptions.compat
   const isCompatPackage =
