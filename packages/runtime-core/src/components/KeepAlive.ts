@@ -37,6 +37,7 @@ import { setTransitionHooks } from './BaseTransition'
 import { ComponentRenderContext } from '../componentPublicInstance'
 import { isSuspense } from './Suspense'
 import { devtoolsComponentAdded } from '../devtools'
+import { isAsyncWrapper } from '../apiAsyncComponent'
 
 type MatchPattern = string | RegExp | string[] | RegExp[]
 
@@ -517,7 +518,12 @@ function getInnerChild(vnode: VNode) {
 
 function getMatchingName(vnode: VNode, matchBy: 'name' | 'key') {
   if (matchBy === 'name') {
-    return getComponentName(vnode.type as ConcreteComponent)
+    const comp = vnode.type as ConcreteComponent
+    return getComponentName(
+      isAsyncWrapper(vnode)
+        ? (comp as ComponentOptions).__asyncResolved || {}
+        : comp
+    )
   }
   return String(vnode.key)
 }
