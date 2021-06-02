@@ -139,7 +139,7 @@ describe('api: provide/inject', () => {
 
     const Consumer = {
       setup() {
-        const count = inject('count') as Ref<number>
+        const count = inject<Ref<number>>('count')!
         return () => count.value
       }
     }
@@ -169,7 +169,7 @@ describe('api: provide/inject', () => {
 
     const Consumer = {
       setup() {
-        const count = inject('count') as Ref<number>
+        const count = inject<Ref<number>>('count')!
         // should not work
         count.value++
         return () => count.value
@@ -206,7 +206,7 @@ describe('api: provide/inject', () => {
 
     const Consumer = {
       setup() {
-        const state = inject('state') as typeof rootState
+        const state = inject<typeof rootState>('state')!
         return () => state.count
       }
     }
@@ -236,7 +236,7 @@ describe('api: provide/inject', () => {
 
     const Consumer = {
       setup() {
-        const state = inject('state') as typeof rootState
+        const state = inject<typeof rootState>('state')!
         // should not work
         state.count++
         return () => state.count
@@ -302,5 +302,20 @@ describe('api: provide/inject', () => {
     const root = nodeOps.createElement('div')
     render(h(Provider), root)
     expect(`injection "foo" not found.`).not.toHaveBeenWarned()
+  })
+
+  // #2400
+  it('should not self-inject', () => {
+    const Comp = {
+      setup() {
+        provide('foo', 'foo')
+        const injection = inject('foo', null)
+        return () => injection
+      }
+    }
+
+    const root = nodeOps.createElement('div')
+    render(h(Comp), root)
+    expect(serialize(root)).toBe(`<div><!----></div>`)
   })
 })

@@ -5,12 +5,23 @@ import {
   Fragment,
   Teleport,
   expectError,
-  expectType
+  expectType,
+  VNode
 } from './index'
 
+expectType<VNode>(<div />)
 expectType<JSX.Element>(<div />)
 expectType<JSX.Element>(<div id="foo" />)
 expectType<JSX.Element>(<input value="foo" />)
+
+// @ts-expect-error style css property validation
+expectError(<div style={{ unknown: 123 }} />)
+
+// allow array styles and nested array styles
+expectType<JSX.Element>(<div style={[{ color: 'red' }]} />)
+expectType<JSX.Element>(
+  <div style={[{ color: 'red' }, [{ fontSize: '1em' }]]} />
+)
 
 // @ts-expect-error unknown prop
 expectError(<div foo="bar" />)
@@ -49,6 +60,8 @@ expectError(<KeepAlive include={123} />)
 // Suspense
 expectType<JSX.Element>(<Suspense />)
 expectType<JSX.Element>(<Suspense key="1" />)
-expectType<JSX.Element>(<Suspense onResolve={() => {}} onRecede={() => {}} />)
+expectType<JSX.Element>(
+  <Suspense onResolve={() => {}} onFallback={() => {}} onPending={() => {}} />
+)
 // @ts-expect-error
 expectError(<Suspense onResolve={123} />)

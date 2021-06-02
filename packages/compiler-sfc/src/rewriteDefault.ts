@@ -3,9 +3,10 @@ import MagicString from 'magic-string'
 
 const defaultExportRE = /((?:^|\n|;)\s*)export(\s*)default/
 const namedDefaultExportRE = /((?:^|\n|;)\s*)export(.+)as(\s*)default/
+const exportDefaultClassRE = /((?:^|\n|;)\s*)export\s+default\s+class\s+([\w$]+)/
 
 /**
- * Utility for rewriting `export default` in a script block into a varaible
+ * Utility for rewriting `export default` in a script block into a variable
  * declaration so that we can inject things into it
  */
 export function rewriteDefault(
@@ -17,7 +18,16 @@ export function rewriteDefault(
     return input + `\nconst ${as} = {}`
   }
 
-  const replaced = input.replace(defaultExportRE, `$1const ${as} =`)
+  let replaced: string | undefined
+
+  const classMatch = input.match(exportDefaultClassRE)
+  if (classMatch) {
+    replaced =
+      input.replace(exportDefaultClassRE, '$1class $2') +
+      `\nconst ${as} = ${classMatch[2]}`
+  } else {
+    replaced = input.replace(defaultExportRE, `$1const ${as} =`)
+  }
   if (!hasDefaultExport(replaced)) {
     return replaced
   }
@@ -37,6 +47,7 @@ export function rewriteDefault(
       node.specifiers.forEach(specifier => {
         if (
           specifier.type === 'ExportSpecifier' &&
+          specifier.exported.type === 'Identifier' &&
           specifier.exported.name === 'default'
         ) {
           const end = specifier.end!

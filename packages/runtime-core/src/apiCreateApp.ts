@@ -1,42 +1,56 @@
 import {
-  Component,
+  ConcreteComponent,
   Data,
   validateComponentName,
-  PublicAPIComponent
+  Component
 } from './component'
-import { ComponentOptions } from './componentOptions'
-import { ComponentPublicInstance } from './componentProxy'
+import { ComponentOptions, RuntimeCompilerOptions } from './componentOptions'
+import { ComponentPublicInstance } from './componentPublicInstance'
 import { Directive, validateDirectiveName } from './directives'
 import { RootRenderFunction } from './renderer'
 import { InjectionKey } from './apiInject'
-import { isFunction, NO, isObject } from '@vue/shared'
 import { warn } from './warning'
 import { createVNode, cloneVNode, VNode } from './vnode'
 import { RootHydrateFunction } from './hydration'
 import { devtoolsInitApp, devtoolsUnmountApp } from './devtools'
+import { isFunction, NO, isObject } from '@vue/shared'
 import { version } from '.'
+import { installAppCompatProperties } from './compat/global'
 
 export interface App<HostElement = any> {
   version: string
   config: AppConfig
   use(plugin: Plugin, ...options: any[]): this
   mixin(mixin: ComponentOptions): this
-  component(name: string): PublicAPIComponent | undefined
-  component(name: string, component: PublicAPIComponent): this
+  component(name: string): Component | undefined
+  component(name: string, component: Component): this
   directive(name: string): Directive | undefined
   directive(name: string, directive: Directive): this
   mount(
     rootContainer: HostElement | string,
-    isHydrate?: boolean
+    isHydrate?: boolean,
+    isSVG?: boolean
   ): ComponentPublicInstance
-  unmount(rootContainer: HostElement | string): void
+  unmount(): void
   provide<T>(key: InjectionKey<T> | string, value: T): this
 
   // internal, but we need to expose these for the server-renderer and devtools
-  _component: Component
+  _uid: number
+  _component: ConcreteComponent
   _props: Data | null
   _container: HostElement | null
   _context: AppContext
+
+  /**
+   * v2 compat only
+   */
+  filter?(name: string): Function | undefined
+  filter?(name: string, filter: Function): this
+
+  /**
+   * @internal v3 compat only
+   */
+  _createRoot?(options: ComponentOptions): ComponentPublicInstance
 }
 
 export type OptionMergeFunction = (
@@ -53,7 +67,6 @@ export interface AppConfig {
   performance: boolean
   optionMergeStrategies: Record<string, OptionMergeFunction>
   globalProperties: Record<string, any>
-  isCustomElement: (tag: string) => boolean
   errorHandler?: (
     err: unknown,
     instance: ComponentPublicInstance | null,
@@ -64,16 +77,41 @@ export interface AppConfig {
     instance: ComponentPublicInstance | null,
     trace: string
   ) => void
+
+  /**
+   * @deprecated use config.compilerOptions.isCustomElement
+   */
+  isCustomElement?: (tag: string) => boolean
+
+  /**
+   * Options to pass to @vue/compiler-dom.
+   * Only supported in runtime compiler build.
+   */
+  compilerOptions: RuntimeCompilerOptions
 }
 
 export interface AppContext {
   app: App // for devtools
   config: AppConfig
   mixins: ComponentOptions[]
-  components: Record<string, PublicAPIComponent>
+  components: Record<string, Component>
   directives: Record<string, Directive>
   provides: Record<string | symbol, any>
-  reload?: () => void // HMR only
+  /**
+   * Flag for de-optimizing props normalization
+   * @internal
+   */
+  deopt?: boolean
+  /**
+   * HMR only
+   * @internal
+   */
+  reload?: () => void
+  /**
+   * v2 compat only
+   * @internal
+   */
+  filters?: Record<string, Function>
 }
 
 type PluginInstallFunction = (app: App, ...options: any[]) => any
@@ -92,9 +130,9 @@ export function createAppContext(): AppContext {
       performance: false,
       globalProperties: {},
       optionMergeStrategies: {},
-      isCustomElement: NO,
       errorHandler: undefined,
-      warnHandler: undefined
+      warnHandler: undefined,
+      compilerOptions: {}
     },
     mixins: [],
     components: {},
@@ -104,9 +142,11 @@ export function createAppContext(): AppContext {
 }
 
 export type CreateAppFunction<HostElement> = (
-  rootComponent: PublicAPIComponent,
+  rootComponent: Component,
   rootProps?: Data | null
 ) => App<HostElement>
+
+let uid = 0
 
 export function createAppAPI<HostElement>(
   render: RootRenderFunction,
@@ -124,7 +164,8 @@ export function createAppAPI<HostElement>(
     let isMounted = false
 
     const app: App = (context.app = {
-      _component: rootComponent as Component,
+      _uid: uid++,
+      _component: rootComponent as ConcreteComponent,
       _props: rootProps,
       _container: null,
       _context: context,
@@ -165,6 +206,11 @@ export function createAppAPI<HostElement>(
         if (__FEATURE_OPTIONS_API__) {
           if (!context.mixins.includes(mixin)) {
             context.mixins.push(mixin)
+            // global mixin with props/emits de-optimizes props/emits
+            // normalization caching.
+            if (mixin.props || mixin.emits) {
+              context.deopt = true
+            }
           } else if (__DEV__) {
             warn(
               'Mixin has already been applied to target app' +
@@ -177,7 +223,7 @@ export function createAppAPI<HostElement>(
         return app
       },
 
-      component(name: string, component?: PublicAPIComponent): any {
+      component(name: string, component?: Component): any {
         if (__DEV__) {
           validateComponentName(name, context.config)
         }
@@ -206,9 +252,16 @@ export function createAppAPI<HostElement>(
         return app
       },
 
-      mount(rootContainer: HostElement, isHydrate?: boolean): any {
+      mount(
+        rootContainer: HostElement,
+        isHydrate?: boolean,
+        isSVG?: boolean
+      ): any {
         if (!isMounted) {
-          const vnode = createVNode(rootComponent as Component, rootProps)
+          const vnode = createVNode(
+            rootComponent as ConcreteComponent,
+            rootProps
+          )
           // store app context on the root VNode.
           // this will be set on the root instance on initial mount.
           vnode.appContext = context
@@ -216,14 +269,14 @@ export function createAppAPI<HostElement>(
           // HMR root reload
           if (__DEV__) {
             context.reload = () => {
-              render(cloneVNode(vnode), rootContainer)
+              render(cloneVNode(vnode), rootContainer, isSVG)
             }
           }
 
           if (isHydrate && hydrate) {
             hydrate(vnode as VNode<Node, Element>, rootContainer as any)
           } else {
-            render(vnode, rootContainer)
+            render(vnode, rootContainer, isSVG)
           }
           isMounted = true
           app._container = rootContainer
@@ -248,14 +301,17 @@ export function createAppAPI<HostElement>(
       unmount() {
         if (isMounted) {
           render(null, app._container)
-          devtoolsUnmountApp(app)
+          if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+            devtoolsUnmountApp(app)
+          }
+          delete app._container.__vue_app__
         } else if (__DEV__) {
           warn(`Cannot unmount an app that is not mounted.`)
         }
       },
 
       provide(key, value) {
-        if (__DEV__ && key in context.provides) {
+        if (__DEV__ && (key as string | symbol) in context.provides) {
           warn(
             `App already provides property with key "${String(key)}". ` +
               `It will be overwritten with the new value.`
@@ -268,6 +324,10 @@ export function createAppAPI<HostElement>(
         return app
       }
     })
+
+    if (__COMPAT__) {
+      installAppCompatProperties(app, context, render)
+    }
 
     return app
   }

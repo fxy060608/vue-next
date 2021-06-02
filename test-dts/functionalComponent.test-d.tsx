@@ -1,7 +1,14 @@
-import { FunctionalComponent, expectError, expectType } from './index'
+import {
+  h,
+  Text,
+  FunctionalComponent,
+  expectError,
+  expectType,
+  Component
+} from './index'
 
 // simple function signature
-const Foo = (props: { foo: number }) => props.foo
+const Foo = (props: { foo: number }) => h(Text, null, props.foo)
 
 // TSX
 expectType<JSX.Element>(<Foo foo={1} />)
@@ -51,3 +58,19 @@ expectError(<Foo />)
 expectError(<Bar foo="bar" />)
 //  @ts-expect-error
 expectError(<Foo baz="bar" />)
+
+const Baz: FunctionalComponent<{}, string[]> = (props, { emit }) => {
+  expectType<{}>(props)
+  expectType<(event: string) => void>(emit)
+}
+
+expectType<Component>(Baz)
+
+const Qux: FunctionalComponent<{}, ['foo', 'bar']> = (props, { emit }) => {
+  emit('foo')
+  emit('foo', 1, 2)
+  emit('bar')
+  emit('bar', 1, 2)
+}
+
+expectType<Component>(Qux)

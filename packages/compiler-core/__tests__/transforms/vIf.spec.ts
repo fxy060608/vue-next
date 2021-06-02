@@ -4,25 +4,25 @@ import { transformIf } from '../../src/transforms/vIf'
 import { transformElement } from '../../src/transforms/transformElement'
 import { transformSlotOutlet } from '../../src/transforms/transformSlotOutlet'
 import {
+  CommentNode,
+  ConditionalExpression,
+  ElementNode,
+  ElementTypes,
+  IfBranchNode,
+  IfConditionalExpression,
   IfNode,
   NodeTypes,
-  ElementNode,
-  TextNode,
-  CommentNode,
   SimpleExpressionNode,
-  ConditionalExpression,
-  IfConditionalExpression,
-  VNodeCall,
-  ElementTypes,
-  IfBranchNode
+  TextNode,
+  VNodeCall
 } from '../../src/ast'
 import { ErrorCodes } from '../../src/errors'
-import { CompilerOptions, generate } from '../../src'
+import { CompilerOptions, generate, TO_HANDLERS } from '../../src'
 import {
+  CREATE_COMMENT,
   FRAGMENT,
   MERGE_PROPS,
-  RENDER_SLOT,
-  CREATE_COMMENT
+  RENDER_SLOT
 } from '../../src/runtimeHelpers'
 import { createObjectMatcher } from '../testUtils'
 
@@ -93,10 +93,12 @@ describe('compiler: v-if', () => {
       expect((node.branches[0].children[0] as ElementNode).tagType).toBe(
         ElementTypes.COMPONENT
       )
+      // #2058 since a component may fail to resolve and fallback to a plain
+      // element, it still needs to be made a block
       expect(
         ((node.branches[0].children[0] as ElementNode)!
           .codegenNode as VNodeCall)!.isBlock
-      ).toBe(false)
+      ).toBe(true)
     })
 
     test('v-if + v-else', () => {
@@ -285,10 +287,23 @@ describe('compiler: v-if', () => {
 
     test('error on user key', () => {
       const onError = jest.fn()
-      parseWithIfTransform(`<div v-if="ok" :key="1" />`, { onError })
+      // dynamic
+      parseWithIfTransform(
+        `<div v-if="ok" :key="a + 1" /><div v-else :key="a + 1" />`,
+        { onError }
+      )
       expect(onError.mock.calls[0]).toMatchObject([
         {
-          code: ErrorCodes.X_V_IF_KEY
+          code: ErrorCodes.X_V_IF_SAME_KEY
+        }
+      ])
+      // static
+      parseWithIfTransform(`<div v-if="ok" key="1" /><div v-else key="1" />`, {
+        onError
+      })
+      expect(onError.mock.calls[1]).toMatchObject([
+        {
+          code: ErrorCodes.X_V_IF_SAME_KEY
         }
       ])
     })
@@ -591,6 +606,27 @@ describe('compiler: v-if', () => {
       expect(branch1.props).toMatchObject(createObjectMatcher({ key: `[0]` }))
     })
 
+    test('with spaces between branches', () => {
+      const {
+        node: { codegenNode }
+      } = parseWithIfTransform(
+        `<div v-if="ok"/> <div v-else-if="no"/> <div v-else/>`
+      )
+      expect(codegenNode.consequent).toMatchObject({
+        tag: `"div"`,
+        props: createObjectMatcher({ key: `[0]` })
+      })
+      const branch = codegenNode.alternate as ConditionalExpression
+      expect(branch.consequent).toMatchObject({
+        tag: `"div"`,
+        props: createObjectMatcher({ key: `[1]` })
+      })
+      expect(branch.alternate).toMatchObject({
+        tag: `"div"`,
+        props: createObjectMatcher({ key: `[2]` })
+      })
+    })
+
     test('with comments', () => {
       const { node } = parseWithIfTransform(`
           <template v-if="ok">
@@ -636,5 +672,25 @@ describe('compiler: v-if', () => {
       expect(b1.children[3].type).toBe(NodeTypes.ELEMENT)
       expect((b1.children[3] as ElementNode).tag).toBe(`p`)
     })
+  })
+
+  test('v-on with v-if', () => {
+    const {
+      node: { codegenNode }
+    } = parseWithIfTransform(
+      `<button v-on="{ click: clickEvent }" v-if="true">w/ v-if</button>`
+    )
+
+    expect((codegenNode.consequent as any).props.type).toBe(
+      NodeTypes.JS_CALL_EXPRESSION
+    )
+    expect((codegenNode.consequent as any).props.callee).toBe(MERGE_PROPS)
+    expect(
+      (codegenNode.consequent as any).props.arguments[0].properties[0].value
+        .content
+    ).toBe('0')
+    expect((codegenNode.consequent as any).props.arguments[1].callee).toBe(
+      TO_HANDLERS
+    )
   })
 })

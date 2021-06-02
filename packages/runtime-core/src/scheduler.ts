@@ -1,38 +1,69 @@
 import { ErrorCodes, callWithErrorHandling } from './errorHandling'
 import { isArray } from '@vue/shared'
+import { ComponentPublicInstance } from './componentPublicInstance'
+import { ComponentInternalInstance, getComponentName } from './component'
+import { warn } from './warning'
+import { ReactiveEffect } from '@vue/reactivity'
 
-export interface SchedulerJob {
-  (): void
+export interface SchedulerJob extends Function, Partial<ReactiveEffect> {
   /**
-   * unique job id, only present on raw effects, e.g. component render effect
+   * Attached by renderer.ts when setting up a component's render effect
+   * Used to obtain component information when reporting max recursive updates.
+   * dev only.
    */
-  id?: number
-  /**
-   * Indicates this is a watch() callback and is allowed to trigger itself.
-   * A watch callback doesn't track its dependencies so if it triggers itself
-   * again, it's likely intentional and it is the user's responsibility to
-   * perform recursive state mutation that eventually stabilizes.
-   */
-  cb?: boolean
+  ownerInstance?: ComponentInternalInstance
 }
 
-const queue: (SchedulerJob | null)[] = []
-const postFlushCbs: Function[] = []
-const resolvedPromise: Promise<any> = Promise.resolve()
-let currentFlushPromise: Promise<void> | null = null
+export type SchedulerCb = Function & { id?: number }
+export type SchedulerCbs = SchedulerCb | SchedulerCb[]
 
 let isFlushing = false
 let isFlushPending = false
+
+const queue: SchedulerJob[] = []
 let flushIndex = 0
-let pendingPostFlushCbs: Function[] | null = null
-let pendingPostFlushIndex = 0
+
+const pendingPreFlushCbs: SchedulerCb[] = []
+let activePreFlushCbs: SchedulerCb[] | null = null
+let preFlushIndex = 0
+
+const pendingPostFlushCbs: SchedulerCb[] = []
+let activePostFlushCbs: SchedulerCb[] | null = null
+let postFlushIndex = 0
+
+const resolvedPromise: Promise<any> = Promise.resolve()
+let currentFlushPromise: Promise<void> | null = null
+
+let currentPreFlushParentJob: SchedulerJob | null = null
 
 const RECURSION_LIMIT = 100
-type CountMap = Map<SchedulerJob | Function, number>
+type CountMap = Map<SchedulerJob | SchedulerCb, number>
 
-export function nextTick(fn?: () => void): Promise<void> {
+export function nextTick(
+  this: ComponentPublicInstance | void,
+  fn?: () => void
+): Promise<void> {
   const p = currentFlushPromise || resolvedPromise
-  return fn ? p.then(fn) : p
+  return fn ? p.then(this ? fn.bind(this) : fn) : p
+}
+
+// #2768
+// Use binary-search to find a suitable position in the queue,
+// so that the queue maintains the increasing order of job's id,
+// which can prevent the job from being skipped and also can avoid repeated patching.
+function findInsertionIndex(job: SchedulerJob) {
+  // the start index should be `flushIndex + 1`
+  let start = flushIndex + 1
+  let end = queue.length
+  const jobId = getId(job)
+
+  while (start < end) {
+    const middle = (start + end) >>> 1
+    const middleJobId = getId(queue[middle])
+    middleJobId < jobId ? (start = middle + 1) : (end = middle)
+  }
+
+  return start
 }
 
 export function queueJob(job: SchedulerJob) {
@@ -43,41 +74,21 @@ export function queueJob(job: SchedulerJob) {
   // allow it recursively trigger itself - it is the user's responsibility to
   // ensure it doesn't end up in an infinite loop.
   if (
-    !queue.length ||
-    !queue.includes(job, job.cb ? flushIndex + 1 : flushIndex)
+    (!queue.length ||
+      !queue.includes(
+        job,
+        isFlushing && job.allowRecurse ? flushIndex + 1 : flushIndex
+      )) &&
+    job !== currentPreFlushParentJob
   ) {
-    queue.push(job)
+    const pos = findInsertionIndex(job)
+    if (pos > -1) {
+      queue.splice(pos, 0, job)
+    } else {
+      queue.push(job)
+    }
     queueFlush()
   }
-}
-
-export function invalidateJob(job: SchedulerJob) {
-  const i = queue.indexOf(job)
-  if (i > -1) {
-    queue[i] = null
-  }
-}
-
-export function queuePostFlushCb(cb: Function | Function[]) {
-  if (!isArray(cb)) {
-    if (
-      !pendingPostFlushCbs ||
-      !pendingPostFlushCbs.includes(
-        cb,
-        (cb as SchedulerJob).cb
-          ? pendingPostFlushIndex + 1
-          : pendingPostFlushIndex
-      )
-    ) {
-      postFlushCbs.push(cb)
-    }
-  } else {
-    // if cb is an array, it is a component lifecycle hook which can only be
-    // triggered by a job, which is already deduped in the main queue, so
-    // we can skip dupicate check here to improve perf
-    postFlushCbs.push(...cb)
-  }
-  queueFlush()
 }
 
 function queueFlush() {
@@ -87,29 +98,116 @@ function queueFlush() {
   }
 }
 
-export function flushPostFlushCbs(seen?: CountMap) {
-  if (postFlushCbs.length) {
-    pendingPostFlushCbs = [...new Set(postFlushCbs)]
-    postFlushCbs.length = 0
+export function invalidateJob(job: SchedulerJob) {
+  const i = queue.indexOf(job)
+  if (i > flushIndex) {
+    queue.splice(i, 1)
+  }
+}
+
+function queueCb(
+  cb: SchedulerCbs,
+  activeQueue: SchedulerCb[] | null,
+  pendingQueue: SchedulerCb[],
+  index: number
+) {
+  if (!isArray(cb)) {
+    if (
+      !activeQueue ||
+      !activeQueue.includes(
+        cb,
+        (cb as SchedulerJob).allowRecurse ? index + 1 : index
+      )
+    ) {
+      pendingQueue.push(cb)
+    }
+  } else {
+    // if cb is an array, it is a component lifecycle hook which can only be
+    // triggered by a job, which is already deduped in the main queue, so
+    // we can skip duplicate check here to improve perf
+    pendingQueue.push(...cb)
+  }
+  queueFlush()
+}
+
+export function queuePreFlushCb(cb: SchedulerCb) {
+  queueCb(cb, activePreFlushCbs, pendingPreFlushCbs, preFlushIndex)
+}
+
+export function queuePostFlushCb(cb: SchedulerCbs) {
+  queueCb(cb, activePostFlushCbs, pendingPostFlushCbs, postFlushIndex)
+}
+
+export function flushPreFlushCbs(
+  seen?: CountMap,
+  parentJob: SchedulerJob | null = null
+) {
+  if (pendingPreFlushCbs.length) {
+    currentPreFlushParentJob = parentJob
+    activePreFlushCbs = [...new Set(pendingPreFlushCbs)]
+    pendingPreFlushCbs.length = 0
     if (__DEV__) {
       seen = seen || new Map()
     }
     for (
-      pendingPostFlushIndex = 0;
-      pendingPostFlushIndex < pendingPostFlushCbs.length;
-      pendingPostFlushIndex++
+      preFlushIndex = 0;
+      preFlushIndex < activePreFlushCbs.length;
+      preFlushIndex++
     ) {
-      if (__DEV__) {
-        checkRecursiveUpdates(seen!, pendingPostFlushCbs[pendingPostFlushIndex])
+      if (
+        __DEV__ &&
+        checkRecursiveUpdates(seen!, activePreFlushCbs[preFlushIndex])
+      ) {
+        continue
       }
-      pendingPostFlushCbs[pendingPostFlushIndex]()
+      activePreFlushCbs[preFlushIndex]()
     }
-    pendingPostFlushCbs = null
-    pendingPostFlushIndex = 0
+    activePreFlushCbs = null
+    preFlushIndex = 0
+    currentPreFlushParentJob = null
+    // recursively flush until it drains
+    flushPreFlushCbs(seen, parentJob)
   }
 }
 
-const getId = (job: SchedulerJob) => (job.id == null ? Infinity : job.id)
+export function flushPostFlushCbs(seen?: CountMap) {
+  if (pendingPostFlushCbs.length) {
+    const deduped = [...new Set(pendingPostFlushCbs)]
+    pendingPostFlushCbs.length = 0
+
+    // #1947 already has active queue, nested flushPostFlushCbs call
+    if (activePostFlushCbs) {
+      activePostFlushCbs.push(...deduped)
+      return
+    }
+
+    activePostFlushCbs = deduped
+    if (__DEV__) {
+      seen = seen || new Map()
+    }
+
+    activePostFlushCbs.sort((a, b) => getId(a) - getId(b))
+
+    for (
+      postFlushIndex = 0;
+      postFlushIndex < activePostFlushCbs.length;
+      postFlushIndex++
+    ) {
+      if (
+        __DEV__ &&
+        checkRecursiveUpdates(seen!, activePostFlushCbs[postFlushIndex])
+      ) {
+        continue
+      }
+      activePostFlushCbs[postFlushIndex]()
+    }
+    activePostFlushCbs = null
+    postFlushIndex = 0
+  }
+}
+
+const getId = (job: SchedulerJob | SchedulerCb) =>
+  job.id == null ? Infinity : job.id
 
 function flushJobs(seen?: CountMap) {
   isFlushPending = false
@@ -118,6 +216,8 @@ function flushJobs(seen?: CountMap) {
     seen = seen || new Map()
   }
 
+  flushPreFlushCbs(seen)
+
   // Sort queue before flush.
   // This ensures that:
   // 1. Components are updated from parent to child. (because parent is always
@@ -125,16 +225,14 @@ function flushJobs(seen?: CountMap) {
   //    priority number)
   // 2. If a component is unmounted during a parent component's update,
   //    its update can be skipped.
-  // Jobs can never be null before flush starts, since they are only invalidated
-  // during execution of another flushed job.
-  queue.sort((a, b) => getId(a!) - getId(b!))
+  queue.sort((a, b) => getId(a) - getId(b))
 
   try {
     for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
       const job = queue[flushIndex]
-      if (job) {
-        if (__DEV__) {
-          checkRecursiveUpdates(seen!, job)
+      if (job && job.active !== false) {
+        if (__DEV__ && checkRecursiveUpdates(seen!, job)) {
+          continue
         }
         callWithErrorHandling(job, null, ErrorCodes.SCHEDULER)
       }
@@ -144,29 +242,39 @@ function flushJobs(seen?: CountMap) {
     queue.length = 0
 
     flushPostFlushCbs(seen)
+
     isFlushing = false
     currentFlushPromise = null
     // some postFlushCb queued jobs!
     // keep flushing until it drains.
-    if (queue.length || postFlushCbs.length) {
+    if (
+      queue.length ||
+      pendingPreFlushCbs.length ||
+      pendingPostFlushCbs.length
+    ) {
       flushJobs(seen)
     }
   }
 }
 
-function checkRecursiveUpdates(seen: CountMap, fn: SchedulerJob | Function) {
+function checkRecursiveUpdates(seen: CountMap, fn: SchedulerJob | SchedulerCb) {
   if (!seen.has(fn)) {
     seen.set(fn, 1)
   } else {
     const count = seen.get(fn)!
     if (count > RECURSION_LIMIT) {
-      throw new Error(
-        `Maximum recursive updates exceeded. ` +
+      const instance = (fn as SchedulerJob).ownerInstance
+      const componentName = instance && getComponentName(instance.type)
+      warn(
+        `Maximum recursive updates exceeded${
+          componentName ? ` in component <${componentName}>` : ``
+        }. ` +
           `This means you have a reactive effect that is mutating its own ` +
           `dependencies and thus recursively triggering itself. Possible sources ` +
           `include component template, render function, updated hook or ` +
           `watcher source function.`
       )
+      return true
     } else {
       seen.set(fn, count + 1)
     }
