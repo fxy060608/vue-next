@@ -1,3 +1,56 @@
+# [3.1.0-beta.7](https://github.com/vuejs/vue-next/compare/v3.1.0-beta.6...v3.1.0-beta.7) (2021-06-02)
+
+
+### Bug Fixes
+
+* **compat:** fix deep data merge with extended constructor ([c7efb96](https://github.com/vuejs/vue-next/commit/c7efb967ca5ab42ea2713331b8e53ae5c2746a78)), closes [#3852](https://github.com/vuejs/vue-next/issues/3852)
+* **compiler-sfc:** fix style injection when using normal script + setup ([8b94464](https://github.com/vuejs/vue-next/commit/8b94464a3b9759a7a98c23efeafc7a9359c9807d)), closes [#3688](https://github.com/vuejs/vue-next/issues/3688)
+* **compiler-sfc:** fix template expression assignment codegen for script setup let refs ([#3626](https://github.com/vuejs/vue-next/issues/3626)) ([2c7bd42](https://github.com/vuejs/vue-next/commit/2c7bd428011e027efa8f66487d2269c8dd79a2b0)), closes [#3625](https://github.com/vuejs/vue-next/issues/3625)
+* **runtime-core:** align option merge behavior with Vue 2 ([e2ca67b](https://github.com/vuejs/vue-next/commit/e2ca67b59a4de57a9bce8d3394263ba493a35a39)), closes [#3566](https://github.com/vuejs/vue-next/issues/3566) [#2791](https://github.com/vuejs/vue-next/issues/2791)
+* **runtime-dom/v-model:** only set selectedIndex when the value changes ([#3845](https://github.com/vuejs/vue-next/issues/3845)) ([ecd97ee](https://github.com/vuejs/vue-next/commit/ecd97ee6e465ec5c841d58d96833fece4e899785))
+* **suspense:** fix suspense regression for errored template component ([44996d1](https://github.com/vuejs/vue-next/commit/44996d1a0a2de1bc6b3abfac6b2b8b3c969d4e01)), closes [#3857](https://github.com/vuejs/vue-next/issues/3857)
+* **watch:** avoid traversing objects that are marked non-reactive ([9acc9a1](https://github.com/vuejs/vue-next/commit/9acc9a1fa838bdcdf673d2f7cc3f996b2b69ffbc))
+
+
+### Code Refactoring
+
+* adjust component options merge cache strategy ([1e35a86](https://github.com/vuejs/vue-next/commit/1e35a860b995c1158d5c4e1706d2fc9bcd3b8412))
+
+
+### Performance Improvements
+
+* avoid deopt for props/emits normalization when global mixins are used ([51d2be2](https://github.com/vuejs/vue-next/commit/51d2be20386d4dc59006d31a1cc96676871027ce))
+
+
+### BREAKING CHANGES
+
+* optionMergeStrategies functions no longer receive
+the component instance as the 3rd argument. The argument was technically
+internal in Vue 2 and only used for generating warnings, and should not
+be needed in userland code. This removal enables much more efficient
+caching of option merging.
+
+
+
+# [3.1.0-beta.6](https://github.com/vuejs/vue-next/compare/v3.1.0-beta.5...v3.1.0-beta.6) (2021-05-28)
+
+
+### Bug Fixes
+
+* **compiler-core:** improve the isMemberExpression function ([#3675](https://github.com/vuejs/vue-next/issues/3675)) ([9b2e894](https://github.com/vuejs/vue-next/commit/9b2e8940176b3b75fa052b3c3e9eeaabc46a95e6))
+* **compiler-dom:** fix in-browser attribute value decoding w/ html tags ([6690372](https://github.com/vuejs/vue-next/commit/669037277b03bb8e67f517faf2811a8668ea86d6)), closes [#3001](https://github.com/vuejs/vue-next/issues/3001)
+* **compiler-sfc:** correctly remove parens used for wrapping ([#3582](https://github.com/vuejs/vue-next/issues/3582)) ([6bfb50a](https://github.com/vuejs/vue-next/commit/6bfb50aff98038a1f854ce24733f545eec2ee796)), closes [#3581](https://github.com/vuejs/vue-next/issues/3581)
+* **reactivity:** ensure computed always expose value ([03a7a73](https://github.com/vuejs/vue-next/commit/03a7a73148a9e210a7889c7a2ecf925338735c70)), closes [#3099](https://github.com/vuejs/vue-next/issues/3099) [#910](https://github.com/vuejs/vue-next/issues/910)
+* **runtime-core:** fix cases of reused children arrays in render functions ([#3670](https://github.com/vuejs/vue-next/issues/3670)) ([a641eb2](https://github.com/vuejs/vue-next/commit/a641eb201fe51620d50884b988f6fefc3e21a20b)), closes [#3666](https://github.com/vuejs/vue-next/issues/3666)
+* **runtime-core:** fix resolving inheritAttrs from mixins ([#3742](https://github.com/vuejs/vue-next/issues/3742)) ([d6607c9](https://github.com/vuejs/vue-next/commit/d6607c9864376fbe17899f3d35fc7b097670a1b1)), closes [#3741](https://github.com/vuejs/vue-next/issues/3741)
+* **runtime-core:** should disable tracking inside directive lifecycle hooks ([#3699](https://github.com/vuejs/vue-next/issues/3699)) ([ff50e8d](https://github.com/vuejs/vue-next/commit/ff50e8d78c033252c4ce7ffddb8069b3ddae5936))
+* **runtime-core:** stricter compat root mount check ([32e2133](https://github.com/vuejs/vue-next/commit/32e21333dd1197a978cf42802729b2133bda5a0b))
+* **runtime-dom:** should remove attribute when binding `null` to `value` ([#3564](https://github.com/vuejs/vue-next/issues/3564)) ([e3f5dcb](https://github.com/vuejs/vue-next/commit/e3f5dcb99bf42fed48d995438e459203dc3f6ed0))
+* **suspense:** fix suspense patching in optimized mode ([9f24195](https://github.com/vuejs/vue-next/commit/9f24195d2ce24184ccdc5020793dd9423f0d3148)), closes [#3828](https://github.com/vuejs/vue-next/issues/3828)
+* **transition:** fix higher order transition components with merged listeners ([071986a](https://github.com/vuejs/vue-next/commit/071986a2c6459fd99b91a48793a9ab6d6618b52d)), closes [#3227](https://github.com/vuejs/vue-next/issues/3227)
+
+
+
 # [3.1.0-beta.5](https://github.com/vuejs/vue-next/compare/v3.1.0-beta.4...v3.1.0-beta.5) (2021-05-26)
 
 

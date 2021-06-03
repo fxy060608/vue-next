@@ -26,8 +26,7 @@ import { AppContext } from './apiCreateApp'
 import {
   SuspenseImpl,
   isSuspense,
-  SuspenseBoundary,
-  normalizeSuspenseChildren
+  SuspenseBoundary
 } from './components/Suspense'
 import { DirectiveBinding } from './directives'
 import { TransitionHooks } from './components/BaseTransition'
@@ -137,6 +136,11 @@ export interface VNode<
    */
   [ReactiveFlags.SKIP]: true
 
+  /**
+   * @internal __COMPAT__ only
+   */
+  isCompatRoot?: true
+
   type: VNodeTypes
   props: (VNodeProps & ExtraProps) | null
   key: string | number | null
@@ -186,7 +190,7 @@ export interface VNode<
 // structure would be stable. This allows us to skip most children diffing
 // and only worry about the dynamic nodes (indicated by patch flags).
 export const blockStack: (VNode[] | null)[] = []
-let currentBlock: VNode[] | null = null
+export let currentBlock: VNode[] | null = null
 
 /**
  * Open a block.
@@ -452,9 +456,7 @@ function _createVNode(
 
   // normalize suspense children
   if (__FEATURE_SUSPENSE__ && shapeFlag & ShapeFlags.SUSPENSE) {
-    const { content, fallback } = normalizeSuspenseChildren(vnode)
-    vnode.ssContent = content
-    vnode.ssFallback = fallback
+    ;(type as typeof SuspenseImpl).normalize(vnode)
   }
 
   if (
@@ -606,11 +608,16 @@ export function normalizeVNode(child: VNodeChild): VNode {
     return createVNode(Comment)
   } else if (isArray(child)) {
     // fragment
-    return createVNode(Fragment, null, child)
+    return createVNode(
+      Fragment,
+      null,
+      // #3666, avoid reference pollution when reusing vnode
+      child.slice()
+    )
   } else if (typeof child === 'object') {
     // already vnode, this should be the most common since compiled templates
     // always produce all-vnode children arrays
-    return child.el === null ? child : cloneVNode(child)
+    return cloneIfMounted(child)
   } else {
     // strings and numbers
     return createVNode(Text, null, String(child))
