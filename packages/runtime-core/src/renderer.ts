@@ -1171,7 +1171,7 @@ function baseCreateRenderer(
       : hostCreateText('', container))! // fixed by xxxxxx
 
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
-    if (patchFlag > 0) {
+    if (dynamicChildren) {
       optimized = true
     }
 
