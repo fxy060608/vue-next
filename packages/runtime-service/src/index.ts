@@ -13,6 +13,7 @@ import { patchProp, forcePatchProp } from './patchProp'
 import { isHTMLTag, isSVGTag, extend } from '@vue/shared'
 
 export * from './dom/ops'
+export { decodeActions } from './dom/Page'
 
 const rendererOptions = extend({ patchProp, forcePatchProp }, nodeOps)
 

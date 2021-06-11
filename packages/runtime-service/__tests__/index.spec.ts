@@ -8,7 +8,8 @@ import {
   createVNode as _createVNode,
   openBlock as _openBlock,
   createBlock as _createBlock,
-  createCommentVNode as _createCommentVNode
+  createCommentVNode as _createCommentVNode,
+  decodeActions
 } from '../src'
 
 const defaultPageNodeOptions = {
@@ -29,7 +30,6 @@ describe('vue', () => {
     const Page = {
       setup() {
         return () => {
-          console.log('render', show.value)
           return (
             _openBlock(),
             _createBlock('view', { class: 'a' }, [
@@ -51,10 +51,10 @@ describe('vue', () => {
     }
     const pageNode = createPageNode(1, defaultPageNodeOptions)
     createApp(Page).mount((pageNode as unknown) as UniElement)
-    console.log(JSON.stringify(pageNode.updateActions))
+    console.log(JSON.stringify(decodeActions(pageNode.updateActions)))
     show.value = false
     nextTick(() => {
-      console.log(JSON.stringify(pageNode.updateActions))
+      console.log(JSON.stringify(decodeActions(pageNode.updateActions)))
     })
   })
 })
