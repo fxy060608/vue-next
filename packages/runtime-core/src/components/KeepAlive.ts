@@ -112,7 +112,7 @@ const KeepAliveImpl: ComponentOptions = {
         o: { createElement }
       }
     } = sharedContext
-    const storageContainer = createElement('div')
+    const storageContainer = createElement('div', null as any) // fixed by xxxxx
 
     sharedContext.activate = (vnode, container, anchor, isSVG, optimized) => {
       const instance = vnode.component!

@@ -109,7 +109,7 @@ function mountSuspense(
     p: patch,
     o: { createElement }
   } = rendererInternals
-  const hiddenContainer = createElement('div')
+  const hiddenContainer = createElement('div', container) // fixed by xxxxxx
   const suspense = (vnode.suspense = createSuspenseBoundary(
     vnode,
     parentSuspense,
@@ -222,7 +222,7 @@ function patchSuspense(
       // discard effects from pending branch
       suspense.effects.length = 0
       // discard previous container
-      suspense.hiddenContainer = createElement('div')
+      suspense.hiddenContainer = createElement('div', container) // fixed by xxxxxx
 
       if (isInFallback) {
         // already in fallback state

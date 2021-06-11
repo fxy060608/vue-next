@@ -49,6 +49,11 @@ const outputConfigs = {
   'global-runtime': {
     file: resolve(`dist/${name}.runtime.global.js`),
     format: 'iife'
+  },
+  'esm-bundler-vue': {
+    // fixed by xxxxxx
+    file: resolve(`dist/vue.runtime.esm.js`),
+    format: `es`
   }
 }
 

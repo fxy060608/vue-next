@@ -96,15 +96,15 @@ export const TeleportImpl = {
     if (n1 == null) {
       // insert anchors in the main view
       const placeholder = (n2.el = __DEV__
-        ? createComment('teleport start')
-        : createText(''))
+        ? createComment('teleport start', container) // fixed by xxxxxx
+        : createText('', container)) // fixed by xxxxxx
       const mainAnchor = (n2.anchor = __DEV__
-        ? createComment('teleport end')
-        : createText(''))
+        ? createComment('teleport end', container) // fixed by xxxxxx
+        : createText('', container)) // fixed by xxxxxx
       insert(placeholder, container, anchor)
       insert(mainAnchor, container, anchor)
       const target = (n2.target = resolveTarget(n2.props, querySelector))
-      const targetAnchor = (n2.targetAnchor = createText(''))
+      const targetAnchor = (n2.targetAnchor = createText('', container)) // fixed by xxxxxx
       if (target) {
         insert(targetAnchor, target)
         // #2652 we could be teleporting from a non-SVG tree into an SVG tree

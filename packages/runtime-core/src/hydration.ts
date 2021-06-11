@@ -433,7 +433,7 @@ export function createHydrationFunctions(
       // back. This should have led to node/children mismatch warnings.
       hasMismatch = true
       // since the anchor is missing, we need to create one and insert it
-      insert((vnode.anchor = createComment(`]`)), container, next)
+      insert((vnode.anchor = createComment(`]`, container)), container, next) // fixed by xxxxxx
       return next
     }
   }

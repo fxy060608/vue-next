@@ -282,6 +282,10 @@ const _ssrUtils = {
  */
 export const ssrUtils = (__NODE_JS__ ? _ssrUtils : null) as typeof _ssrUtils
 
+// fixed by xxxxxx
+export { injectHook } from './apiLifecycle'
+export { isInSSRComponentSetup } from './component'
+
 // 2.x COMPAT ------------------------------------------------------------------
 
 export { DeprecationTypes } from './compat/compatConfig'

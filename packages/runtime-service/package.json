@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "name": "@dcloudio/runtime-service",
+  "version": "3.1.0-beta.7",
+  "sideEffects": false,
+  "buildOptions": {
+    "name": "VueRuntimeDOM",
+    "formats": [
+      "esm-bundler",
+      "esm-browser",
+      "cjs",
+      "global"
+    ]
+  },
+  "dependencies": {
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared"
+  }
+}
