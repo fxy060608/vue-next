@@ -132,7 +132,11 @@ export default class UniPageNode extends UniNode implements IUniPageNode {
   private createAction: PageCreateAction
   private createdAction: PageCreatedAction
   public updateActions: PageAction[] = []
-  constructor(pageId: number, options: PageNodeOptions) {
+  constructor(
+    pageId: number,
+    options: PageNodeOptions,
+    setup: boolean = false
+  ) {
     super(NODE_TYPE_PAGE, '#page', (null as unknown) as IUniPageNode)
     this.nodeId = 0
     this.pageId = pageId
@@ -140,6 +144,8 @@ export default class UniPageNode extends UniNode implements IUniPageNode {
 
     this.createAction = [ACTION_TYPE_PAGE_CREATE, options]
     this.createdAction = [ACTION_TYPE_PAGE_CREATED]
+
+    setup && this.setup()
   }
   onCreate(thisNode: UniNode, nodeName: string | number) {
     pushCreateAction(this, thisNode.nodeId!, nodeName)
@@ -179,22 +185,25 @@ export default class UniPageNode extends UniNode implements IUniPageNode {
   push(action: PageAction) {
     this.updateActions.push(action)
   }
-  create() {
-    this.send([this.createAction])
-  }
-  created() {
-    this.send([this.createdAction])
-  }
-  update() {
-    if (this.updateActions.length) {
-      this.send(this.updateActions)
-      this.updateActions.length = 0
-    }
-  }
   restore() {
     this.push(this.createAction)
     // TODO restore children
     this.push(this.createdAction)
+  }
+  setup() {
+    this.send([this.createAction])
+  }
+  mounted() {
+    const { updateActions, createdAction } = this
+    updateActions.unshift(createdAction)
+    this.update()
+  }
+  update() {
+    const { updateActions } = this
+    if (updateActions.length) {
+      this.send(updateActions)
+      updateActions.length = 0
+    }
   }
   send(action: PageAction[]) {
     // @ts-expect-error

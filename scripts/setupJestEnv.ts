@@ -1,3 +1,9 @@
+;(global as any).UniServiceJSBridge = {
+  publishHandler(...args: any[]) {
+    console.log('publishHandler', JSON.stringify(args))
+  }
+}
+
 expect.extend({
   toHaveBeenWarned(received: string) {
     asserted.add(received)

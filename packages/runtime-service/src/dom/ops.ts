@@ -1,8 +1,12 @@
 import { UniElement, UniTextNode, UniCommentNode } from '@dcloudio/uni-shared'
 import UniPageNode, { PageNodeOptions } from './Page'
 
-export function createPageNode(pageId: number, pageOptions: PageNodeOptions) {
-  return new UniPageNode(pageId, pageOptions)
+export function createPageNode(
+  pageId: number,
+  pageOptions: PageNodeOptions,
+  setup?: boolean
+) {
+  return new UniPageNode(pageId, pageOptions, setup)
 }
 
 export function createElement(
