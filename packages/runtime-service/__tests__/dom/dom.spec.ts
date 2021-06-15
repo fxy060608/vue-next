@@ -94,7 +94,7 @@ describe('dom', () => {
     } = root
     expect(addEventListenerAction[0]).toBe(ACTION_TYPE_SET_ATTRIBUTE)
     expect(addEventListenerAction[1]).toBe(2)
-    expect(addEventListenerAction[2]).toBe('onClick')
+    expect(addEventListenerAction[2]).toBe('.e0')
     expect(addEventListenerAction[3]).toBe(1)
 
     root.updateActions.length = 0
@@ -104,6 +104,6 @@ describe('dom', () => {
     } = root
     expect(removeEventListenerAction[0]).toBe(ACTION_TYPE_REMOVE_ATTRIBUTE)
     expect(removeEventListenerAction[1]).toBe(2)
-    expect(removeEventListenerAction[2]).toBe('onClick')
+    expect(removeEventListenerAction[2]).toBe('.e0')
   })
 })

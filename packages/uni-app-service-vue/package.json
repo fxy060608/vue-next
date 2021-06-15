@@ -1,7 +1,7 @@
 {
-  "name": "@dcloudio/uni-h5-vue",
+  "name": "@dcloudio/uni-app-service-vue",
   "version": "3.0.0",
-  "description": "@dcloudio/uni-h5-vue",
+  "description": "@dcloudio/uni-app-service-vue",
   "main": "dist/vue.runtime.esm.js",
   "module": "dist/vue.runtime.esm.js",
   "files": [
@@ -26,15 +26,5 @@
   "bugs": {
     "url": "https://github.com/vuejs/vue-next/issues"
   },
-  "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/vue#readme",
-  "dependencies": {
-    "@vue/shared": "3.1.0-beta.7",
-    "@vue/compiler-dom": "3.1.0-beta.7",
-    "@vue/runtime-dom": "3.1.0-beta.7"
-  },
-  "devDependencies": {
-    "lodash": "^4.17.15",
-    "marked": "^0.7.0",
-    "todomvc-app-css": "^2.3.0"
-  }
+  "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/vue#readme"
 }
