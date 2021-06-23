@@ -49,7 +49,7 @@ const bar = 1
 },`)
   })
 
-  test('defineEmit()', () => {
+  test('defineEmit() (deprecated)', () => {
     const { content, bindings } = compile(`
 <script setup>
 import { defineEmit } from 'vue'
@@ -61,7 +61,7 @@ const myEmit = defineEmit(['foo', 'bar'])
       myEmit: BindingTypes.SETUP_CONST
     })
     // should remove defineOptions import and call
-    expect(content).not.toMatch('defineEmit')
+    expect(content).not.toMatch(/defineEmits?/)
     // should generate correct setup signature
     expect(content).toMatch(`setup(__props, { emit: myEmit }) {`)
     // should include context options in default export
@@ -70,26 +70,25 @@ const myEmit = defineEmit(['foo', 'bar'])
   emits: ['foo', 'bar'],`)
   })
 
-  test('<template inherit-attrs="false">', () => {
-    const { content } = compile(`
-      <script>
-      export default {}
-      </script>
-      <template inherit-attrs="false">
-      {{ a }}
-      </template>
-      `)
+  test('defineEmits()', () => {
+    const { content, bindings } = compile(`
+<script setup>
+import { defineEmits } from 'vue'
+const myEmit = defineEmits(['foo', 'bar'])
+</script>
+  `)
     assertCode(content)
-
-    const { content: content2 } = compile(`
-      <script setup>
-      const a = 1
-      </script>
-      <template inherit-attrs="false">
-      {{ a }}
-      </template>
-      `)
-    assertCode(content2)
+    expect(bindings).toStrictEqual({
+      myEmit: BindingTypes.SETUP_CONST
+    })
+    // should remove defineOptions import and call
+    expect(content).not.toMatch('defineEmits')
+    // should generate correct setup signature
+    expect(content).toMatch(`setup(__props, { emit: myEmit }) {`)
+    // should include context options in default export
+    expect(content).toMatch(`export default {
+  expose: [],
+  emits: ['foo', 'bar'],`)
   })
 
   describe('<script> and <script setup> co-usage', () => {
@@ -145,9 +144,9 @@ const myEmit = defineEmit(['foo', 'bar'])
     test('should allow defineProps/Emit at the start of imports', () => {
       assertCode(
         compile(`<script setup>
-      import { defineProps, defineEmit, ref } from 'vue'
+      import { defineProps, defineEmits, ref } from 'vue'
       defineProps(['foo'])
-      defineEmit(['bar'])
+      defineEmits(['bar'])
       const r = ref(0)
       </script>`).content
       )
@@ -450,9 +449,9 @@ const myEmit = defineEmit(['foo', 'bar'])
     test('defineProps/Emit w/ runtime options', () => {
       const { content } = compile(`
 <script setup lang="ts">
-import { defineProps, defineEmit } from 'vue'
+import { defineProps, defineEmits } from 'vue'
 const props = defineProps({ foo: String })
-const emit = defineEmit(['a', 'b'])
+const emit = defineEmits(['a', 'b'])
 </script>
       `)
       assertCode(content)
@@ -549,11 +548,11 @@ const emit = defineEmit(['a', 'b'])
       })
     })
 
-    test('defineEmit w/ type', () => {
+    test('defineEmits w/ type', () => {
       const { content } = compile(`
       <script setup lang="ts">
-      import { defineEmit } from 'vue'
-      const emit = defineEmit<(e: 'foo' | 'bar') => void>()
+      import { defineEmits } from 'vue'
+      const emit = defineEmits<(e: 'foo' | 'bar') => void>()
       </script>
       `)
       assertCode(content)
@@ -561,24 +560,24 @@ const emit = defineEmit(['a', 'b'])
       expect(content).toMatch(`emits: ["foo", "bar"] as unknown as undefined`)
     })
 
-    test('defineEmit w/ type (union)', () => {
+    test('defineEmits w/ type (union)', () => {
       const type = `((e: 'foo' | 'bar') => void) | ((e: 'baz', id: number) => void)`
       expect(() =>
         compile(`
       <script setup lang="ts">
-      import { defineEmit } from 'vue'
-      const emit = defineEmit<${type}>()
+      import { defineEmits } from 'vue'
+      const emit = defineEmits<${type}>()
       </script>
       `)
       ).toThrow()
     })
 
-    test('defineEmit w/ type (type literal w/ call signatures)', () => {
+    test('defineEmits w/ type (type literal w/ call signatures)', () => {
       const type = `{(e: 'foo' | 'bar'): void; (e: 'baz', id: number): void;}`
       const { content } = compile(`
       <script setup lang="ts">
-      import { defineEmit } from 'vue'
-      const emit = defineEmit<${type}>()
+      import { defineEmits } from 'vue'
+      const emit = defineEmits<${type}>()
       </script>
       `)
       assertCode(content)
@@ -906,8 +905,8 @@ const emit = defineEmit(['a', 'b'])
 
       expect(() => {
         compile(`<script setup lang="ts">
-        import { defineEmit } from 'vue'
-        defineEmit<{}>({})
+        import { defineEmits } from 'vue'
+        defineEmits<{}>({})
         </script>`)
       }).toThrow(`cannot accept both type and non-type arguments`)
     })
@@ -927,9 +926,9 @@ const emit = defineEmit(['a', 'b'])
 
       expect(() =>
         compile(`<script setup>
-        import { defineEmit } from 'vue'
+        import { defineEmits } from 'vue'
         const bar = 'hello'
-        defineEmit([bar])
+        defineEmits([bar])
         </script>`)
       ).toThrow(`cannot reference locally declared variables`)
     })
@@ -947,9 +946,9 @@ const emit = defineEmit(['a', 'b'])
 
       expect(() =>
         compile(`<script setup>
-        import { defineEmit } from 'vue'
+        import { defineEmits } from 'vue'
         ref: bar = 1
-        defineEmit({
+        defineEmits({
           bar
         })
       </script>`)
@@ -959,14 +958,14 @@ const emit = defineEmit(['a', 'b'])
     test('should allow defineProps/Emit() referencing scope var', () => {
       assertCode(
         compile(`<script setup>
-          import { defineProps, defineEmit } from 'vue'
+          import { defineProps, defineEmits } from 'vue'
           const bar = 1
           defineProps({
             foo: {
               default: bar => bar + 1
             }
           })
-          defineEmit({
+          defineEmits({
             foo: bar => bar > 1
           })
         </script>`).content
@@ -976,14 +975,14 @@ const emit = defineEmit(['a', 'b'])
     test('should allow defineProps/Emit() referencing imported binding', () => {
       assertCode(
         compile(`<script setup>
-        import { defineProps, defineEmit } from 'vue'
+        import { defineProps, defineEmits } from 'vue'
         import { bar } from './bar'
         defineProps({
           foo: {
             default: () => bar
           }
         })
-        defineEmit({
+        defineEmits({
           foo: () => bar > 1
         })
         </script>`).content

@@ -4,7 +4,8 @@ import {
   pauseTracking,
   resetTracking,
   shallowReadonly,
-  proxyRefs
+  proxyRefs,
+  markRaw
 } from '@vue/reactivity'
 import {
   ComponentPublicInstance,
@@ -609,7 +610,7 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
-  instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers)
+  instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
   }
@@ -826,11 +827,9 @@ export function finishComponentSetup(
   }
 }
 
-const attrHandlers: ProxyHandler<Data> = {
+const attrDevProxyHandlers: ProxyHandler<Data> = {
   get: (target, key: string) => {
-    if (__DEV__) {
-      markAttrsAccessed()
-    }
+    markAttrsAccessed()
     return target[key]
   },
   set: () => {
@@ -858,7 +857,7 @@ export function createSetupContext(
     // properties (overwrites should not be done in prod)
     return Object.freeze({
       get attrs() {
-        return new Proxy(instance.attrs, attrHandlers)
+        return new Proxy(instance.attrs, attrDevProxyHandlers)
       },
       get slots() {
         return shallowReadonly(instance.slots)
