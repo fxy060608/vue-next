@@ -52,7 +52,7 @@ const outputConfigs = {
   },
   'esm-bundler-vue': {
     // fixed by xxxxxx
-    file: resolve(`dist/vue.runtime.esm.js`),
+    file: resolve(`dist/service.runtime.esm.js`),
     format: `es`
   }
 }

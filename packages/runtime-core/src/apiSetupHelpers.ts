@@ -38,17 +38,17 @@ export function defineProps() {
   return null as any
 }
 
-export function defineEmit<
+export function defineEmits<
   TypeEmit = undefined,
   E extends EmitsOptions = EmitsOptions,
   EE extends string = string,
   InferredEmit = EmitFn<E>
 >(emitOptions?: E | EE[]): TypeEmit extends undefined ? InferredEmit : TypeEmit
 // implementation
-export function defineEmit() {
+export function defineEmits() {
   if (__DEV__) {
     warn(
-      `defineEmit() is a compiler-hint helper that is only usable inside ` +
+      `defineEmits() is a compiler-hint helper that is only usable inside ` +
         `<script setup> of a single file component. Its arguments should be ` +
         `compiled away and passing it at runtime has no effect.`
     )
@@ -56,10 +56,36 @@ export function defineEmit() {
   return null as any
 }
 
+/**
+ * @deprecated use `defineEmits` instead.
+ */
+export const defineEmit = defineEmits
+
+/**
+ * @deprecated use `useSlots` and `useAttrs` instead.
+ */
 export function useContext(): SetupContext {
+  if (__DEV__) {
+    warn(
+      `\`useContext()\` has been deprecated and will be removed in the ` +
+        `next minor release. Use \`useSlots()\` and \`useAttrs()\` instead.`
+    )
+  }
+  return getContext()
+}
+
+function getContext(): SetupContext {
   const i = getCurrentInstance()!
   if (__DEV__ && !i) {
     warn(`useContext() called without active instance.`)
   }
   return i.setupContext || (i.setupContext = createSetupContext(i))
+}
+
+export function useSlots(): SetupContext['slots'] {
+  return getContext().slots
+}
+
+export function useAttrs(): SetupContext['attrs'] {
+  return getContext().attrs
 }
