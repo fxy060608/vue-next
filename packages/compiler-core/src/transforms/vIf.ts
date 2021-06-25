@@ -18,7 +18,11 @@ import {
   IfConditionalExpression,
   BlockCodegenNode,
   IfNode,
-  createVNodeCall
+  createVNodeCall,
+  AttributeNode,
+  locStub,
+  CacheExpression,
+  ConstantTypes
 } from '../ast'
 import { createCompilerError, ErrorCodes } from '../errors'
 import { processExpression } from './transformExpression'
@@ -28,9 +32,9 @@ import {
   FRAGMENT,
   CREATE_COMMENT,
   OPEN_BLOCK,
-  TELEPORT
+  CREATE_VNODE
 } from '../runtimeHelpers'
-import { injectProp, findDir, findProp } from '../utils'
+import { injectProp, findDir, findProp, isBuiltInType } from '../utils'
 import { PatchFlags, PatchFlagNames } from '@vue/shared'
 
 export const transformIf = createStructuralDirectiveTransform(
@@ -61,13 +65,7 @@ export const transformIf = createStructuralDirectiveTransform(
           ) as IfConditionalExpression
         } else {
           // attach this branch's codegen node to the v-if root.
-          let parentCondition = ifNode.codegenNode!
-          while (
-            parentCondition.alternate.type ===
-            NodeTypes.JS_CONDITIONAL_EXPRESSION
-          ) {
-            parentCondition = parentCondition.alternate
-          }
+          const parentCondition = getParentCondition(ifNode.codegenNode!)
           parentCondition.alternate = createCodegenNodeForBranch(
             branch,
             key + ifNode.branches.length - 1,
@@ -111,11 +109,6 @@ export function processIf(
     validateBrowserExpression(dir.exp as SimpleExpressionNode, context)
   }
 
-  const userKey = /*#__PURE__*/ findProp(node, 'key')
-  if (userKey) {
-    context.onError(createCompilerError(ErrorCodes.X_V_IF_KEY, userKey.loc))
-  }
-
   if (dir.name === 'if') {
     const branch = createIfBranch(node, dir)
     const ifNode: IfNode = {
@@ -139,13 +132,50 @@ export function processIf(
         comments.unshift(sibling)
         continue
       }
+
+      if (
+        sibling &&
+        sibling.type === NodeTypes.TEXT &&
+        !sibling.content.trim().length
+      ) {
+        context.removeNode(sibling)
+        continue
+      }
+
       if (sibling && sibling.type === NodeTypes.IF) {
         // move the node to the if node's branches
         context.removeNode()
         const branch = createIfBranch(node, dir)
-        if (__DEV__ && comments.length) {
+        if (
+          __DEV__ &&
+          comments.length &&
+          // #3619 ignore comments if the v-if is direct child of <transition>
+          !(
+            context.parent &&
+            context.parent.type === NodeTypes.ELEMENT &&
+            isBuiltInType(context.parent.tag, 'transition')
+          )
+        ) {
           branch.children = [...comments, ...branch.children]
         }
+
+        // check if user is forcing same key on different branches
+        if (__DEV__ || !__BROWSER__) {
+          const key = branch.userKey
+          if (key) {
+            sibling.branches.forEach(({ userKey }) => {
+              if (isSameKey(userKey, key)) {
+                context.onError(
+                  createCompilerError(
+                    ErrorCodes.X_V_IF_SAME_KEY,
+                    branch.userKey!.loc
+                  )
+                )
+              }
+            })
+          }
+        }
+
         sibling.branches.push(branch)
         const onExit = processCodegen && processCodegen(sibling, branch, false)
         // since the branch was removed, it will not be traversed.
@@ -174,7 +204,8 @@ function createIfBranch(node: ElementNode, dir: DirectiveNode): IfBranchNode {
     children:
       node.tagType === ElementTypes.TEMPLATE && !findDir(node, 'for')
         ? node.children
-        : [node]
+        : [node],
+    userKey: findProp(node, `key`)
   }
 }
 
@@ -204,10 +235,15 @@ function createChildrenCodegenNode(
   keyIndex: number,
   context: TransformContext
 ): BlockCodegenNode {
-  const { helper } = context
+  const { helper, removeHelper } = context
   const keyProperty = createObjectProperty(
     `key`,
-    createSimpleExpression(`${keyIndex}`, false)
+    createSimpleExpression(
+      `${keyIndex}`,
+      false,
+      locStub,
+      ConstantTypes.CAN_HOIST
+    )
   )
   const { children } = branch
   const firstChild = children[0]
@@ -220,14 +256,24 @@ function createChildrenCodegenNode(
       injectProp(vnodeCall, keyProperty, context)
       return vnodeCall
     } else {
+      let patchFlag = PatchFlags.STABLE_FRAGMENT
+      let patchFlagText = PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
+      // check if the fragment actually contains a single valid child with
+      // the rest being comments
+      if (
+        __DEV__ &&
+        children.filter(c => c.type !== NodeTypes.COMMENT).length === 1
+      ) {
+        patchFlag |= PatchFlags.DEV_ROOT_FRAGMENT
+        patchFlagText += `, ${PatchFlagNames[PatchFlags.DEV_ROOT_FRAGMENT]}`
+      }
+
       return createVNodeCall(
         context,
         helper(FRAGMENT),
         createObjectExpression([keyProperty]),
         children,
-        `${PatchFlags.STABLE_FRAGMENT} /* ${
-          PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
-        } */`,
+        patchFlag + (__DEV__ ? ` /* ${patchFlagText} */` : ``),
         undefined,
         undefined,
         true,
@@ -239,14 +285,8 @@ function createChildrenCodegenNode(
     const vnodeCall = (firstChild as ElementNode)
       .codegenNode as BlockCodegenNode
     // Change createVNode to createBlock.
-    if (
-      vnodeCall.type === NodeTypes.VNODE_CALL &&
-      // component vnodes are always tracked and its children are
-      // compiled into slots so no need to make it a block
-      ((firstChild as ElementNode).tagType !== ElementTypes.COMPONENT ||
-        // teleport has component type but isn't always tracked
-        vnodeCall.tag === TELEPORT)
-    ) {
+    if (vnodeCall.type === NodeTypes.VNODE_CALL && !vnodeCall.isBlock) {
+      removeHelper(CREATE_VNODE)
       vnodeCall.isBlock = true
       helper(OPEN_BLOCK)
       helper(CREATE_BLOCK)
@@ -254,5 +294,50 @@ function createChildrenCodegenNode(
     // inject branch key
     injectProp(vnodeCall, keyProperty, context)
     return vnodeCall
+  }
+}
+
+function isSameKey(
+  a: AttributeNode | DirectiveNode | undefined,
+  b: AttributeNode | DirectiveNode
+): boolean {
+  if (!a || a.type !== b.type) {
+    return false
+  }
+  if (a.type === NodeTypes.ATTRIBUTE) {
+    if (a.value!.content !== (b as AttributeNode).value!.content) {
+      return false
+    }
+  } else {
+    // directive
+    const exp = a.exp!
+    const branchExp = (b as DirectiveNode).exp!
+    if (exp.type !== branchExp.type) {
+      return false
+    }
+    if (
+      exp.type !== NodeTypes.SIMPLE_EXPRESSION ||
+      (exp.isStatic !== (branchExp as SimpleExpressionNode).isStatic ||
+        exp.content !== (branchExp as SimpleExpressionNode).content)
+    ) {
+      return false
+    }
+  }
+  return true
+}
+
+function getParentCondition(
+  node: IfConditionalExpression | CacheExpression
+): IfConditionalExpression {
+  while (true) {
+    if (node.type === NodeTypes.JS_CONDITIONAL_EXPRESSION) {
+      if (node.alternate.type === NodeTypes.JS_CONDITIONAL_EXPRESSION) {
+        node = node.alternate
+      } else {
+        return node
+      }
+    } else if (node.type === NodeTypes.JS_CACHE_EXPRESSION) {
+      node = node.value as IfConditionalExpression
+    }
   }
 }

@@ -9,7 +9,8 @@ import {
   Suspense,
   onMounted,
   defineAsyncComponent,
-  defineComponent
+  defineComponent,
+  createTextVNode
 } from '@vue/runtime-dom'
 import { renderToString, SSRContext } from '@vue/server-renderer'
 
@@ -45,6 +46,14 @@ describe('SSR hydration', () => {
     msg.value = 'bar'
     await nextTick()
     expect(container.textContent).toBe('bar')
+  })
+
+  test('empty text', async () => {
+    const { container } = mountWithHydration('<div></div>', () =>
+      h('div', createTextVNode(''))
+    )
+    expect(container.textContent).toBe('')
+    expect(`Hydration children mismatch in <div>`).not.toHaveBeenWarned()
   })
 
   test('comment', () => {
@@ -506,8 +515,10 @@ describe('SSR hydration', () => {
     const App = {
       template: `
       <Suspense @resolve="done">
-        <AsyncChild :n="1" />
-        <AsyncChild :n="2" />
+        <div>
+          <AsyncChild :n="1" />
+          <AsyncChild :n="2" />
+        </div>
       </Suspense>`,
       components: {
         AsyncChild
@@ -521,7 +532,7 @@ describe('SSR hydration', () => {
     // server render
     container.innerHTML = await renderToString(h(App))
     expect(container.innerHTML).toMatchInlineSnapshot(
-      `"<!--[--><span>1</span><span>2</span><!--]-->"`
+      `"<div><span>1</span><span>2</span></div>"`
     )
     // reset asyncDeps from ssr
     asyncDeps.length = 0
@@ -537,17 +548,23 @@ describe('SSR hydration', () => {
 
     // should flush buffered effects
     expect(mountedCalls).toMatchObject([1, 2])
-    expect(container.innerHTML).toMatch(`<span>1</span><span>2</span>`)
+    expect(container.innerHTML).toMatch(
+      `<div><span>1</span><span>2</span></div>`
+    )
 
     const span1 = container.querySelector('span')!
     triggerEvent('click', span1)
     await nextTick()
-    expect(container.innerHTML).toMatch(`<span>2</span><span>2</span>`)
+    expect(container.innerHTML).toMatch(
+      `<div><span>2</span><span>2</span></div>`
+    )
 
     const span2 = span1.nextSibling as Element
     triggerEvent('click', span2)
     await nextTick()
-    expect(container.innerHTML).toMatch(`<span>2</span><span>3</span>`)
+    expect(container.innerHTML).toMatch(
+      `<div><span>2</span><span>3</span></div>`
+    )
   })
 
   test('async component', async () => {
@@ -607,6 +624,141 @@ describe('SSR hydration', () => {
     // should be hydrated now
     triggerEvent('click', container.querySelector('button')!)
     expect(spy).toHaveBeenCalled()
+  })
+
+  test('update async wrapper before resolve', async () => {
+    const Comp = {
+      render() {
+        return h('h1', 'Async component')
+      }
+    }
+    let serverResolve: any
+    let AsyncComp = defineAsyncComponent(
+      () =>
+        new Promise(r => {
+          serverResolve = r
+        })
+    )
+
+    const bol = ref(true)
+    const App = {
+      setup() {
+        onMounted(() => {
+          // change state, this makes updateComponent(AsyncComp) execute before
+          // the async component is resolved
+          bol.value = false
+        })
+
+        return () => {
+          return [bol.value ? 'hello' : 'world', h(AsyncComp)]
+        }
+      }
+    }
+
+    // server render
+    const htmlPromise = renderToString(h(App))
+    serverResolve(Comp)
+    const html = await htmlPromise
+    expect(html).toMatchInlineSnapshot(
+      `"<!--[-->hello<h1>Async component</h1><!--]-->"`
+    )
+
+    // hydration
+    let clientResolve: any
+    AsyncComp = defineAsyncComponent(
+      () =>
+        new Promise(r => {
+          clientResolve = r
+        })
+    )
+
+    const container = document.createElement('div')
+    container.innerHTML = html
+    createSSRApp(App).mount(container)
+
+    // resolve
+    clientResolve(Comp)
+    await new Promise(r => setTimeout(r))
+
+    // should be hydrated now
+    expect(`Hydration node mismatch`).not.toHaveBeenWarned()
+    expect(container.innerHTML).toMatchInlineSnapshot(
+      `"<!--[-->world<h1>Async component</h1><!--]-->"`
+    )
+  })
+
+  // #3787
+  test('unmount async wrapper before load', async () => {
+    let resolve: any
+    const AsyncComp = defineAsyncComponent(
+      () =>
+        new Promise(r => {
+          resolve = r
+        })
+    )
+
+    const show = ref(true)
+    const root = document.createElement('div')
+    root.innerHTML = '<div><div>async</div></div>'
+
+    createSSRApp({
+      render() {
+        return h('div', [show.value ? h(AsyncComp) : h('div', 'hi')])
+      }
+    }).mount(root)
+
+    show.value = false
+    await nextTick()
+    expect(root.innerHTML).toBe('<div><div>hi</div></div>')
+    resolve({})
+  })
+
+  test('unmount async wrapper before load (fragment)', async () => {
+    let resolve: any
+    const AsyncComp = defineAsyncComponent(
+      () =>
+        new Promise(r => {
+          resolve = r
+        })
+    )
+
+    const show = ref(true)
+    const root = document.createElement('div')
+    root.innerHTML = '<div><!--[-->async<!--]--></div>'
+
+    createSSRApp({
+      render() {
+        return h('div', [show.value ? h(AsyncComp) : h('div', 'hi')])
+      }
+    }).mount(root)
+
+    show.value = false
+    await nextTick()
+    expect(root.innerHTML).toBe('<div><div>hi</div></div>')
+    resolve({})
+  })
+
+  test('elements with camel-case in svg ', () => {
+    const { vnode, container } = mountWithHydration(
+      '<animateTransform></animateTransform>',
+      () => h('animateTransform')
+    )
+    expect(vnode.el).toBe(container.firstChild)
+    expect(`Hydration node mismatch`).not.toHaveBeenWarned()
+  })
+
+  test('SVG as a mount container', () => {
+    const svgContainer = document.createElement('svg')
+    svgContainer.innerHTML = '<g></g>'
+    const app = createSSRApp({
+      render: () => h('g')
+    })
+
+    expect(
+      (app.mount(svgContainer).$.subTree as VNode<Node, Element> & {
+        el: Element
+      }).el instanceof SVGElement
+    )
   })
 
   describe('mismatch handling', () => {

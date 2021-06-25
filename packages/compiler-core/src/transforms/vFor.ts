@@ -10,7 +10,6 @@ import {
   SimpleExpressionNode,
   createCallExpression,
   createFunctionExpression,
-  ElementTypes,
   createObjectExpression,
   createObjectProperty,
   ForCodegenNode,
@@ -24,7 +23,8 @@ import {
   VNodeCall,
   ForRenderListExpression,
   BlockCodegenNode,
-  ForIteratorExpression
+  ForIteratorExpression,
+  ConstantTypes
 } from '../ast'
 import { createCompilerError, ErrorCodes } from '../errors'
 import {
@@ -38,7 +38,8 @@ import {
   RENDER_LIST,
   OPEN_BLOCK,
   CREATE_BLOCK,
-  FRAGMENT
+  FRAGMENT,
+  CREATE_VNODE
 } from '../runtimeHelpers'
 import { processExpression } from './transformExpression'
 import { validateBrowserExpression } from '../validateExpression'
@@ -47,7 +48,7 @@ import { PatchFlags, PatchFlagNames } from '@vue/shared'
 export const transformFor = createStructuralDirectiveTransform(
   'for',
   (node, dir, context) => {
-    const { helper } = context
+    const { helper, removeHelper } = context
     return processFor(node, dir, context, forNode => {
       // create the loop render function expression now, and add the
       // iterator on exit after all children have been traversed
@@ -55,9 +56,30 @@ export const transformFor = createStructuralDirectiveTransform(
         forNode.source
       ]) as ForRenderListExpression
       const keyProp = findProp(node, `key`)
+      const keyProperty = keyProp
+        ? createObjectProperty(
+            `key`,
+            keyProp.type === NodeTypes.ATTRIBUTE
+              ? createSimpleExpression(keyProp.value!.content, true)
+              : keyProp.exp!
+          )
+        : null
+
+      if (!__BROWSER__ && context.prefixIdentifiers && keyProperty) {
+        // #2085 process :key expression needs to be processed in order for it
+        // to behave consistently for <template v-for> and <div v-for>.
+        // In the case of `<template v-for>`, the node is discarded and never
+        // traversed so its key expression won't be processed by the normal
+        // transforms.
+        keyProperty.value = processExpression(
+          keyProperty.value as SimpleExpressionNode,
+          context
+        )
+      }
+
       const isStableFragment =
         forNode.source.type === NodeTypes.SIMPLE_EXPRESSION &&
-        forNode.source.isConstant
+        forNode.source.constType > ConstantTypes.NOT_CONSTANT
       const fragmentFlag = isStableFragment
         ? PatchFlags.STABLE_FRAGMENT
         : keyProp
@@ -68,7 +90,8 @@ export const transformFor = createStructuralDirectiveTransform(
         helper(FRAGMENT),
         undefined,
         renderExp,
-        `${fragmentFlag} /* ${PatchFlagNames[fragmentFlag]} */`,
+        fragmentFlag +
+          (__DEV__ ? ` /* ${PatchFlagNames[fragmentFlag]} */` : ``),
         undefined,
         undefined,
         true /* isBlock */,
@@ -81,6 +104,25 @@ export const transformFor = createStructuralDirectiveTransform(
         let childBlock: BlockCodegenNode
         const isTemplate = isTemplateNode(node)
         const { children } = forNode
+
+        // check <template v-for> key placement
+        if ((__DEV__ || !__BROWSER__) && isTemplate) {
+          node.children.some(c => {
+            if (c.type === NodeTypes.ELEMENT) {
+              const key = findProp(c, 'key')
+              if (key) {
+                context.onError(
+                  createCompilerError(
+                    ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT,
+                    key.loc
+                  )
+                )
+                return true
+              }
+            }
+          })
+        }
+
         const needFragmentWrapper =
           children.length !== 1 || children[0].type !== NodeTypes.ELEMENT
         const slotOutlet = isSlotOutlet(node)
@@ -90,14 +132,7 @@ export const transformFor = createStructuralDirectiveTransform(
             isSlotOutlet(node.children[0])
             ? (node.children[0] as SlotOutletNode) // api-extractor somehow fails to infer this
             : null
-        const keyProperty = keyProp
-          ? createObjectProperty(
-              `key`,
-              keyProp.type === NodeTypes.ATTRIBUTE
-                ? createSimpleExpression(keyProp.value!.content, true)
-                : keyProp.exp!
-            )
-          : null
+
         if (slotOutlet) {
           // <slot v-for="..."> or <template v-for="..."><slot/></template>
           childBlock = slotOutlet.codegenNode as RenderSlotCall
@@ -115,9 +150,10 @@ export const transformFor = createStructuralDirectiveTransform(
             helper(FRAGMENT),
             keyProperty ? createObjectExpression([keyProperty]) : undefined,
             node.children,
-            `${PatchFlags.STABLE_FRAGMENT} /* ${
-              PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
-            } */`,
+            PatchFlags.STABLE_FRAGMENT +
+              (__DEV__
+                ? ` /* ${PatchFlagNames[PatchFlags.STABLE_FRAGMENT]} */`
+                : ``),
             undefined,
             undefined,
             true
@@ -127,10 +163,25 @@ export const transformFor = createStructuralDirectiveTransform(
           // but mark it as a block.
           childBlock = (children[0] as PlainElementNode)
             .codegenNode as VNodeCall
+          if (isTemplate && keyProperty) {
+            injectProp(childBlock, keyProperty, context)
+          }
+          if (childBlock.isBlock !== !isStableFragment) {
+            if (childBlock.isBlock) {
+              // switch from block to vnode
+              removeHelper(OPEN_BLOCK)
+              removeHelper(CREATE_BLOCK)
+            } else {
+              // switch from vnode to block
+              removeHelper(CREATE_VNODE)
+            }
+          }
           childBlock.isBlock = !isStableFragment
           if (childBlock.isBlock) {
             helper(OPEN_BLOCK)
             helper(CREATE_BLOCK)
+          } else {
+            helper(CREATE_VNODE)
           }
         }
 
@@ -183,7 +234,7 @@ export function processFor(
     keyAlias: key,
     objectIndexAlias: index,
     parseResult,
-    children: node.tagType === ElementTypes.TEMPLATE ? node.children : [node]
+    children: isTemplateNode(node) ? node.children : [node]
   }
 
   context.replaceNode(forNode)

@@ -13,6 +13,7 @@ import {
   createCommentVNode,
   Fragment
 } from '@vue/runtime-dom'
+import { PatchFlags } from '@vue/shared/src'
 
 describe('attribute fallthrough', () => {
   it('should allow attrs to fallthrough', async () => {
@@ -300,6 +301,34 @@ describe('attribute fallthrough', () => {
     expect(root.innerHTML).toMatch(`<div>1</div>`)
   })
 
+  // #3741
+  it('should not fallthrough with inheritAttrs: false from mixins', () => {
+    const Parent = {
+      render() {
+        return h(Child, { foo: 1, class: 'parent' })
+      }
+    }
+
+    const mixin = {
+      inheritAttrs: false
+    }
+
+    const Child = defineComponent({
+      mixins: [mixin],
+      props: ['foo'],
+      render() {
+        return h('div', this.foo)
+      }
+    })
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    render(h(Parent), root)
+
+    // should not contain class
+    expect(root.innerHTML).toMatch(`<div>1</div>`)
+  })
+
   it('explicit spreading with inheritAttrs: false', () => {
     const Parent = {
       render() {
@@ -574,11 +603,16 @@ describe('attribute fallthrough', () => {
       setup() {
         return () => (
           openBlock(),
-          createBlock(Fragment, null, [
-            createCommentVNode('hello'),
-            h('button'),
-            createCommentVNode('world')
-          ])
+          createBlock(
+            Fragment,
+            null,
+            [
+              createCommentVNode('hello'),
+              h('button'),
+              createCommentVNode('world')
+            ],
+            PatchFlags.STABLE_FRAGMENT | PatchFlags.DEV_ROOT_FRAGMENT
+          )
         )
       }
     }
@@ -593,5 +627,62 @@ describe('attribute fallthrough', () => {
     const button = root.children[0] as HTMLElement
     button.dispatchEvent(new CustomEvent('click'))
     expect(click).toHaveBeenCalled()
+  })
+
+  // #1989
+  it('should not fallthrough v-model listeners with corresponding declared prop', () => {
+    let textFoo = ''
+    let textBar = ''
+    const click = jest.fn()
+
+    const App = defineComponent({
+      setup() {
+        return () =>
+          h(Child, {
+            modelValue: textFoo,
+            'onUpdate:modelValue': (val: string) => {
+              textFoo = val
+            }
+          })
+      }
+    })
+
+    const Child = defineComponent({
+      props: ['modelValue'],
+      setup(_props, { emit }) {
+        return () =>
+          h(GrandChild, {
+            modelValue: textBar,
+            'onUpdate:modelValue': (val: string) => {
+              textBar = val
+              emit('update:modelValue', 'from Child')
+            }
+          })
+      }
+    })
+
+    const GrandChild = defineComponent({
+      props: ['modelValue'],
+      setup(_props, { emit }) {
+        return () =>
+          h('button', {
+            onClick() {
+              click()
+              emit('update:modelValue', 'from GrandChild')
+            }
+          })
+      }
+    })
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    render(h(App), root)
+
+    const node = root.children[0] as HTMLElement
+
+    node.dispatchEvent(new CustomEvent('click'))
+    expect(click).toHaveBeenCalled()
+    expect(textBar).toBe('from GrandChild')
+    expect(textFoo).toBe('from Child')
   })
 })

@@ -1,15 +1,35 @@
-import { reactive, readonly, toRaw, ReactiveFlags } from './reactive'
+import {
+  reactive,
+  readonly,
+  toRaw,
+  ReactiveFlags,
+  Target,
+  readonlyMap,
+  reactiveMap,
+  shallowReactiveMap,
+  shallowReadonlyMap
+} from './reactive'
 import { TrackOpTypes, TriggerOpTypes } from './operations'
-import { track, trigger, ITERATE_KEY } from './effect'
+import {
+  track,
+  trigger,
+  ITERATE_KEY,
+  pauseTracking,
+  resetTracking
+} from './effect'
 import {
   isObject,
   hasOwn,
   isSymbol,
   hasChanged,
   isArray,
-  extend
+  isIntegerKey,
+  extend,
+  makeMap
 } from '@vue/shared'
 import { isRef } from './ref'
+
+const isNonTrackableKeys = /*#__PURE__*/ makeMap(`__proto__,__v_isRef,__isVue`)
 
 const builtInSymbols = new Set(
   Object.getOwnPropertyNames(Symbol)
@@ -23,25 +43,39 @@ const readonlyGet = /*#__PURE__*/ createGetter(true)
 const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true)
 
 const arrayInstrumentations: Record<string, Function> = {}
-;['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
-  arrayInstrumentations[key] = function(...args: any[]): any {
-    const arr = toRaw(this) as any
-    for (let i = 0, l = (this as any).length; i < l; i++) {
+// instrument identity-sensitive Array methods to account for possible reactive
+// values
+;(['includes', 'indexOf', 'lastIndexOf'] as const).forEach(key => {
+  const method = Array.prototype[key] as any
+  arrayInstrumentations[key] = function(this: unknown[], ...args: unknown[]) {
+    const arr = toRaw(this)
+    for (let i = 0, l = this.length; i < l; i++) {
       track(arr, TrackOpTypes.GET, i + '')
     }
     // we run the method using the original args first (which may be reactive)
-    const res = arr[key](...args)
+    const res = method.apply(arr, args)
     if (res === -1 || res === false) {
       // if that didn't work, run it again using raw values.
-      return arr[key](...args.map(toRaw))
+      return method.apply(arr, args.map(toRaw))
     } else {
       return res
     }
   }
 })
+// instrument length-altering mutation methods to avoid length being tracked
+// which leads to infinite loops in some cases (#2137)
+;(['push', 'pop', 'shift', 'unshift', 'splice'] as const).forEach(key => {
+  const method = Array.prototype[key] as any
+  arrayInstrumentations[key] = function(this: unknown[], ...args: unknown[]) {
+    pauseTracking()
+    const res = method.apply(this, args)
+    resetTracking()
+    return res
+  }
+})
 
 function createGetter(isReadonly = false, shallow = false) {
-  return function get(target: object, key: string | symbol, receiver: object) {
+  return function get(target: Target, key: string | symbol, receiver: object) {
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {
@@ -50,24 +84,26 @@ function createGetter(isReadonly = false, shallow = false) {
       key === ReactiveFlags.RAW &&
       receiver ===
         (isReadonly
-          ? (target as any)[ReactiveFlags.READONLY]
-          : (target as any)[ReactiveFlags.REACTIVE])
+          ? shallow
+            ? shallowReadonlyMap
+            : readonlyMap
+          : shallow
+            ? shallowReactiveMap
+            : reactiveMap
+        ).get(target)
     ) {
       return target
     }
 
     const targetIsArray = isArray(target)
-    if (targetIsArray && hasOwn(arrayInstrumentations, key)) {
+
+    if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
 
     const res = Reflect.get(target, key, receiver)
 
-    if (
-      isSymbol(key)
-        ? builtInSymbols.has(key)
-        : key === `__proto__` || key === `__v_isRef`
-    ) {
+    if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res
     }
 
@@ -80,8 +116,9 @@ function createGetter(isReadonly = false, shallow = false) {
     }
 
     if (isRef(res)) {
-      // ref unwrapping, only for Objects, not for Arrays.
-      return targetIsArray ? res : res.value
+      // ref unwrapping - does not apply for Array + integer key.
+      const shouldUnwrap = !targetIsArray || !isIntegerKey(key)
+      return shouldUnwrap ? res.value : res
     }
 
     if (isObject(res)) {
@@ -105,9 +142,10 @@ function createSetter(shallow = false) {
     value: unknown,
     receiver: object
   ): boolean {
-    const oldValue = (target as any)[key]
+    let oldValue = (target as any)[key]
     if (!shallow) {
       value = toRaw(value)
+      oldValue = toRaw(oldValue)
       if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
         oldValue.value = value
         return true
@@ -116,7 +154,10 @@ function createSetter(shallow = false) {
       // in shallow mode, objects are set as-is regardless of reactive or not
     }
 
-    const hadKey = hasOwn(target, key)
+    const hadKey =
+      isArray(target) && isIntegerKey(key)
+        ? Number(key) < target.length
+        : hasOwn(target, key)
     const result = Reflect.set(target, key, value, receiver)
     // don't trigger if target is something up in the prototype chain of original
     if (target === toRaw(receiver)) {
@@ -148,8 +189,8 @@ function has(target: object, key: string | symbol): boolean {
   return result
 }
 
-function ownKeys(target: object): (string | number | symbol)[] {
-  track(target, TrackOpTypes.ITERATE, ITERATE_KEY)
+function ownKeys(target: object): (string | symbol)[] {
+  track(target, TrackOpTypes.ITERATE, isArray(target) ? 'length' : ITERATE_KEY)
   return Reflect.ownKeys(target)
 }
 
@@ -163,8 +204,6 @@ export const mutableHandlers: ProxyHandler<object> = {
 
 export const readonlyHandlers: ProxyHandler<object> = {
   get: readonlyGet,
-  has,
-  ownKeys,
   set(target, key) {
     if (__DEV__) {
       console.warn(
