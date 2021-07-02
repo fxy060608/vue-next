@@ -4,6 +4,9 @@ import {
   defineEmit,
   defineEmits,
   useContext,
+  useAttrs,
+  useSlots,
+  withDefaults,
   Slots,
   describe
 } from './index'
@@ -17,6 +20,31 @@ describe('defineProps w/ type declaration', () => {
   expectType<string>(props.foo)
   // @ts-expect-error
   props.bar
+})
+
+describe('defineProps w/ type declaration + withDefaults', () => {
+  const res = withDefaults(
+    defineProps<{
+      number?: number
+      arr?: string[]
+      obj?: { x: number }
+      fn?: (e: string) => void
+      x?: string
+    }>(),
+    {
+      number: 123,
+      arr: () => [],
+      obj: () => ({ x: 123 }),
+      fn: () => {}
+    }
+  )
+
+  res.number + 1
+  res.arr.push('hi')
+  res.obj.x
+  res.fn('hi')
+  // @ts-expect-error
+  res.x.slice()
 })
 
 describe('defineProps w/ runtime declaration', () => {
@@ -107,4 +135,14 @@ describe('useContext', () => {
   // should be able to emit anything
   emit('foo')
   emit('bar')
+})
+
+describe('useAttrs', () => {
+  const attrs = useAttrs()
+  expectType<Record<string, unknown>>(attrs)
+})
+
+describe('useSlots', () => {
+  const slots = useSlots()
+  expectType<Slots>(slots)
 })
