@@ -1,8 +1,7 @@
 import { UniNode, UniElement } from '@dcloudio/uni-shared'
 
 import { RendererOptions } from '@vue/runtime-core'
-import { createComment, createElement, createTextNode } from './dom/ops'
-import UniPageNode from './dom/Page'
+import { createComment, createElement, createTextNode } from './dom'
 
 let tempContainer: UniElement
 
@@ -22,14 +21,14 @@ export const nodeOps: Omit<
   },
 
   createElement: (tag, container): UniElement => {
-    return createElement(tag, container as UniElement | UniPageNode)
+    return createElement(tag, container as UniElement)
   },
 
   createText: (text, container) =>
-    createTextNode(text, container as UniElement | UniPageNode),
+    createTextNode(text, container as UniElement),
 
   createComment: (text, container) =>
-    createComment(text, container as UniElement | UniPageNode),
+    createComment(text, container as UniElement),
 
   setText: (node, text) => {
     node.nodeValue = text

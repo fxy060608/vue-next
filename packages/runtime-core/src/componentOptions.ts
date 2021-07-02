@@ -540,6 +540,13 @@ export function applyOptions(instance: ComponentInternalInstance) {
   const publicThis = instance.proxy! as any
   const ctx = instance.ctx
 
+  // fixed by xxxxxx
+  const customApplyOptions = instance.appContext.config.globalProperties
+    .$applyOptions as Function
+  if (customApplyOptions) {
+    customApplyOptions(options, instance, publicThis)
+  }
+
   // do not cache property access on public proxy during state initialization
   shouldCacheAccess = false
 

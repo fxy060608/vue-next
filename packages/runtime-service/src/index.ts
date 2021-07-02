@@ -1,4 +1,4 @@
-import { UniNode, UniElement } from '@dcloudio/uni-shared'
+import { UniNode } from '@dcloudio/uni-shared'
 
 import {
   createRenderer,
@@ -10,28 +10,27 @@ import {
 import { nodeOps } from './nodeOps'
 import { patchProp, forcePatchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
-import { isHTMLTag, isSVGTag, extend } from '@vue/shared'
+import { isHTMLTag, isSVGTag, extend, isString } from '@vue/shared'
+import { createComment } from '@vue/uni-app-service-vue'
 
-export * from './dom/ops'
-export { decodeActions } from './dom/Page'
+export * from './dom'
 
 const rendererOptions = extend({ patchProp, forcePatchProp }, nodeOps)
 
 // lazy create the renderer - this makes core renderer logic tree-shakable
 // in case the user only imports reactivity utilities from Vue.
-let renderer: Renderer<UniElement>
+let renderer: Renderer<UniNode>
 
 function ensureRenderer() {
   return (
-    renderer ||
-    (renderer = createRenderer<UniNode, UniElement>(rendererOptions))
+    renderer || (renderer = createRenderer<UniNode, UniNode>(rendererOptions))
   )
 }
 
 // use explicit type casts here to avoid import() calls in rolled-up d.ts
 export const render = ((...args) => {
   ensureRenderer().render(...args)
-}) as RootRenderFunction<UniElement>
+}) as RootRenderFunction<UniNode>
 
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
@@ -41,12 +40,15 @@ export const createApp = ((...args) => {
   }
 
   const { mount } = app
-  app.mount = (pageNode: UniElement): any => {
-    return pageNode && mount(pageNode, false, false)
+  app.mount = (container: UniNode | string): any => {
+    if (isString(container)) {
+      container = createComment(container)
+    }
+    return container && mount(container, false, false)
   }
 
   return app
-}) as CreateAppFunction<UniElement>
+}) as CreateAppFunction<UniNode>
 
 export const createSSRApp = createApp
 
