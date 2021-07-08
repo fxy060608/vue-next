@@ -1,6 +1,6 @@
 import { UniElement, UniEvent, UniEventListener } from '@dcloudio/uni-shared'
 
-import { hyphenate } from '@vue/shared'
+import { hyphenate, isArray } from '@vue/shared'
 import {
   ComponentInternalInstance,
   callWithAsyncErrorHandling
@@ -87,5 +87,21 @@ function createInvoker(
     )
   }
   invoker.value = initialValue
+  const modifiers = new Set<string>()
+  // 合并 modifiers
+  if (isArray(invoker.value)) {
+    invoker.value.forEach(v => {
+      if ((v as any).modifiers) {
+        ;(v as any).modifiers.forEach((m: string) => {
+          modifiers.add(m)
+        })
+      }
+    })
+  } else if ((invoker.value as any).modifiers) {
+    ;(invoker.value as any).modifiers.forEach((m: string) => {
+      modifiers.add(m)
+    })
+  }
+  ;(invoker as any).modifiers = [...modifiers]
   return invoker
 }

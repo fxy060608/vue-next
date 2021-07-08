@@ -33,13 +33,16 @@ const modifierGuards: Record<
  * @private
  */
 export const withModifiers = (fn: Function, modifiers: string[]) => {
-  return (event: Event, ...args: unknown[]) => {
+  // fixed by xxxxxx 补充 modifiers 标记，方便同步给 view 层
+  const wrapper = (event: Event, ...args: unknown[]) => {
     for (let i = 0; i < modifiers.length; i++) {
       const guard = modifierGuards[modifiers[i]]
       if (guard && guard(event, modifiers)) return
     }
     return fn(event, ...args)
   }
+  wrapper.modifiers = modifiers
+  return wrapper
 }
 
 // Kept for 2.x compat.
