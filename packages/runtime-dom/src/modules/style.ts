@@ -10,7 +10,7 @@ export function patchStyle(el: Element, prev: Style, next: Style) {
   } else if (isString(next)) {
     if (prev !== next) {
       const current = style.display
-      style.cssText = next
+      style.cssText = normalizeRpx(next)
       // indicates that the `display` of the element is controlled by `v-show`,
       // so we always keep the current `display` value regardless of the `style` value,
       // thus handing over control to `v-show`.
@@ -42,6 +42,7 @@ function setStyle(
   if (isArray(val)) {
     val.forEach(v => setStyle(style, name, v))
   } else {
+    val = normalizeRpx(val)
     if (name.startsWith('--')) {
       // custom property definition
       style.setProperty(name, val)
@@ -81,4 +82,21 @@ function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
     }
   }
   return rawName
+}
+
+// fixed by xxxxxx
+// upx,rpx
+const rpxRE = /\b([+-]?\d+(\.\d+)?)[r|u]px\b/g
+const normalizeRpx = (val: string) => {
+  // @ts-ignore
+  if (typeof rpx2px !== 'function') {
+    return val
+  }
+  if (isString(val)) {
+    return val.replace(rpxRE, (a, b) => {
+      // @ts-ignore
+      return rpx2px(b) + 'px'
+    })
+  }
+  return val
 }
