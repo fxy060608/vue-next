@@ -18,10 +18,15 @@ type ModelDirective<T> = ObjectDirective<T & { _assign: AssignerFn }>
 export const vModelText: ModelDirective<
   UniInputElement | UniTextAreaElement
 > = {
-  created(el, { modifiers: { lazy, trim, number } }, vnode) {
+  created(el, { modifiers: { trim, number } }, vnode) {
     el._assign = getModelAssigner(vnode)
-    addEventListener(el, lazy ? 'change' : 'input', e => {
-      let domValue: string | number = el.value as string
+    addEventListener(el, 'input', e => {
+      let domValue: string | number = e.detail.value as string
+      // 从 view 层接收到新值后，赋值给 service 层元素，注意，需要临时解除 pageNode，否则赋值 value 会触发向 view 层的再次同步数据
+      const pageNode = el.pageNode
+      el.pageNode = null
+      el.value = domValue
+      el.pageNode = pageNode
       if (trim) {
         domValue = domValue.trim()
       } else if (number) {
@@ -29,14 +34,6 @@ export const vModelText: ModelDirective<
       }
       el._assign(domValue)
     })
-    if (trim) {
-      addEventListener(el, 'change', () => {
-        el.value = (el.value as string).trim()
-      })
-    }
-    if (!lazy) {
-      addEventListener(el, 'change', evt => el.dispatchEvent(evt))
-    }
   },
   beforeUpdate(el, { value }, vnode) {
     el._assign = getModelAssigner(vnode)

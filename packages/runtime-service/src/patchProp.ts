@@ -5,13 +5,14 @@ import { patchStyle } from './modules/style'
 import { patchAttr } from './modules/attrs'
 
 import { patchEvent } from './modules/events'
-import { isOn } from '@vue/shared'
+import { isModelListener, isOn } from '@vue/shared'
 import { RendererOptions } from '@vue/runtime-core'
 
 type DOMRendererOptions = RendererOptions<UniNode, UniElement>
 
+// fixed by xxxxxx 不强制更新value，否则即使不变，也会从 service 同步到 view 中
 export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (_, key) =>
-  key === 'value'
+  false // key === 'value'
 
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,
@@ -28,13 +29,12 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     case 'style':
       patchStyle(el, prevValue, nextValue)
       break
-    case 'modelValue':
-    case 'onUpdate:modelValue':
-      // handled by v-model directive
-      break
     default:
       if (isOn(key)) {
-        patchEvent(el, key, prevValue, nextValue)
+        // ignore v-model listeners
+        if (!isModelListener(key)) {
+          patchEvent(el, key, prevValue, nextValue)
+        }
       } else {
         patchAttr(el, key, nextValue)
       }

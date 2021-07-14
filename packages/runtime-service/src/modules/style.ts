@@ -13,16 +13,26 @@ export function patchStyle(el: UniElement, prev: Style, next: Style) {
     }
   } else {
     const batchedStyles: Record<string, string | string[]> = {}
-    if (prev && !isString(prev)) {
-      for (const key in prev) {
+    const isPrevObj = prev && !isString(prev)
+    if (isPrevObj) {
+      for (const key in prev as Record<string, string | string[]>) {
         if (next[key] == null) {
           batchedStyles[key] = ''
         }
       }
+      for (const key in next) {
+        const value = next[key]
+        if (value !== (prev as Record<string, string | string[]>)[key]) {
+          batchedStyles[key] = value
+        }
+      }
+    } else {
+      for (const key in next) {
+        batchedStyles[key] = next[key]
+      }
     }
-    for (const key in next) {
-      batchedStyles[key] = next[key]
+    if (Object.keys(batchedStyles).length) {
+      el.setAttribute('style', batchedStyles)
     }
-    el.setAttribute('style', batchedStyles)
   }
 }
