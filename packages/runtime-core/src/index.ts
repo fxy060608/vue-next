@@ -91,7 +91,7 @@ export { useSSRContext, ssrContextKey } from './helpers/useSsrContext'
 // Custom Renderer API ---------------------------------------------------------
 
 export { createRenderer, createHydrationRenderer } from './renderer'
-export { queuePostFlushCb } from './scheduler'
+export { queuePostFlushCb, flushPostFlushCbs } from './scheduler' // fixed by xxxxxx export flushPostFlushCbs
 export { warn } from './warning'
 export {
   handleError,

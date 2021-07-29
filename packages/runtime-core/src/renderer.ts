@@ -45,7 +45,7 @@ import {
 import {
   queueJob,
   queuePostFlushCb,
-  flushPostFlushCbs,
+  // flushPostFlushCbs,
   invalidateJob,
   flushPreFlushCbs,
   SchedulerCb
@@ -819,11 +819,16 @@ function baseCreateRenderer(
         value: vnode,
         enumerable: false
       })
-      Object.defineProperty(el, '__vueParentComponent', {
-        value: parentComponent,
-        enumerable: false
-      })
+      // Object.defineProperty(el, '__vueParentComponent', {
+      //   value: parentComponent,
+      //   enumerable: false
+      // })
     }
+    // fixed by xxxxxx 始终提供__vueParentComponent
+    Object.defineProperty(el, '__vueParentComponent', {
+      value: parentComponent,
+      enumerable: false
+    })
     if (dirs) {
       invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount')
     }
@@ -2390,7 +2395,8 @@ function baseCreateRenderer(
     } else {
       patch(container._vnode || null, vnode, container, null, null, null, isSVG)
     }
-    flushPostFlushCbs()
+    // fixed by xxxxxx 调整到UniComponent里边触发flushPostFlushCbs
+    // flushPostFlushCbs()
     container._vnode = vnode
   }
 
