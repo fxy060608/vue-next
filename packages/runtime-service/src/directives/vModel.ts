@@ -21,7 +21,7 @@ export const vModelText: ModelDirective<
   created(el, { modifiers: { trim, number } }, vnode) {
     el._assign = getModelAssigner(vnode)
     addEventListener(el, 'input', e => {
-      let domValue: string | number = e.detail.value as string
+      let domValue: string | number = e.detail!.value as string
       // 从 view 层接收到新值后，赋值给 service 层元素，注意，需要临时解除 pageNode，否则赋值 value 会触发向 view 层的再次同步数据
       const pageNode = el.pageNode
       el.pageNode = null

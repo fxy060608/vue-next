@@ -1,14 +1,8 @@
 import { UniElement } from '@dcloudio/uni-shared'
 import { ObjectDirective } from '@vue/runtime-core'
 
-interface VShowElement extends UniElement {
-  // _vod = vue original display
-  _vod: string
-}
-
-export const vShow: ObjectDirective<VShowElement> = {
+export const vShow: ObjectDirective<UniElement> = {
   beforeMount(el, { value }) {
-    el._vod = (el.style.display === 'none' ? '' : el.style.display) as string
     setDisplay(el, value)
   },
   updated(el, { value, oldValue }) {
@@ -20,6 +14,6 @@ export const vShow: ObjectDirective<VShowElement> = {
   }
 }
 
-function setDisplay(el: VShowElement, value: unknown): void {
-  el.style.display = value ? el._vod : 'none'
+function setDisplay(el: UniElement, value: unknown): void {
+  el.setAttribute('.vShow', !!value)
 }
