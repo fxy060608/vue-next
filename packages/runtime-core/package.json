@@ -33,6 +33,7 @@
   "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/runtime-core#readme",
   "dependencies": {
     "@vue/shared": "3.1.4",
-    "@vue/reactivity": "3.1.4"
+    "@vue/reactivity": "3.1.4",
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared"
   }
 }
