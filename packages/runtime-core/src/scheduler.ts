@@ -46,8 +46,13 @@ let flushIndex = 0
 const pendingPostFlushCbs: SchedulerJob[] = []
 let activePostFlushCbs: SchedulerJob[] | null = null
 let postFlushIndex = 0
-
-const resolvedPromise = /*#__PURE__*/ Promise.resolve() as Promise<any>
+// fixed by xxxxxx iOS
+const iOSPromise = {
+  then(callback: Function) {
+    setTimeout(() => callback(), 0)
+  },
+} as Promise<any>
+const resolvedPromise = /*#__PURE__*/ iOSPromise as Promise<any>
 let currentFlushPromise: Promise<void> | null = null
 
 const RECURSION_LIMIT = 100
