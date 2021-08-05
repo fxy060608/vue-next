@@ -10,7 +10,7 @@ import { callWithAsyncErrorHandling, ErrorTypeStrings } from './errorHandling'
 import { warn } from './warning'
 import { toHandlerKey } from '@vue/shared'
 import { DebuggerEvent, pauseTracking, resetTracking } from '@vue/reactivity'
-
+import { isRootHook } from '@dcloudio/uni-shared'
 export {
   onActivated,
   onDeactivated,
@@ -25,6 +25,10 @@ export function injectHook(
   prepend: boolean = false
 ): Function | undefined {
   if (target) {
+    // fixed by xxxxxx
+    if (isRootHook(type)) {
+      target = target.root
+    }
     const hooks = target[type] || (target[type] = [])
     // cache the error handling wrapper for injected hooks so the same hook
     // can be properly deduped by the scheduler. "__weh" stands for "with error
@@ -32,7 +36,7 @@ export function injectHook(
     const wrappedHook =
       hook.__weh ||
       (hook.__weh = (...args: unknown[]) => {
-        if (target.isUnmounted) {
+        if (target!.isUnmounted) {
           return
         }
         // disable tracking inside all lifecycle hooks

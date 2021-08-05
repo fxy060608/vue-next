@@ -1,4 +1,4 @@
-import { ComponentInternalInstance } from '@vue/runtime-core'
+import { ComponentInternalInstance, nextTick } from '@vue/runtime-core'
 interface WXSElement {
   __wxsWatches?: { [name: string]: () => void }
 }
@@ -20,13 +20,14 @@ export function patchWxs(
     el.__wxsWatches[rawName] = proxy.$watch(
       () => instance.attrs[name],
       (value: unknown, oldValue: unknown) => {
-        // TODO ownerInstance,instance
-        nextValue(
-          value,
-          oldValue,
-          (proxy as any).$gcd(proxy, true),
-          (proxy as any).$gcd(proxy, true)
-        )
+        nextTick(() => {
+          nextValue(
+            value,
+            oldValue,
+            (proxy as any).$gcd(proxy, true),
+            (proxy as any).$gcd(proxy, false)
+          )
+        })
       },
       {
         deep: true
