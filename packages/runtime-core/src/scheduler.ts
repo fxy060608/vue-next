@@ -30,8 +30,14 @@ let preFlushIndex = 0
 const pendingPostFlushCbs: SchedulerCb[] = []
 let activePostFlushCbs: SchedulerCb[] | null = null
 let postFlushIndex = 0
-
-const resolvedPromise: Promise<any> = Promise.resolve()
+// fixed by xxxxxx iOS
+const iOSPromise = {
+  then(callback: Function) {
+    setTimeout(() => callback(), 0)
+  }
+} as Promise<any>
+const isIOS = exports.platform === 'iOS'
+const resolvedPromise: Promise<any> = isIOS ? iOSPromise : Promise.resolve()
 let currentFlushPromise: Promise<void> | null = null
 
 let currentPreFlushParentJob: SchedulerJob | null = null
