@@ -824,11 +824,13 @@ function baseCreateRenderer(
         value: vnode,
         enumerable: false
       })
-      Object.defineProperty(el, '__vueParentComponent', {
-        value: parentComponent,
-        enumerable: false
-      })
     }
+    // fixed by xxxxxx
+    Object.defineProperty(el, '__vueParentComponent', {
+      value: parentComponent,
+      enumerable: false
+    })
+
     if (dirs) {
       invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount')
     }

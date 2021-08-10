@@ -1,6 +1,6 @@
 import { ComponentInternalInstance, nextTick } from '@vue/runtime-core'
 interface WXSElement {
-  __wxsWatches?: { [name: string]: () => void }
+  __wxsProps?: { [name: string]: unknown }
 }
 export function patchWxs(
   el: Element & WXSElement,
@@ -8,30 +8,24 @@ export function patchWxs(
   nextValue: Function | null,
   instance: ComponentInternalInstance | null = null
 ) {
-  if (!el.__wxsWatches) {
-    el.__wxsWatches = {}
+  if (!nextValue || !instance) {
+    return
   }
-  if (!nextValue) {
-    return el.__wxsWatches[rawName] && el.__wxsWatches[rawName]()
+  const propName = rawName.replace('change:', '')
+  const { attrs } = instance
+  const nextPropValue = attrs[propName]
+  const prevPropValue = (el.__wxsProps || (el.__wxsProps = {}))[propName]
+  if (prevPropValue === nextPropValue) {
+    return
   }
-  if (!el.__wxsWatches[rawName] && instance && instance.proxy) {
-    const proxy = instance.proxy
-    const name = rawName.split(':')[1]
-    el.__wxsWatches[rawName] = proxy.$watch(
-      () => instance.attrs[name],
-      (value: unknown, oldValue: unknown) => {
-        nextTick(() => {
-          nextValue(
-            value,
-            oldValue,
-            (proxy as any).$gcd(proxy, true),
-            (proxy as any).$gcd(proxy, false)
-          )
-        })
-      },
-      {
-        deep: true
-      }
+  el.__wxsProps[propName] = nextPropValue
+  const proxy = instance.proxy!
+  nextTick(() => {
+    nextValue(
+      nextPropValue,
+      prevPropValue,
+      (proxy as any).$gcd(proxy, true),
+      (proxy as any).$gcd(proxy, false)
     )
-  }
+  })
 }

@@ -30,6 +30,15 @@ export function patchStyle(el: Element, prev: Style, next: Style) {
       }
     }
   }
+  // fixed by xxxxxx
+  const { __wxsStyle } = (el as unknown) as {
+    __wxsStyle: Record<string, string>
+  }
+  if (__wxsStyle) {
+    for (const key in __wxsStyle) {
+      setStyle(style, key, __wxsStyle[key])
+    }
+  }
 }
 
 const importantRE = /\s*!important$/

@@ -10,9 +10,22 @@ import { patchWxs } from './modules/wxs'
 const nativeOnRE = /^on[a-z]/
 
 type DOMRendererOptions = RendererOptions<Node, Element>
-
-export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (_, key) =>
-  key === 'value'
+// fixed by xxxxxx
+export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (
+  el,
+  key
+) => {
+  if (key === 'value' || key.indexOf('change:') === 0) {
+    return true
+  }
+  if (key === 'class' && (el as any).__wxsClassChanged) {
+    return true
+  }
+  if (key === 'style' && (el as any).__wxsStyleChanged) {
+    return true
+  }
+  return false
+}
 
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,

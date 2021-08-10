@@ -3,7 +3,7 @@ import {
   ComponentInternalInstance,
   callWithAsyncErrorHandling
 } from '@vue/runtime-core'
-import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
+import { ErrorCodes } from '@vue/runtime-core'
 
 interface Invoker extends EventListener {
   value: EventValue
@@ -130,7 +130,7 @@ function createInvoker(
             fn,
             instance,
             ErrorCodes.NATIVE_EVENT_HANDLER,
-            [!(fn as any).__wwe ? normalizeNativeEvent(e) : e]
+            !(fn as any).__wwe ? normalizeNativeEvent(e) : [e]
           )
         }
         return
@@ -139,12 +139,10 @@ function createInvoker(
         patchStopImmediatePropagation(e, value),
         instance,
         ErrorCodes.NATIVE_EVENT_HANDLER,
-        [
-          // fixed by xxxxxx
-          normalizeNativeEvent && !(value as any).__wwe
-            ? normalizeNativeEvent(e)
-            : e
-        ]
+        // fixed by xxxxxx
+        normalizeNativeEvent && !(value as any).__wwe
+          ? normalizeNativeEvent(e, value, instance)
+          : [e]
       )
     }
   }
