@@ -1376,6 +1376,17 @@ function baseCreateRenderer(
       optimized
     )
 
+    // fixed by xxxxxx 对根节点设置ownerid
+    if ((instance as any).$wxsModules) {
+      const vnode = instance.subTree
+      if (vnode.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        const elemVNode = (vnode.children as VNode[]).find(
+          vnode => vnode.shapeFlag & ShapeFlags.ELEMENT
+        )
+        elemVNode && elemVNode.el!.setAttribute('.vOwnerId', instance.uid)
+      }
+    }
+
     if (__DEV__) {
       popWarningContext()
       endMeasure(instance, `mount`)

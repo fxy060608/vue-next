@@ -18,7 +18,8 @@ type ModelDirective<T> = ObjectDirective<T & { _assign: AssignerFn }>
 export const vModelText: ModelDirective<
   UniInputElement | UniTextAreaElement
 > = {
-  created(el, { modifiers: { trim, number } }, vnode) {
+  created(el, { value, modifiers: { trim, number } }, vnode) {
+    el.value = value == null ? '' : value
     el._assign = getModelAssigner(vnode)
     addEventListener(el, 'input', e => {
       let domValue: string | number = e.detail!.value as string

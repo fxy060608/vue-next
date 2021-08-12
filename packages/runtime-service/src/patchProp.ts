@@ -50,7 +50,11 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   key,
   prevValue,
   nextValue,
-  parentComponent
+  isSVG = false,
+  prevChildren,
+  parentComponent,
+  parentSuspense,
+  unmountChildren
 ) => {
   switch (key) {
     // special
@@ -64,7 +68,7 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
       if (isOn(key)) {
         // ignore v-model listeners
         if (!isModelListener(key)) {
-          patchEvent(el, key, prevValue, nextValue)
+          patchEvent(el, key, prevValue, nextValue, parentComponent)
         }
       } else {
         // 非基本类型

@@ -155,7 +155,8 @@ function logError(
     }
     // crash in dev by default so it's more noticeable
     if (throwInDev) {
-      throw err
+      // throw err fixed by xxxxxx 避免 error 导致 App 端不可用（比如跳转时报错）
+      console.error(err)
     } else if (!__TEST__) {
       console.error(err)
     }
