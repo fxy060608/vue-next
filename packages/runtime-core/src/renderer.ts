@@ -89,7 +89,11 @@ import { isAsyncWrapper } from './apiAsyncComponent'
 import { isCompatEnabled } from './compat/compatConfig'
 import { DeprecationTypes } from './compat/compatConfig'
 import { registerLegacyRef } from './compat/ref'
-
+import {
+  ATTR_V_OWNER_ID,
+  ATTR_V_RENDERJS,
+  resolveOwnerEl
+} from '@dcloudio/uni-shared'
 export interface Renderer<HostElement = RendererElement> {
   render: RootRenderFunction<HostElement>
   createApp: CreateAppFunction<HostElement>
@@ -1378,12 +1382,11 @@ function baseCreateRenderer(
 
     // fixed by xxxxxx 对根节点设置ownerid
     if ((instance as any).$wxsModules) {
-      const vnode = instance.subTree
-      if (vnode.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-        const elemVNode = (vnode.children as VNode[]).find(
-          vnode => vnode.shapeFlag & ShapeFlags.ELEMENT
-        )
-        elemVNode && elemVNode.el!.setAttribute('.vOwnerId', instance.uid)
+      const el = resolveOwnerEl(instance)
+      if (el) {
+        el.setAttribute(ATTR_V_OWNER_ID, instance.uid)
+        const { $renderjsModules } = instance.type as any
+        $renderjsModules && el.setAttribute(ATTR_V_RENDERJS, $renderjsModules)
       }
     }
 
