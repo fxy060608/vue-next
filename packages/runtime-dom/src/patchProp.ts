@@ -19,9 +19,11 @@ export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (
     return true
   }
   if (key === 'class' && (el as any).__wxsClassChanged) {
+    ;(el as any).__wxsClassChanged = false
     return true
   }
   if (key === 'style' && (el as any).__wxsStyleChanged) {
+    ;(el as any).__wxsStyleChanged = false
     return true
   }
   return false
