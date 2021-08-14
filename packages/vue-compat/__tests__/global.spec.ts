@@ -257,7 +257,7 @@ describe('GLOBAL_PROTOTYPE', () => {
   })
 
   test('method this context', () => {
-    Vue.prototype.$test = function() {
+    Vue.prototype.$test = function () {
       return this.msg
     }
     const vm = new Vue({

@@ -10,12 +10,13 @@ import { patchWxs } from './modules/wxs'
 const nativeOnRE = /^on[a-z]/
 
 type DOMRendererOptions = RendererOptions<Node, Element>
+
 // fixed by xxxxxx
 export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (
   el,
   key
 ) => {
-  if (key === 'value' || key.indexOf('change:') === 0) {
+  if (key.indexOf('change:') === 0) {
     return true
   }
   if (key === 'class' && (el as any).__wxsClassChanged) {
@@ -44,43 +45,42 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   if (__UNI_FEATURE_WXS__ && key.indexOf('change:') === 0) {
     return patchWxs(el, key, nextValue, parentComponent)
   }
-  switch (key) {
-    // special
-    case 'class':
-      patchClass(el, nextValue, isSVG)
-      break
-    case 'style':
-      patchStyle(el, prevValue, nextValue)
-      break
-    default:
-      if (isOn(key)) {
-        // ignore v-model listeners
-        if (!isModelListener(key)) {
-          patchEvent(el, key, prevValue, nextValue, parentComponent)
-        }
-      } else if (shouldSetAsProp(el, key, nextValue, isSVG)) {
-        patchDOMProp(
-          el,
-          key,
-          nextValue,
-          prevChildren,
-          parentComponent,
-          parentSuspense,
-          unmountChildren
-        )
-      } else {
-        // special case for <input v-model type="checkbox"> with
-        // :true-value & :false-value
-        // store value as dom properties since non-string values will be
-        // stringified.
-        if (key === 'true-value') {
-          ;(el as any)._trueValue = nextValue
-        } else if (key === 'false-value') {
-          ;(el as any)._falseValue = nextValue
-        }
-        patchAttr(el, key, nextValue, isSVG, parentComponent)
-      }
-      break
+  if (key === 'class') {
+    patchClass(el, nextValue, isSVG)
+  } else if (key === 'style') {
+    patchStyle(el, prevValue, nextValue)
+  } else if (isOn(key)) {
+    // ignore v-model listeners
+    if (!isModelListener(key)) {
+      patchEvent(el, key, prevValue, nextValue, parentComponent)
+    }
+  } else if (
+    key[0] === '.'
+      ? ((key = key.slice(1)), true)
+      : key[0] === '^'
+      ? ((key = key.slice(1)), false)
+      : shouldSetAsProp(el, key, nextValue, isSVG)
+  ) {
+    patchDOMProp(
+      el,
+      key,
+      nextValue,
+      prevChildren,
+      parentComponent,
+      parentSuspense,
+      unmountChildren
+    )
+  } else {
+    // special case for <input v-model type="checkbox"> with
+    // :true-value & :false-value
+    // store value as dom properties since non-string values will be
+    // stringified.
+    if (key === 'true-value') {
+      ;(el as any)._trueValue = nextValue
+    } else if (key === 'false-value') {
+      ;(el as any)._falseValue = nextValue
+    }
+    patchAttr(el, key, nextValue, isSVG, parentComponent)
   }
 }
 
@@ -92,8 +92,8 @@ function shouldSetAsProp(
 ) {
   if (isSVG) {
     // most keys must be set as attribute on svg elements to work
-    // ...except innerHTML
-    if (key === 'innerHTML') {
+    // ...except innerHTML & textContent
+    if (key === 'innerHTML' || key === 'textContent') {
       return true
     }
     // or native onclick with function values
