@@ -1,9 +1,10 @@
 import { isPromise } from '../../shared/src'
 import {
   getCurrentInstance,
+  setCurrentInstance,
   SetupContext,
   createSetupContext,
-  setCurrentInstance
+  unsetCurrentInstance
 } from './component'
 import { EmitFn, EmitsOptions } from './componentEmits'
 import {
@@ -109,11 +110,6 @@ export function defineEmits() {
 }
 
 /**
- * @deprecated use `defineEmits` instead.
- */
-export const defineEmit = defineEmits
-
-/**
  * Vue `<script setup>` compiler macro for declaring a component's exposed
  * instance properties when it is accessed by a parent component via template
  * refs.
@@ -134,12 +130,12 @@ export function defineExpose(exposed?: Record<string, any>) {
 type NotUndefined<T> = T extends undefined ? never : T
 
 type InferDefaults<T> = {
-  [K in keyof T]?: NotUndefined<T[K]> extends (
+  [K in keyof T]?: NotUndefined<T[K]> extends
     | number
     | string
     | boolean
     | symbol
-    | Function)
+    | Function
     ? NotUndefined<T[K]>
     : (props: T) => NotUndefined<T[K]>
 }
@@ -175,19 +171,6 @@ export function withDefaults<Props, Defaults extends InferDefaults<Props>>(
     warnRuntimeUsage(`withDefaults`)
   }
   return null as any
-}
-
-/**
- * @deprecated use `useSlots` and `useAttrs` instead.
- */
-export function useContext(): SetupContext {
-  if (__DEV__) {
-    warn(
-      `\`useContext()\` has been deprecated and will be removed in the ` +
-        `next minor release. Use \`useSlots()\` and \`useAttrs()\` instead.`
-    )
-  }
-  return getContext()
 }
 
 export function useSlots(): SetupContext['slots'] {
@@ -230,25 +213,38 @@ export function mergeDefaults(
 }
 
 /**
- * Runtime helper for storing and resuming current instance context in
- * async setup().
+ * `<script setup>` helper for persisting the current instance context over
+ * async/await flows.
+ *
+ * `@vue/compiler-sfc` converts the following:
+ *
+ * ```ts
+ * const x = await foo()
+ * ```
+ *
+ * into:
+ *
+ * ```ts
+ * let __temp, __restore
+ * const x = (([__temp, __restore] = withAsyncContext(() => foo())),__temp=await __temp,__restore(),__temp)
+ * ```
+ * @internal
  */
-export function withAsyncContext<T>(awaitable: T | Promise<T>): Promise<T> {
-  const ctx = getCurrentInstance()
-  setCurrentInstance(null) // unset after storing instance
+export function withAsyncContext(getAwaitable: () => any) {
+  const ctx = getCurrentInstance()!
   if (__DEV__ && !ctx) {
-    warn(`withAsyncContext() called when there is no active context instance.`)
+    warn(
+      `withAsyncContext called without active current instance. ` +
+        `This is likely a bug.`
+    )
   }
-  return isPromise<T>(awaitable)
-    ? awaitable.then(
-        res => {
-          setCurrentInstance(ctx)
-          return res
-        },
-        err => {
-          setCurrentInstance(ctx)
-          throw err
-        }
-      )
-    : (awaitable as any)
+  let awaitable = getAwaitable()
+  unsetCurrentInstance()
+  if (isPromise(awaitable)) {
+    awaitable = awaitable.catch(e => {
+      setCurrentInstance(ctx)
+      throw e
+    })
+  }
+  return [awaitable, () => setCurrentInstance(ctx)]
 }
