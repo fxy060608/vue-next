@@ -305,9 +305,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dcloudio/uni-shared@file:../uni-app-next/packages/uni-shared":
-  version "3.0.0-alpha-3000020210813002"
-
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-0.4.3.tgz#9e42981ef035beb3dd49add17acb96e8ff6f394c"
