@@ -42,6 +42,9 @@ describe('with object props', () => {
     kkk?: any
     validated?: string
     date?: Date
+    l?: Date
+    ll?: Date | number
+    lll?: string | number
   }
 
   type GT = string & { __brand: unknown }
@@ -131,7 +134,10 @@ describe('with object props', () => {
         // validator requires explicit annotation
         validator: (val: unknown) => val !== ''
       },
-      date: Date
+      date: Date,
+      l: [Date],
+      ll: [Date, Number],
+      lll: [String, Number]
     },
     setup(props) {
       // type assertion. See https://github.com/SamVerschueren/tsd
@@ -164,6 +170,9 @@ describe('with object props', () => {
       expectType<ExpectedProps['kkk']>(props.kkk)
       expectType<ExpectedProps['validated']>(props.validated)
       expectType<ExpectedProps['date']>(props.date)
+      expectType<ExpectedProps['l']>(props.l)
+      expectType<ExpectedProps['ll']>(props.ll)
+      expectType<ExpectedProps['lll']>(props.lll)
 
       // @ts-expect-error props should be readonly
       expectError((props.a = 1))
