@@ -467,8 +467,10 @@ export function compileScript(
           return isQualifiedType(node.declaration)
         }
       }
-
-      for (const node of scriptSetupAst.body) {
+      const body = scriptAst
+        ? [...scriptSetupAst.body, ...scriptAst.body]
+        : scriptSetupAst.body
+      for (const node of body) {
         const qualified = isQualifiedType(node)
         if (qualified) {
           return qualified
@@ -526,7 +528,7 @@ export function compileScript(
   /**
    * check defaults. If the default object is an object literal with only
    * static properties, we can directly generate more optimzied default
-   * decalrations. Otherwise we will have to fallback to runtime merging.
+   * declarations. Otherwise we will have to fallback to runtime merging.
    */
   function checkStaticDefaults() {
     return (
@@ -623,7 +625,8 @@ export function compileScript(
               ) +
               ', '
           } else {
-            res += scriptSetupSource.slice(m.start!, m.end!) + `, `
+            res +=
+              scriptSetupSource.slice(m.start!, m.typeAnnotation.end!) + `, `
           }
         }
       }
@@ -634,7 +637,7 @@ export function compileScript(
   }
 
   // 1. process normal <script> first if it exists
-  let scriptAst
+  let scriptAst: Program | undefined
   if (script) {
     // import dedupe between <script> and <script setup>
     scriptAst = parse(
@@ -894,7 +897,7 @@ export function compileScript(
       }
     }
 
-    // walk decalrations to record declared bindings
+    // walk declarations to record declared bindings
     if (
       (node.type === 'VariableDeclaration' ||
         node.type === 'FunctionDeclaration' ||
@@ -1512,6 +1515,7 @@ function inferRuntimeType(
           case 'Map':
           case 'WeakSet':
           case 'WeakMap':
+          case 'Date':
             return [node.typeName.name]
           case 'Record':
           case 'Partial':
