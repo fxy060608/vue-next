@@ -716,6 +716,17 @@ function parseAttributes(
     }
 
     const attr = parseAttribute(context, attributeNames)
+
+    // Trim whitespace between class
+    // https://github.com/vuejs/vue-next/issues/4251
+    if (
+      attr.type === NodeTypes.ATTRIBUTE &&
+      attr.value &&
+      attr.name === 'class'
+    ) {
+      attr.value.content = attr.value.content.replace(/\s+/g, ' ').trim()
+    }
+
     if (type === TagType.Start) {
       props.push(attr)
     }
@@ -814,9 +825,10 @@ function parseAttribute(
             context,
             ErrorCodes.X_MISSING_DYNAMIC_DIRECTIVE_ARGUMENT_END
           )
+          content = content.substr(1)
+        } else {
+          content = content.substr(1, content.length - 2)
         }
-
-        content = content.substr(1, content.length - 2)
       } else if (isSlot) {
         // #1241 special case for v-slot: vuetify relies extensively on slot
         // names containing dots. v-slot doesn't have any modifiers and Vue 2.x
