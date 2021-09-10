@@ -20,7 +20,8 @@ module.exports = {
     'no-restricted-syntax': [
       'error',
       'ObjectExpression > SpreadElement',
-      'ObjectPattern > RestElement'
+      'ObjectPattern > RestElement',
+      'AwaitExpression'
     ]
   },
   overrides: [
@@ -41,14 +42,16 @@ module.exports = {
     },
     // Packages targeting DOM
     {
-      files: ['packages/{vue,runtime-dom}/**'],
+      files: ['packages/{vue,vue-compat,runtime-dom}/**'],
       rules: {
         'no-restricted-globals': ['error', ...NodeGlobals]
       }
     },
     // Packages targeting Node
     {
-      files: ['packages/{compiler-sfc,compiler-ssr,server-renderer}/**'],
+      files: [
+        'packages/{compiler-sfc,compiler-ssr,server-renderer,ref-transform}/**'
+      ],
       rules: {
         'no-restricted-globals': ['error', ...DOMGlobals],
         'no-restricted-syntax': 'off'

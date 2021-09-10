@@ -31,7 +31,7 @@ export {
   camelize,
   computed,
   defineComponent,
-  defineEmit,
+  defineEmits,
   defineProps,
   inject,
   nextTick,

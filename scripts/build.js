@@ -75,8 +75,8 @@ async function build(target) {
   const pkgDir = path.resolve(`packages/${target}`)
   const pkg = require(`${pkgDir}/package.json`)
 
-  // only build published packages for release
-  if (isRelease && pkg.private) {
+  // if this is a full build (no specific targets), ignore private packages
+  if ((isRelease || !targets.length) && pkg.private) {
     return
   }
 
@@ -118,9 +118,8 @@ async function build(target) {
     const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor')
 
     const extractorConfigPath = path.resolve(pkgDir, `api-extractor.json`)
-    const extractorConfig = ExtractorConfig.loadFileAndPrepare(
-      extractorConfigPath
-    )
+    const extractorConfig =
+      ExtractorConfig.loadFileAndPrepare(extractorConfigPath)
     const extractorResult = Extractor.invoke(extractorConfig, {
       localBuild: true,
       showVerboseMessages: true
@@ -128,18 +127,18 @@ async function build(target) {
 
     if (extractorResult.succeeded) {
       // concat additional d.ts to rolled-up dts
-      // const typesDir = path.resolve(pkgDir, 'types')
-      // if (await fs.exists(typesDir)) {
-      //   const dtsPath = path.resolve(pkgDir, pkg.types)
-      //   const existing = await fs.readFile(dtsPath, 'utf-8')
-      //   const typeFiles = await fs.readdir(typesDir)
-      //   const toAdd = await Promise.all(
-      //     typeFiles.map(file => {
-      //       return fs.readFile(path.resolve(typesDir, file), 'utf-8')
-      //     })
-      //   )
-      //   await fs.writeFile(dtsPath, existing + '\n' + toAdd.join('\n'))
-      // }
+      const typesDir = path.resolve(pkgDir, 'types')
+      if (await fs.exists(typesDir)) {
+        const dtsPath = path.resolve(pkgDir, pkg.types)
+        const existing = await fs.readFile(dtsPath, 'utf-8')
+        const typeFiles = await fs.readdir(typesDir)
+        const toAdd = await Promise.all(
+          typeFiles.map(file => {
+            return fs.readFile(path.resolve(typesDir, file), 'utf-8')
+          })
+        )
+        await fs.writeFile(dtsPath, existing + '\n' + toAdd.join('\n'))
+      }
       console.log(
         chalk.bold(chalk.green(`API Extractor completed successfully.`))
       )
@@ -169,9 +168,7 @@ function checkAllSizes(targets) {
 function checkSize(target) {
   const pkgDir = path.resolve(`packages/${target}`)
   checkFileSize(`${pkgDir}/dist/${target}.global.prod.js`)
-  if (target === 'uni-mp-vue') {
-    checkFileSize(`${pkgDir}/dist/vue.runtime.esm.js`)
-  }
+  checkFileSize(`${pkgDir}/dist/${target}.runtime.global.prod.js`)
 }
 
 function checkFileSize(filePath) {

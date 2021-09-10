@@ -11,10 +11,13 @@ import {
   nextTick
 } from '@vue/runtime-test'
 import * as runtimeTest from '@vue/runtime-test'
+import { registerRuntimeCompiler, createApp } from '@vue/runtime-test'
 import { baseCompile } from '@vue/compiler-core'
 
 declare var __VUE_HMR_RUNTIME__: HMRRuntime
 const { createRecord, rerender, reload } = __VUE_HMR_RUNTIME__
+
+registerRuntimeCompiler(compileToFunction)
 
 function compileToFunction(template: string) {
   const { code } = baseCompile(template)
@@ -33,9 +36,9 @@ describe('hot module replacement', () => {
   })
 
   test('createRecord', () => {
-    expect(createRecord('test1', {})).toBe(true)
+    expect(createRecord('test1')).toBe(true)
     // if id has already been created, should return false
-    expect(createRecord('test1', {})).toBe(false)
+    expect(createRecord('test1')).toBe(false)
   })
 
   test('rerender', async () => {
@@ -47,7 +50,7 @@ describe('hot module replacement', () => {
       __hmrId: childId,
       render: compileToFunction(`<div><slot/></div>`)
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const Parent: ComponentOptions = {
       __hmrId: parentId,
@@ -59,7 +62,7 @@ describe('hot module replacement', () => {
         `<div @click="count++">{{ count }}<Child>{{ count }}</Child></div>`
       )
     }
-    createRecord(parentId, Parent)
+    createRecord(parentId)
 
     render(h(Parent), root)
     expect(serializeInner(root)).toBe(`<div>0<div>0</div></div>`)
@@ -125,7 +128,7 @@ describe('hot module replacement', () => {
       unmounted: unmountSpy,
       render: compileToFunction(`<div @click="count++">{{ count }}</div>`)
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const Parent: ComponentOptions = {
       render: () => h(Child)
@@ -164,7 +167,7 @@ describe('hot module replacement', () => {
         render: compileToFunction(`<div @click="count++">{{ count }}</div>`)
       }
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const Parent: ComponentOptions = {
       render: () => h(Child)
@@ -209,7 +212,7 @@ describe('hot module replacement', () => {
       },
       render: compileToFunction(template)
     }
-    createRecord(id, Comp)
+    createRecord(id)
 
     render(h(Comp), root)
     expect(serializeInner(root)).toBe(
@@ -246,14 +249,14 @@ describe('hot module replacement', () => {
       },
       render: compileToFunction(`<div>{{ msg }}</div>`)
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const Parent: ComponentOptions = {
       __hmrId: parentId,
       components: { Child },
       render: compileToFunction(`<Child msg="foo" />`)
     }
-    createRecord(parentId, Parent)
+    createRecord(parentId)
 
     render(h(Parent), root)
     expect(serializeInner(root)).toBe(`<div>foo</div>`)
@@ -272,14 +275,14 @@ describe('hot module replacement', () => {
       __hmrId: childId,
       render: compileToFunction(`<div>child</div>`)
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const Parent: ComponentOptions = {
       __hmrId: parentId,
       components: { Child },
       render: compileToFunction(`<Child class="test" />`)
     }
-    createRecord(parentId, Parent)
+    createRecord(parentId)
 
     render(h(Parent), root)
     expect(serializeInner(root)).toBe(`<div class="test">child</div>`)
@@ -299,7 +302,7 @@ describe('hot module replacement', () => {
       __hmrId: childId,
       render: compileToFunction(`<div>child</div>`)
     }
-    createRecord(childId, Child)
+    createRecord(childId)
 
     const components: ComponentOptions[] = []
 
@@ -321,7 +324,7 @@ describe('hot module replacement', () => {
         }
       }
 
-      createRecord(parentId, parentComp)
+      createRecord(parentId)
     }
 
     const last = components[components.length - 1]
@@ -367,7 +370,7 @@ describe('hot module replacement', () => {
         </Child>
       `)
     }
-    createRecord(parentId, Parent)
+    createRecord(parentId)
 
     render(h(Parent), root)
     expect(serializeInner(root)).toBe(
@@ -392,5 +395,44 @@ describe('hot module replacement', () => {
     expect(serializeInner(target)).toBe(
       `<div style={}><div>1</div><div>2</div></div>`
     )
+  })
+
+  // #4174
+  test('with global mixins', async () => {
+    const childId = 'hmr-global-mixin'
+    const createSpy1 = jest.fn()
+    const createSpy2 = jest.fn()
+
+    const Child: ComponentOptions = {
+      __hmrId: childId,
+      created: createSpy1,
+      render() {
+        return h('div')
+      }
+    }
+    createRecord(childId)
+
+    const Parent: ComponentOptions = {
+      render: () => h(Child)
+    }
+
+    const app = createApp(Parent)
+    app.mixin({})
+
+    const root = nodeOps.createElement('div')
+    app.mount(root)
+    expect(createSpy1).toHaveBeenCalledTimes(1)
+    expect(createSpy2).toHaveBeenCalledTimes(0)
+
+    reload(childId, {
+      __hmrId: childId,
+      created: createSpy2,
+      render() {
+        return h('div')
+      }
+    })
+    await nextTick()
+    expect(createSpy1).toHaveBeenCalledTimes(1)
+    expect(createSpy2).toHaveBeenCalledTimes(1)
   })
 })

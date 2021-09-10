@@ -84,7 +84,7 @@ describe('api: createApp', () => {
         const bar = inject('bar')
         try {
           inject('__proto__')
-        } catch (e) {}
+        } catch (e: any) {}
         return () => `${foo},${bar}`
       }
     }
@@ -481,4 +481,7 @@ describe('api: createApp', () => {
     app.mount(root)
     expect(serializeInner(root)).toBe('hello')
   })
+
+  // config.compilerOptions is tested in packages/vue since it is only
+  // supported in the full build.
 })

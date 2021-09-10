@@ -19,7 +19,10 @@ import {
   TemplateTextChildNode,
   DirectiveArguments,
   createVNodeCall,
-  ConstantTypes
+  ConstantTypes,
+  JSChildNode,
+  createFunctionExpression,
+  createBlockStatement
 } from '../ast'
 import {
   PatchFlags,
@@ -37,11 +40,15 @@ import {
   RESOLVE_COMPONENT,
   RESOLVE_DYNAMIC_COMPONENT,
   MERGE_PROPS,
+  NORMALIZE_CLASS,
+  NORMALIZE_STYLE,
+  NORMALIZE_PROPS,
   TO_HANDLERS,
   TELEPORT,
   KEEP_ALIVE,
   SUSPENSE,
-  UNREF
+  UNREF,
+  GUARD_REACTIVE_PROPS
 } from '../runtimeHelpers'
 import {
   getInnerRange,
@@ -54,7 +61,12 @@ import {
 } from '../utils'
 import { buildSlots } from './vSlot'
 import { getConstantType } from './hoistStatic'
-import { BindingTypes } from '../options'
+import { BindingMetadata, BindingTypes } from '../options'
+import {
+  checkCompatEnabled,
+  CompilerDeprecationTypes,
+  isCompatEnabled
+} from '../compat/compatConfig'
 
 // some directive transforms (e.g. v-model) may return a symbol for runtime
 // import, which should be used instead of a resolveDirective call.
@@ -62,26 +74,30 @@ const directiveImportMap = new WeakMap<DirectiveNode, symbol>()
 
 // generate a JavaScript AST for this element's codegen
 export const transformElement: NodeTransform = (node, context) => {
-  if (
-    !(
-      node.type === NodeTypes.ELEMENT &&
-      (node.tagType === ElementTypes.ELEMENT ||
-        node.tagType === ElementTypes.COMPONENT)
-    )
-  ) {
-    return
-  }
   // perform the work on exit, after all child expressions have been
   // processed and merged.
   return function postTransformElement() {
+    node = context.currentNode!
+
+    if (
+      !(
+        node.type === NodeTypes.ELEMENT &&
+        (node.tagType === ElementTypes.ELEMENT ||
+          node.tagType === ElementTypes.COMPONENT)
+      )
+    ) {
+      return
+    }
+
     const { tag, props } = node
     const isComponent = node.tagType === ElementTypes.COMPONENT
 
     // The goal of the transform is to create a codegenNode implementing the
     // VNodeCall interface.
-    const vnodeTag = isComponent
+    let vnodeTag = isComponent
       ? resolveComponentType(node as ComponentNode, context)
       : `"${tag}"`
+
     const isDynamicComponent =
       isObject(vnodeTag) && vnodeTag.callee === RESOLVE_DYNAMIC_COMPONENT
 
@@ -217,6 +233,7 @@ export const transformElement: NodeTransform = (node, context) => {
       vnodeDirectives,
       !!shouldUseBlock,
       false /* disableTracking */,
+      isComponent,
       node.loc
     )
   }
@@ -227,21 +244,47 @@ export function resolveComponentType(
   context: TransformContext,
   ssr = false
 ) {
-  const { tag } = node
+  let { tag } = node
 
   // 1. dynamic component
-  const isProp =
-    node.tag === 'component' ? findProp(node, 'is') : findDir(node, 'is')
+  const isExplicitDynamic = isComponentTag(tag)
+  const isProp = findProp(node, 'is')
   if (isProp) {
-    const exp =
-      isProp.type === NodeTypes.ATTRIBUTE
-        ? isProp.value && createSimpleExpression(isProp.value.content, true)
-        : isProp.exp
-    if (exp) {
-      return createCallExpression(context.helper(RESOLVE_DYNAMIC_COMPONENT), [
-        exp
-      ])
+    if (
+      isExplicitDynamic ||
+      (__COMPAT__ &&
+        isCompatEnabled(
+          CompilerDeprecationTypes.COMPILER_IS_ON_ELEMENT,
+          context
+        ))
+    ) {
+      const exp =
+        isProp.type === NodeTypes.ATTRIBUTE
+          ? isProp.value && createSimpleExpression(isProp.value.content, true)
+          : isProp.exp
+      if (exp) {
+        return createCallExpression(context.helper(RESOLVE_DYNAMIC_COMPONENT), [
+          exp
+        ])
+      }
+    } else if (
+      isProp.type === NodeTypes.ATTRIBUTE &&
+      isProp.value!.content.startsWith('vue:')
+    ) {
+      // <button is="vue:xxx">
+      // if not <component>, only is value that starts with "vue:" will be
+      // treated as component by the parse phase and reach here, unless it's
+      // compat mode where all is values are considered components
+      tag = isProp.value!.content.slice(4)
     }
+  }
+
+  // 1.5 v-is (TODO: Deprecate)
+  const isDir = !isExplicitDynamic && findDir(node, 'is')
+  if (isDir && isDir.exp) {
+    return createCallExpression(context.helper(RESOLVE_DYNAMIC_COMPONENT), [
+      isDir.exp
+    ])
   }
 
   // 2. built-in components (Teleport, Transition, KeepAlive, Suspense...)
@@ -260,6 +303,13 @@ export function resolveComponentType(
     const fromSetup = resolveSetupReference(tag, context)
     if (fromSetup) {
       return fromSetup
+    }
+    const dotIndex = tag.indexOf('.')
+    if (dotIndex > 0) {
+      const ns = resolveSetupReference(tag.slice(0, dotIndex), context)
+      if (ns) {
+        return ns + tag.slice(dotIndex)
+      }
     }
   }
 
@@ -285,7 +335,7 @@ export function resolveComponentType(
 
 function resolveSetupReference(name: string, context: TransformContext) {
   const bindings = context.bindingMetadata
-  if (!bindings) {
+  if (!bindings || bindings.__isScriptSetup === false) {
     return
   }
 
@@ -383,13 +433,23 @@ export function buildProps(
         // skip if the prop is a cached handler or has constant value
         return
       }
+
       if (name === 'ref') {
         hasRef = true
-      } else if (name === 'class' && !isComponent) {
+      } else if (name === 'class') {
         hasClassBinding = true
-      } else if (name === 'style' && !isComponent) {
+      } else if (name === 'style') {
         hasStyleBinding = true
       } else if (name !== 'key' && !dynamicPropNames.includes(name)) {
+        dynamicPropNames.push(name)
+      }
+
+      // treat the dynamic class and style binding of the component as dynamic props
+      if (
+        isComponent &&
+        (name === 'class' || name === 'style') &&
+        !dynamicPropNames.includes(name)
+      ) {
         dynamicPropNames.push(name)
       }
     } else {
@@ -402,18 +462,34 @@ export function buildProps(
     const prop = props[i]
     if (prop.type === NodeTypes.ATTRIBUTE) {
       const { loc, name, value } = prop
-      let isStatic = true
+      let valueNode = createSimpleExpression(
+        value ? value.content : '',
+        true,
+        value ? value.loc : loc
+      ) as JSChildNode
       if (name === 'ref') {
         hasRef = true
         // in inline mode there is no setupState object, so we can't use string
         // keys to set the ref. Instead, we need to transform it to pass the
         // acrtual ref instead.
-        if (!__BROWSER__ && context.inline) {
-          isStatic = false
+        if (!__BROWSER__ && context.inline && value?.content) {
+          valueNode = createFunctionExpression(['_value', '_refs'])
+          valueNode.body = createBlockStatement(
+            processInlineRef(context.bindingMetadata, value.content)
+          )
         }
       }
-      // skip :is on <component>
-      if (name === 'is' && tag === 'component') {
+      // skip is on <component>, or is="vue:xxx"
+      if (
+        name === 'is' &&
+        (isComponentTag(tag) ||
+          (value && value.content.startsWith('vue:')) ||
+          (__COMPAT__ &&
+            isCompatEnabled(
+              CompilerDeprecationTypes.COMPILER_IS_ON_ELEMENT,
+              context
+            )))
+      ) {
         continue
       }
       properties.push(
@@ -423,18 +499,14 @@ export function buildProps(
             true,
             getInnerRange(loc, 0, name.length)
           ),
-          createSimpleExpression(
-            value ? value.content : '',
-            isStatic,
-            value ? value.loc : loc
-          )
+          valueNode
         )
       )
     } else {
       // directives
       const { name, arg, exp, loc } = prop
-      const isBind = name === 'bind'
-      const isOn = name === 'on'
+      const isVBind = name === 'bind'
+      const isVOn = name === 'on'
 
       // skip v-slot - it is handled by its dedicated transform.
       if (name === 'slot') {
@@ -445,24 +517,31 @@ export function buildProps(
         }
         continue
       }
-      // skip v-once - it is handled by its dedicated transform.
-      if (name === 'once') {
+      // skip v-once/v-memo - they are handled by dedicated transforms.
+      if (name === 'once' || name === 'memo') {
         continue
       }
       // skip v-is and :is on <component>
       if (
         name === 'is' ||
-        (isBind && tag === 'component' && isBindKey(arg, 'is'))
+        (isVBind &&
+          isBindKey(arg, 'is') &&
+          (isComponentTag(tag) ||
+            (__COMPAT__ &&
+              isCompatEnabled(
+                CompilerDeprecationTypes.COMPILER_IS_ON_ELEMENT,
+                context
+              ))))
       ) {
         continue
       }
       // skip v-on in SSR compilation
-      if (isOn && ssr) {
+      if (isVOn && ssr) {
         continue
       }
 
       // special case for v-bind and v-on with no argument
-      if (!arg && (isBind || isOn)) {
+      if (!arg && (isVBind || isVOn)) {
         hasDynamicKeys = true
         if (exp) {
           if (properties.length) {
@@ -471,7 +550,50 @@ export function buildProps(
             )
             properties = []
           }
-          if (isBind) {
+          if (isVBind) {
+            if (__COMPAT__) {
+              // 2.x v-bind object order compat
+              if (__DEV__) {
+                const hasOverridableKeys = mergeArgs.some(arg => {
+                  if (arg.type === NodeTypes.JS_OBJECT_EXPRESSION) {
+                    return arg.properties.some(({ key }) => {
+                      if (
+                        key.type !== NodeTypes.SIMPLE_EXPRESSION ||
+                        !key.isStatic
+                      ) {
+                        return true
+                      }
+                      return (
+                        key.content !== 'class' &&
+                        key.content !== 'style' &&
+                        !isOn(key.content)
+                      )
+                    })
+                  } else {
+                    // dynamic expression
+                    return true
+                  }
+                })
+                if (hasOverridableKeys) {
+                  checkCompatEnabled(
+                    CompilerDeprecationTypes.COMPILER_V_BIND_OBJECT_ORDER,
+                    context,
+                    loc
+                  )
+                }
+              }
+
+              if (
+                isCompatEnabled(
+                  CompilerDeprecationTypes.COMPILER_V_BIND_OBJECT_ORDER,
+                  context
+                )
+              ) {
+                mergeArgs.unshift(exp)
+                continue
+              }
+            }
+
             mergeArgs.push(exp)
           } else {
             // v-on="obj" -> toHandlers(obj)
@@ -485,7 +607,7 @@ export function buildProps(
         } else {
           context.onError(
             createCompilerError(
-              isBind
+              isVBind
                 ? ErrorCodes.X_V_BIND_NO_EXPRESSION
                 : ErrorCodes.X_V_ON_NO_EXPRESSION,
               loc
@@ -511,6 +633,25 @@ export function buildProps(
         // no built-in transform, this is a user custom directive.
         runtimeDirectives.push(prop)
       }
+    }
+
+    if (
+      __COMPAT__ &&
+      prop.type === NodeTypes.ATTRIBUTE &&
+      prop.name === 'ref' &&
+      context.scopes.vFor > 0 &&
+      checkCompatEnabled(
+        CompilerDeprecationTypes.COMPILER_V_FOR_REF,
+        context,
+        prop.loc
+      )
+    ) {
+      properties.push(
+        createObjectProperty(
+          createSimpleExpression('refInFor', true),
+          createSimpleExpression('true', false)
+        )
+      )
     }
   }
 
@@ -544,10 +685,10 @@ export function buildProps(
   if (hasDynamicKeys) {
     patchFlag |= PatchFlags.FULL_PROPS
   } else {
-    if (hasClassBinding) {
+    if (hasClassBinding && !isComponent) {
       patchFlag |= PatchFlags.CLASS
     }
-    if (hasStyleBinding) {
+    if (hasStyleBinding && !isComponent) {
       patchFlag |= PatchFlags.STYLE
     }
     if (dynamicPropNames.length) {
@@ -562,6 +703,80 @@ export function buildProps(
     (hasRef || hasVnodeHook || runtimeDirectives.length > 0)
   ) {
     patchFlag |= PatchFlags.NEED_PATCH
+  }
+
+  // pre-normalize props, SSR is skipped for now
+  if (!context.inSSR && propsExpression) {
+    switch (propsExpression.type) {
+      case NodeTypes.JS_OBJECT_EXPRESSION:
+        // means that there is no v-bind,
+        // but still need to deal with dynamic key binding
+        let classKeyIndex = -1
+        let styleKeyIndex = -1
+        let hasDynamicKey = false
+
+        for (let i = 0; i < propsExpression.properties.length; i++) {
+          const key = propsExpression.properties[i].key
+          if (isStaticExp(key)) {
+            if (key.content === 'class') {
+              classKeyIndex = i
+            } else if (key.content === 'style') {
+              styleKeyIndex = i
+            }
+          } else if (!key.isHandlerKey) {
+            hasDynamicKey = true
+          }
+        }
+
+        const classProp = propsExpression.properties[classKeyIndex]
+        const styleProp = propsExpression.properties[styleKeyIndex]
+
+        // no dynamic key
+        if (!hasDynamicKey) {
+          if (classProp && !isStaticExp(classProp.value)) {
+            classProp.value = createCallExpression(
+              context.helper(NORMALIZE_CLASS),
+              [classProp.value]
+            )
+          }
+          if (
+            styleProp &&
+            !isStaticExp(styleProp.value) &&
+            // the static style is compiled into an object,
+            // so use `hasStyleBinding` to ensure that it is a dynamic style binding
+            (hasStyleBinding ||
+              // v-bind:style and style both exist,
+              // v-bind:style with static literal object
+              styleProp.value.type === NodeTypes.JS_ARRAY_EXPRESSION)
+          ) {
+            styleProp.value = createCallExpression(
+              context.helper(NORMALIZE_STYLE),
+              [styleProp.value]
+            )
+          }
+        } else {
+          // dynamic key binding, wrap with `normalizeProps`
+          propsExpression = createCallExpression(
+            context.helper(NORMALIZE_PROPS),
+            [propsExpression]
+          )
+        }
+        break
+      case NodeTypes.JS_CALL_EXPRESSION:
+        // mergeProps call, do nothing
+        break
+      default:
+        // single v-bind
+        propsExpression = createCallExpression(
+          context.helper(NORMALIZE_PROPS),
+          [
+            createCallExpression(context.helper(GUARD_REACTIVE_PROPS), [
+              propsExpression
+            ])
+          ]
+        )
+        break
+    }
   }
 
   return {
@@ -626,7 +841,8 @@ function buildDirectiveArgs(
   } else {
     // user directive.
     // see if we have directives exposed via <script setup>
-    const fromSetup = !__BROWSER__ && resolveSetupReference(dir.name, context)
+    const fromSetup =
+      !__BROWSER__ && resolveSetupReference('v-' + dir.name, context)
     if (fromSetup) {
       dirArgs.push(fromSetup)
     } else {
@@ -671,4 +887,22 @@ function stringifyDynamicPropNames(props: string[]): string {
     if (i < l - 1) propsNamesString += ', '
   }
   return propsNamesString + `]`
+}
+
+function isComponentTag(tag: string) {
+  return tag[0].toLowerCase() + tag.slice(1) === 'component'
+}
+
+function processInlineRef(
+  bindings: BindingMetadata,
+  raw: string
+): JSChildNode[] {
+  const body = [createSimpleExpression(`_refs['${raw}'] = _value`)]
+  const type = bindings[raw]
+  if (type === BindingTypes.SETUP_REF) {
+    body.push(createSimpleExpression(`${raw}.value = _value`))
+  } else if (type === BindingTypes.SETUP_LET) {
+    body.push(createSimpleExpression(`${raw} = _value`))
+  }
+  return body
 }

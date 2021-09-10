@@ -1,6 +1,6 @@
 import { ShapeFlags, invokeArrayFns, NOOP } from '@vue/shared'
 
-import { stop, ReactiveEffectOptions, effect } from '@vue/reactivity'
+import { ReactiveEffectOptions, effect } from '@vue/reactivity'
 
 import { warn, VNodeProps, ComponentOptions } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
@@ -53,11 +53,8 @@ function mountComponent(
   initialVNode: VNode,
   options: CreateComponentOptions
 ): ComponentPublicInstance {
-  const instance: ComponentInternalInstance = (initialVNode.component = createComponentInstance(
-    initialVNode,
-    options.parentComponent,
-    null
-  ))
+  const instance: ComponentInternalInstance = (initialVNode.component =
+    createComponentInstance(initialVNode, options.parentComponent, null))
 
   if (__FEATURE_OPTIONS_API__) {
     instance.ctx.$onApplyOptions = onApplyOptions
@@ -79,8 +76,9 @@ function mountComponent(
   if (__FEATURE_OPTIONS_API__) {
     // $children
     if (options.parentComponent && instance.proxy) {
-      ;(options.parentComponent.ctx
-        .$children as ComponentPublicInstance[]).push(instance.proxy)
+      ;(
+        options.parentComponent.ctx.$children as ComponentPublicInstance[]
+      ).push(instance.proxy)
     }
   }
   setupRenderEffect(instance)
@@ -104,42 +102,42 @@ function createDevEffectOptions(
 }
 function setupRenderEffect(instance: ComponentInternalInstance) {
   // create reactive effect for rendering
-  instance.update = effect(function componentEffect() {
-    if (!instance.isMounted) {
-      instance.render && (instance.render as any).call(instance.proxy)
-      patch(instance)
-    } else {
-      instance.render && (instance.render as any).call(instance.proxy)
-      // updateComponent
-      const { bu, u } = instance
-      // beforeUpdate hook
-      if (bu) {
-        invokeArrayFns(bu)
+  instance.update = effect(
+    function componentEffect() {
+      if (!instance.isMounted) {
+        instance.render && (instance.render as any).call(instance.proxy)
+        patch(instance)
+      } else {
+        instance.render && (instance.render as any).call(instance.proxy)
+        // updateComponent
+        const { bu, u } = instance
+        // beforeUpdate hook
+        if (bu) {
+          invokeArrayFns(bu)
+        }
+        patch(instance)
+        // updated hook
+        if (u) {
+          queuePostRenderEffect(u)
+        }
       }
-      patch(instance)
-      // updated hook
-      if (u) {
-        queuePostRenderEffect(u)
-      }
-    }
-  }, __DEV__ ? createDevEffectOptions(instance) : prodEffectOptions)
+    },
+    __DEV__ ? createDevEffectOptions(instance) : prodEffectOptions
+  )
 }
 
 function unmountComponent(instance: ComponentInternalInstance) {
-  const { bum, effects, update, um } = instance
+  const { bum, scope, update, um } = instance
   // beforeUnmount hook
   if (bum) {
     invokeArrayFns(bum)
   }
-  if (effects) {
-    for (let i = 0; i < effects.length; i++) {
-      stop(effects[i])
-    }
-  }
+  // stop effects in component scope
+  scope.stop()
   // update may be null if a component is unmounted before its async
   // setup has resolved.
   if (update) {
-    stop(update)
+    update.active = false
   }
   // unmounted hook
   if (um) {
@@ -174,11 +172,10 @@ export function createVueApp(rootComponent: Component, rootProps = null) {
     return mountComponent(createVNode(initialVNode), options)
   }
 
-  const destroyComponent: (
-    component: ComponentPublicInstance
-  ) => void = function destroyComponent(component) {
-    return component && unmountComponent(component.$)
-  }
+  const destroyComponent: (component: ComponentPublicInstance) => void =
+    function destroyComponent(component) {
+      return component && unmountComponent(component.$)
+    }
 
   app.mount = function mount() {
     // App.vue
