@@ -509,19 +509,50 @@ export function compileScript(
   /**
    * await foo()
    * -->
-   * (([__temp, __restore] = withAsyncContext(() => foo())),__temp=await __temp,__restore(),__temp)
+   * ;(
+   *   ([__temp,__restore] = withAsyncContext(() => foo())),
+   *   await __temp,
+   *   __restore()
+   * )
+   *
+   * const a = await foo()
+   * -->
+   * const a = (
+   *   ([__temp, __restore] = withAsyncContext(() => foo())),
+   *   __temp = await __temp,
+   *   __restore(),
+   *   __temp
+   * )
    */
-  function processAwait(node: AwaitExpression, isStatement: boolean) {
+  function processAwait(
+    node: AwaitExpression,
+    needSemi: boolean,
+    isStatement: boolean
+  ) {
+    const argumentStart =
+      node.argument.extra && node.argument.extra.parenthesized
+        ? (node.argument.extra.parenStart as number)
+        : node.argument.start!
+
+    const argumentStr = source.slice(
+      argumentStart + startOffset,
+      node.argument.end! + startOffset
+    )
+
+    const containsNestedAwait = /\bawait\b/.test(argumentStr)
+
     s.overwrite(
       node.start! + startOffset,
-      node.argument.start! + startOffset,
-      `${isStatement ? `;` : ``}(([__temp,__restore]=${helper(
+      argumentStart + startOffset,
+      `${needSemi ? `;` : ``}(\n  ([__temp,__restore] = ${helper(
         `withAsyncContext`
-      )}(()=>(`
+      )}(${containsNestedAwait ? `async ` : ``}() => `
     )
     s.appendLeft(
       node.end! + startOffset,
-      `))),__temp=await __temp,__restore()${isStatement ? `` : `,__temp`})`
+      `)),\n  ${isStatement ? `` : `__temp = `}await __temp,\n  __restore()${
+        isStatement ? `` : `,\n  __temp`
+      }\n)`
     )
   }
 
@@ -671,7 +702,7 @@ export function compileScript(
         const start = node.start! + scriptStartOffset!
         const end = node.declaration.start! + scriptStartOffset!
         s.overwrite(start, end, `const ${defaultTempVar} = `)
-      } else if (node.type === 'ExportNamedDeclaration' && node.specifiers) {
+      } else if (node.type === 'ExportNamedDeclaration') {
         const defaultSpecifier = node.specifiers.find(
           s => s.exported.type === 'Identifier' && s.exported.name === 'default'
         ) as ExportSpecifier
@@ -703,6 +734,9 @@ export function compileScript(
               `\nconst ${defaultTempVar} = ${defaultSpecifier.local.name}\n`
             )
           }
+        }
+        if (node.declaration) {
+          walkDeclaration(node.declaration, setupBindings, userImportAlias)
         }
       } else if (
         (node.type === 'VariableDeclaration' ||
@@ -920,7 +954,14 @@ export function compileScript(
           }
           if (child.type === 'AwaitExpression') {
             hasAwait = true
-            processAwait(child, parent.type === 'ExpressionStatement')
+            const needsSemi = scriptSetupAst.body.some(n => {
+              return n.type === 'ExpressionStatement' && n.start === child.start
+            })
+            processAwait(
+              child,
+              needsSemi,
+              parent.type === 'ExpressionStatement'
+            )
           }
         }
       })
@@ -1541,6 +1582,9 @@ function inferRuntimeType(
     case 'TSIntersectionType':
       return ['Object']
 
+    case 'TSSymbolKeyword':
+      return ['Symbol']
+
     default:
       return [`null`] // no runtime check
   }
@@ -1823,7 +1867,7 @@ function resolveTemplateUsageCheckString(sfc: SFCDescriptor) {
 
 function stripStrings(exp: string) {
   return exp
-    .replace(/'[^']+'|"[^"]+"/g, '')
+    .replace(/'[^']*'|"[^"]*"/g, '')
     .replace(/`[^`]+`/g, stripTemplateString)
 }
 
