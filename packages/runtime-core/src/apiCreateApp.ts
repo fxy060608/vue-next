@@ -4,6 +4,7 @@ import {
   validateComponentName,
   Component,
   ComponentInternalInstance
+  // getExposeProxy
 } from './component'
 import {
   ComponentOptions,
@@ -172,9 +173,9 @@ export type CreateAppFunction<HostElement> = (
 ) => App<HostElement>
 
 let uid = 0
-// fixed by xxxxxx
+
 export function createAppAPI<HostElement>(
-  render?: RootRenderFunction,
+  render?: RootRenderFunction, // fixed by xxxxxx
   hydrate?: RootHydrateFunction
 ): CreateAppFunction<HostElement> {
   return function createApp(rootComponent, rootProps = null) {
@@ -272,7 +273,6 @@ export function createAppAPI<HostElement>(
         context.directives[name] = directive
         return app
       },
-
       // fixed by xxxxxx
       mount(): any {},
       // fixed by xxxxxx
