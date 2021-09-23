@@ -923,10 +923,15 @@
   resolved "https://registry.yarnpkg.com/@vue/consolidate/-/consolidate-0.17.3.tgz#9614d25a2eb263fa5df18ce98b0a576142e0ec83"
   integrity sha512-nl0SWcTMzaaTnJ5G6V8VlMDA1CVVrNnaQKF1aBZU3kXtjgU9jtHMsEAsgjoRUx+T0EVJk9TgbmxGhK3pOk22zw==
 
-"@vue/repl@^0.3.7":
-  version "0.3.7"
-  resolved "https://registry.yarnpkg.com/@vue/repl/-/repl-0.3.7.tgz#e5bd0f4a87ce1ce88bc03a09ec1bb5ccec779bce"
-  integrity sha512-n756Zsts7P1/IcFciPwM1S1l/XNvdqp/F0rgkITPAajcnt+BbqN/9Y6HS6p/p7FqEwe5i8wwvi0eO/7J0do6Zg==
+"@vue/repl@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@vue/repl/-/repl-0.4.0.tgz#c9f8c32dd000e569ba7e6c3427ab14b5a8e3633e"
+  integrity sha512-iHP8TSDvX8LxcOc9R0WVJG/OH6x2UYJOvBqilRe2mp/OuWbwymIPI3kIH/icSO7uTwVFrTAkb1x8DOlrkRi4MA==
+
+"@vue/shared@3.2.13":
+  version "3.2.13"
+  resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.13.tgz#c830ef966d7af12598e0ea862a55695ea589cd47"
+  integrity sha512-F/gs3kHQ8Xeo24F6EImOvBiIoYQsBjF9qoLzvk+LHxYN6ZhIDEL1NWrBFYzdFQ7NphjEYd4EvPZ+Qee+WX8P6w==
 
 "@zeit/schemas@2.6.0":
   version "2.6.0"
