@@ -1,6 +1,6 @@
 import { ShapeFlags, invokeArrayFns, NOOP } from '@vue/shared'
 
-import { ReactiveEffectOptions, effect } from '@vue/reactivity'
+import { ReactiveEffect } from '@vue/reactivity'
 
 import { warn, VNodeProps, ComponentOptions } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
@@ -19,7 +19,7 @@ import {
   Component
 } from '../../runtime-core/src/component'
 
-import { queueJob } from '../../runtime-core/src/scheduler'
+import { queueJob, SchedulerJob } from '../../runtime-core/src/scheduler'
 
 import { patch } from './patch'
 import { initAppConfig } from './appConfig'
@@ -87,43 +87,55 @@ function mountComponent(
   }
   return instance.proxy as ComponentPublicInstance
 }
-const prodEffectOptions = {
-  scheduler: queueJob
-}
 
-function createDevEffectOptions(
-  instance: ComponentInternalInstance
-): ReactiveEffectOptions {
-  return {
-    scheduler: queueJob,
-    onTrack: instance.rtc ? e => invokeArrayFns(instance.rtc!, e) : void 0,
-    onTrigger: instance.rtg ? e => invokeArrayFns(instance.rtg!, e) : void 0
-  }
-}
 function setupRenderEffect(instance: ComponentInternalInstance) {
-  // create reactive effect for rendering
-  instance.update = effect(
-    function componentEffect() {
-      if (!instance.isMounted) {
-        instance.render && (instance.render as any).call(instance.proxy)
-        patch(instance)
-      } else {
-        instance.render && (instance.render as any).call(instance.proxy)
-        // updateComponent
-        const { bu, u } = instance
-        // beforeUpdate hook
-        if (bu) {
-          invokeArrayFns(bu)
-        }
-        patch(instance)
-        // updated hook
-        if (u) {
-          queuePostRenderEffect(u)
-        }
+  const componentUpdateFn = () => {
+    if (!instance.isMounted) {
+      instance.render && (instance.render as any).call(instance.proxy)
+      patch(instance)
+    } else {
+      instance.render && (instance.render as any).call(instance.proxy)
+      // updateComponent
+      const { bu, u } = instance
+      effect.allowRecurse = false
+      // beforeUpdate hook
+      if (bu) {
+        invokeArrayFns(bu)
       }
-    },
-    __DEV__ ? createDevEffectOptions(instance) : prodEffectOptions
+      effect.allowRecurse = true
+      patch(instance)
+      // updated hook
+      if (u) {
+        queuePostRenderEffect(u)
+      }
+    }
+  }
+
+  // create reactive effect for rendering
+  const effect = new ReactiveEffect(
+    componentUpdateFn,
+    () => queueJob(instance.update),
+    instance.scope // track it in component's effect scope
   )
+
+  const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
+  update.id = instance.uid
+  // allowRecurse
+  // #1801, #2043 component render effects should allow recursive updates
+  effect.allowRecurse = update.allowRecurse = true
+
+  if (__DEV__) {
+    effect.onTrack = instance.rtc
+      ? e => invokeArrayFns(instance.rtc!, e)
+      : void 0
+    effect.onTrigger = instance.rtg
+      ? e => invokeArrayFns(instance.rtg!, e)
+      : void 0
+    // @ts-ignore (for scheduler)
+    update.ownerInstance = instance
+  }
+
+  update()
 }
 
 function unmountComponent(instance: ComponentInternalInstance) {
