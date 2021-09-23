@@ -523,13 +523,12 @@ defineExpose({ foo: 123 })
         { inlineTemplate: true }
       )
       // known const ref: set value
-      expect(content).toMatch(`count.value = $event`)
-      // const but maybe ref: also assign .value directly since non-ref
-      // won't work
-      expect(content).toMatch(`maybe.value = $event`)
+      expect(content).toMatch(`(count).value = $event`)
+      // const but maybe ref: assign if ref, otherwise do nothing
+      expect(content).toMatch(`_isRef(maybe) ? (maybe).value = $event : null`)
       // let: handle both cases
       expect(content).toMatch(
-        `_isRef(lett) ? lett.value = $event : lett = $event`
+        `_isRef(lett) ? (lett).value = $event : lett = $event`
       )
       assertCode(content)
     })
@@ -1181,6 +1180,19 @@ const emit = defineEmits(['a', 'b'])
         defineEmits([bar])
         </script>`)
       ).toThrow(`cannot reference locally declared variables`)
+
+      // #4644
+      expect(() =>
+        compile(`
+        <script>const bar = 1</script>
+        <script setup>
+        defineProps({
+          foo: {
+            default: () => bar
+          }
+        })
+        </script>`)
+      ).not.toThrow(`cannot reference locally declared variables`)
     })
 
     test('should allow defineProps/Emit() referencing scope var', () => {
