@@ -321,9 +321,7 @@ export { isInSSRComponentSetup } from './component'
  * SSR utils for \@vue/server-renderer. Only exposed in cjs builds.
  * @internal
  */
-export const ssrUtils = (
-  __NODE_JS__ || __ESM_BUNDLER__ ? _ssrUtils : null
-) as typeof _ssrUtils
+export const ssrUtils = (__SSR__ ? _ssrUtils : null) as typeof _ssrUtils
 
 // 2.x COMPAT ------------------------------------------------------------------
 
