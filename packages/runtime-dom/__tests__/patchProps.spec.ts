@@ -43,6 +43,18 @@ describe('runtime-dom: props patching', () => {
     expect(el.multiple).toBe(true)
     patchProp(el, 'multiple', null, null)
     expect(el.multiple).toBe(false)
+    patchProp(el, 'multiple', null, true)
+    expect(el.multiple).toBe(true)
+    patchProp(el, 'multiple', null, 0)
+    expect(el.multiple).toBe(false)
+    patchProp(el, 'multiple', null, '0')
+    expect(el.multiple).toBe(true)
+    patchProp(el, 'multiple', null, false)
+    expect(el.multiple).toBe(false)
+    patchProp(el, 'multiple', null, 1)
+    expect(el.multiple).toBe(true)
+    patchProp(el, 'multiple', null, undefined)
+    expect(el.multiple).toBe(false)
   })
 
   test('innerHTML unmount prev children', () => {
@@ -169,5 +181,49 @@ describe('runtime-dom: props patching', () => {
     // just to verify that it doesn't throw when i.e. switching a dynamic :is from an 'input' to a 'textarea'
     // see https://github.com/vuejs/vue-next/issues/2766
     patchProp(el, 'type', 'text', null)
+  })
+
+  test('force patch as prop', () => {
+    const el = document.createElement('div') as any
+    patchProp(el, '.x', null, 1)
+    expect(el.x).toBe(1)
+  })
+
+  test('force patch as attribute', () => {
+    const el = document.createElement('div') as any
+    el.x = 1
+    patchProp(el, '^x', null, 2)
+    expect(el.x).toBe(1)
+    expect(el.getAttribute('x')).toBe('2')
+  })
+
+  test('input with size', () => {
+    const el = document.createElement('input')
+    patchProp(el, 'size', null, 100)
+    expect(el.size).toBe(100)
+    patchProp(el, 'size', 100, null)
+    expect(el.getAttribute('size')).toBe(null)
+  })
+
+  test('patch value for select', () => {
+    const root = document.createElement('div')
+    render(
+      h('select', { value: 'foo' }, [
+        h('option', { value: 'foo' }, 'foo'),
+        h('option', { value: 'bar' }, 'bar')
+      ]),
+      root
+    )
+    const el = root.children[0] as HTMLSelectElement
+    expect(el.value).toBe('foo')
+
+    render(
+      h('select', { value: 'baz' }, [
+        h('option', { value: 'foo' }, 'foo'),
+        h('option', { value: 'baz' }, 'baz')
+      ]),
+      root
+    )
+    expect(el.value).toBe('baz')
   })
 })

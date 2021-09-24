@@ -1,4 +1,4 @@
-import { nodeOps, render } from '@vue/runtime-test'
+import { createApp, nodeOps, render } from '@vue/runtime-test'
 import { defineComponent, h, ref } from '../src'
 
 describe('api: expose', () => {
@@ -170,14 +170,41 @@ describe('api: expose', () => {
     render(h(Parent), root)
   })
 
+  test('with mount', () => {
+    const Component = defineComponent({
+      setup(_, { expose }) {
+        expose({
+          foo: 1
+        })
+        return {
+          bar: 2
+        }
+      },
+      render() {
+        return h('div')
+      }
+    })
+    const root = nodeOps.createElement('div')
+    const vm = createApp(Component).mount(root) as any
+    expect(vm.foo).toBe(1)
+    expect(vm.bar).toBe(undefined)
+  })
+
   test('expose should allow access to built-in instance properties', () => {
+    const GrandChild = defineComponent({
+      render() {
+        return h('div')
+      }
+    })
+
+    const grandChildRef = ref()
     const Child = defineComponent({
       render() {
         return h('div')
       },
       setup(_, { expose }) {
         expose()
-        return {}
+        return () => h(GrandChild, { ref: grandChildRef })
       }
     })
 
@@ -190,5 +217,7 @@ describe('api: expose', () => {
     const root = nodeOps.createElement('div')
     render(h(Parent), root)
     expect(childRef.value.$el.tag).toBe('div')
+    expect(grandChildRef.value.$parent).toBe(childRef.value)
+    expect(grandChildRef.value.$parent.$parent).toBe(grandChildRef.value.$root)
   })
 })
