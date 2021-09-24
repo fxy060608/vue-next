@@ -643,14 +643,14 @@ function setupStatefulComponent(
 
     if (isPromise(setupResult)) {
       setupResult.then(unsetCurrentInstance, unsetCurrentInstance)
-
-      if (isSSR) {
+      // fixed by xxxxxx
+      if (false && isSSR) {
         // return the promise so server-renderer can wait on it
         return setupResult
           .then((resolvedResult: unknown) => {
             handleSetupResult(instance, resolvedResult, isSSR)
           })
-          .catch(e => {
+          .catch((e: any) => {
             handleError(e, instance, ErrorCodes.SETUP_FUNCTION)
           })
       } else if (__FEATURE_SUSPENSE__) {
@@ -678,7 +678,7 @@ export function handleSetupResult(
 ) {
   if (isFunction(setupResult)) {
     // setup returned an inline render function
-    if (__NODE_JS__ && (instance.type as ComponentOptions).__ssrInlineRender) {
+    if (__SSR__ && (instance.type as ComponentOptions).__ssrInlineRender) {
       // when the function's name is `ssrRender` (compiled by SFC inline mode),
       // set it as ssrRender instead.
       instance.ssrRender = setupResult
@@ -751,22 +751,16 @@ export function finishComponentSetup(
   }
 
   // template / render function normalization
-  if (__NODE_JS__ && isSSR) {
-    // 1. the render function may already exist, returned by `setup`
-    // 2. otherwise try to use the `Component.render`
-    // 3. if the component doesn't have a render function,
-    //    set `instance.render` to NOOP so that it can inherit the render
-    //    function from mixins/extend
-    instance.render = (instance.render ||
-      Component.render ||
-      NOOP) as InternalRenderFunction
-  } else if (!instance.render) {
-    // could be set from setup()
-    if (compile && !Component.render) {
+  // could be already set when returned from setup()
+  // fixed by xxxxxx
+  if (false && !instance.render) {
+    // only do on-the-fly compile if not in SSR - SSR on-the-fly compliation
+    // is done by server-renderer
+    if (!isSSR && compile && !Component.render) {
       const template =
         (__COMPAT__ &&
           instance.vnode.props &&
-          instance.vnode.props['inline-template']) ||
+          instance.vnode.props!['inline-template']) ||
         Component.template
       if (template) {
         if (__DEV__) {
@@ -792,7 +786,7 @@ export function finishComponentSetup(
             extend(finalCompilerOptions.compatConfig, Component.compatConfig)
           }
         }
-        Component.render = compile(template, finalCompilerOptions)
+        Component.render = compile!(template, finalCompilerOptions)
         if (__DEV__) {
           endMeasure(instance, `compile`)
         }
