@@ -38,6 +38,7 @@ export function injectHook(
       hook.__weh ||
       (hook.__weh = (...args: unknown[]) => {
         if (target!.isUnmounted) {
+          // fixed by xxxxxx
           return
         }
         // disable tracking inside all lifecycle hooks
