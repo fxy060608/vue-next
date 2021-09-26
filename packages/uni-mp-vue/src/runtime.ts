@@ -6,6 +6,8 @@ export { isInSSRComponentSetup } from 'packages/runtime-core/src/component'
 
 // @vue/reactivity
 export {
+  EffectScope,
+  ReactiveEffect,
   customRef,
   effect,
   effectScope,
@@ -28,7 +30,7 @@ export {
   toRefs,
   triggerRef,
   unref
-} from '@vue/runtime-core'
+} from '@vue/reactivity'
 
 export {
   callWithAsyncErrorHandling,
