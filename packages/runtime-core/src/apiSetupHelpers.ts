@@ -1,4 +1,4 @@
-import { isPromise } from '../../shared/src'
+import { isPromise } from '@vue/shared'
 import {
   getCurrentInstance,
   setCurrentInstance,
