@@ -1,6 +1,6 @@
 {
   "name": "@vue/runtime-core",
-  "version": "3.2.16",
+  "version": "3.2.19",
   "description": "@vue/runtime-core",
   "main": "index.js",
   "module": "dist/runtime-core.esm-bundler.js",
@@ -32,8 +32,7 @@
   },
   "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/runtime-core#readme",
   "dependencies": {
-    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
-    "@vue/shared": "3.2.16",
-    "@vue/reactivity": "3.2.16"
+    "@vue/shared": "3.2.19",
+    "@vue/reactivity": "3.2.19"
   }
 }

@@ -309,9 +309,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@dcloudio/uni-shared@file:../uni-app-next/packages/uni-shared":
-  version "3.0.0-alpha-3020720210917002"
-
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-0.4.3.tgz#9e42981ef035beb3dd49add17acb96e8ff6f394c"
@@ -923,10 +920,10 @@
   resolved "https://registry.yarnpkg.com/@vue/consolidate/-/consolidate-0.17.3.tgz#9614d25a2eb263fa5df18ce98b0a576142e0ec83"
   integrity sha512-nl0SWcTMzaaTnJ5G6V8VlMDA1CVVrNnaQKF1aBZU3kXtjgU9jtHMsEAsgjoRUx+T0EVJk9TgbmxGhK3pOk22zw==
 
-"@vue/repl@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@vue/repl/-/repl-0.4.0.tgz#c9f8c32dd000e569ba7e6c3427ab14b5a8e3633e"
-  integrity sha512-iHP8TSDvX8LxcOc9R0WVJG/OH6x2UYJOvBqilRe2mp/OuWbwymIPI3kIH/icSO7uTwVFrTAkb1x8DOlrkRi4MA==
+"@vue/repl@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@vue/repl/-/repl-0.4.1.tgz#b2062bea2baa077520eb01b87df51fff357961be"
+  integrity sha512-Rq9q0MHRA0YRGBE2VSFL5ZkllqLK5HnFK9/+6Iu75M39BZAacwf808fHPTN0bhYGkJ63ur2i0sEYnnNzWzluPg==
 
 "@vue/shared@3.2.13":
   version "3.2.13"
