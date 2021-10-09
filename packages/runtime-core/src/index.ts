@@ -72,6 +72,7 @@ export {
   withDefaults,
   // internal
   mergeDefaults,
+  createPropsRestProxy,
   withAsyncContext
 } from './apiSetupHelpers'
 
