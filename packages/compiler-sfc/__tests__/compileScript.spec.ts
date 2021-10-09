@@ -96,6 +96,18 @@ const bar = 1
   props: propsModel,`)
   })
 
+  // #4764
+  test('defineProps w/ leading code', () => {
+    const { content } = compile(`
+    <script setup>import { x } from './x'
+    const props = defineProps({})
+    </script>
+    `)
+    // props declaration should be inside setup, not moved along with the import
+    expect(content).not.toMatch(`const props = __props\nimport`)
+    assertCode(content)
+  })
+
   test('defineEmits()', () => {
     const { content, bindings } = compile(`
 <script setup>
@@ -164,8 +176,8 @@ defineExpose({ foo: 123 })
         const { content } = compile(`
         <script>
         export const n = 1
-        export        default     
-        {   
+        export        default
+        {
           some:'option'
         }
         </script>
@@ -181,7 +193,7 @@ defineExpose({ foo: 123 })
         const { content } = compile(`
         <script>
         export const n = 1
-        export default{   
+        export default{
           some:'option'
         }
         </script>
@@ -549,7 +561,7 @@ defineExpose({ foo: 123 })
           <div @click="v += 1"/>
           <div @click="v -= 1"/>
           <div @click="() => {
-              let a = '' + lett           
+              let a = '' + lett
               v = a
            }"/>
            <div @click="() => {
@@ -561,7 +573,7 @@ defineExpose({ foo: 123 })
                   let z2 = z
                 })
                 let lz = z
-              })        
+              })
               v = a
            }"/>
         </template>
@@ -1038,6 +1050,26 @@ const emit = defineEmits(['a', 'b'])
       )
       assertCode(content)
       expect(bindings).toStrictEqual({
+        Foo: BindingTypes.SETUP_CONST
+      })
+    })
+
+    test('runtime Enum in normal script', () => {
+      const { content, bindings } = compile(
+        `<script lang="ts">
+          export enum D { D = "D" }
+          const enum C { C = "C" }
+          enum B { B = "B" }
+        </script>
+        <script setup lang="ts">
+        enum Foo { A = 123 }
+        </script>`
+      )
+      assertCode(content)
+      expect(bindings).toStrictEqual({
+        D: BindingTypes.SETUP_CONST,
+        C: BindingTypes.SETUP_CONST,
+        B: BindingTypes.SETUP_CONST,
         Foo: BindingTypes.SETUP_CONST
       })
     })

@@ -1,5 +1,4 @@
 import { parse } from '@babel/parser'
-import { babelParserDefaultPlugins } from '@vue/shared'
 import { transform } from '../src'
 
 function assertCode(code: string) {
@@ -7,7 +6,7 @@ function assertCode(code: string) {
   try {
     parse(code, {
       sourceType: 'module',
-      plugins: [...babelParserDefaultPlugins, 'typescript']
+      plugins: ['typescript']
     })
   } catch (e: any) {
     console.log(code)
@@ -17,7 +16,7 @@ function assertCode(code: string) {
 }
 
 test('$ unwrapping', () => {
-  const { code, rootVars } = transform(`
+  const { code, rootRefs } = transform(`
     import { ref, shallowRef } from 'vue'
     let foo = $(ref())
     let a = $(ref(1))
@@ -40,12 +39,12 @@ test('$ unwrapping', () => {
   // normal declarations left untouched
   expect(code).toMatch(`let c = () => {}`)
   expect(code).toMatch(`let d`)
-  expect(rootVars).toStrictEqual(['foo', 'a', 'b'])
+  expect(rootRefs).toStrictEqual(['foo', 'a', 'b'])
   assertCode(code)
 })
 
 test('$ref & $shallowRef declarations', () => {
-  const { code, rootVars, importedHelpers } = transform(`
+  const { code, rootRefs, importedHelpers } = transform(`
     let foo = $ref()
     let a = $ref(1)
     let b = $shallowRef({
@@ -70,13 +69,13 @@ test('$ref & $shallowRef declarations', () => {
   // normal declarations left untouched
   expect(code).toMatch(`let c = () => {}`)
   expect(code).toMatch(`let d`)
-  expect(rootVars).toStrictEqual(['foo', 'a', 'b'])
+  expect(rootRefs).toStrictEqual(['foo', 'a', 'b'])
   expect(importedHelpers).toStrictEqual(['ref', 'shallowRef'])
   assertCode(code)
 })
 
 test('multi $ref declarations', () => {
-  const { code, rootVars, importedHelpers } = transform(`
+  const { code, rootRefs, importedHelpers } = transform(`
     let a = $ref(1), b = $ref(2), c = $ref({
       count: 0
     })
@@ -86,31 +85,31 @@ test('multi $ref declarations', () => {
       count: 0
     })
     `)
-  expect(rootVars).toStrictEqual(['a', 'b', 'c'])
+  expect(rootRefs).toStrictEqual(['a', 'b', 'c'])
   expect(importedHelpers).toStrictEqual(['ref'])
   assertCode(code)
 })
 
 test('$computed declaration', () => {
-  const { code, rootVars, importedHelpers } = transform(`
+  const { code, rootRefs, importedHelpers } = transform(`
     let a = $computed(() => 1)
     `)
   expect(code).toMatch(`
     let a = _computed(() => 1)
     `)
-  expect(rootVars).toStrictEqual(['a'])
+  expect(rootRefs).toStrictEqual(['a'])
   expect(importedHelpers).toStrictEqual(['computed'])
   assertCode(code)
 })
 
 test('mixing $ref & $computed declarations', () => {
-  const { code, rootVars, importedHelpers } = transform(`
+  const { code, rootRefs, importedHelpers } = transform(`
     let a = $ref(1), b = $computed(() => a + 1)
     `)
   expect(code).toMatch(`
     let a = _ref(1), b = _computed(() => a.value + 1)
     `)
-  expect(rootVars).toStrictEqual(['a', 'b'])
+  expect(rootRefs).toStrictEqual(['a', 'b'])
   expect(importedHelpers).toStrictEqual(['ref', 'computed'])
   assertCode(code)
 })
@@ -201,7 +200,7 @@ test('should not rewrite scope variable', () => {
 })
 
 test('object destructure', () => {
-  const { code, rootVars } = transform(`
+  const { code, rootRefs } = transform(`
     let n = $ref(1), { a, b: c, d = 1, e: f = 2, ...g } = $(useFoo())
     let { foo } = $(useSomthing(() => 1));
     console.log(n, a, c, d, f, g, foo)
@@ -221,12 +220,12 @@ test('object destructure', () => {
   expect(code).toMatch(
     `console.log(n.value, a.value, c.value, d.value, f.value, g.value, foo.value)`
   )
-  expect(rootVars).toStrictEqual(['n', 'a', 'c', 'd', 'f', 'g', 'foo'])
+  expect(rootRefs).toStrictEqual(['n', 'a', 'c', 'd', 'f', 'g', 'foo'])
   assertCode(code)
 })
 
 test('array destructure', () => {
-  const { code, rootVars } = transform(`
+  const { code, rootRefs } = transform(`
     let n = $ref(1), [a, b = 1, ...c] = $(useFoo())
     console.log(n, a, b, c)
     `)
@@ -235,12 +234,12 @@ test('array destructure', () => {
   expect(code).toMatch(`\nconst b = _shallowRef(__b);`)
   expect(code).toMatch(`\nconst c = _shallowRef(__c);`)
   expect(code).toMatch(`console.log(n.value, a.value, b.value, c.value)`)
-  expect(rootVars).toStrictEqual(['n', 'a', 'b', 'c'])
+  expect(rootRefs).toStrictEqual(['n', 'a', 'b', 'c'])
   assertCode(code)
 })
 
 test('nested destructure', () => {
-  const { code, rootVars } = transform(`
+  const { code, rootRefs } = transform(`
     let [{ a: { b }}] = $(useFoo())
     let { c: [d, e] } = $(useBar())
     console.log(b, d, e)
@@ -252,7 +251,7 @@ test('nested destructure', () => {
   expect(code).toMatch(`\nconst b = _shallowRef(__b);`)
   expect(code).toMatch(`\nconst d = _shallowRef(__d);`)
   expect(code).toMatch(`\nconst e = _shallowRef(__e);`)
-  expect(rootVars).toStrictEqual(['b', 'd', 'e'])
+  expect(rootRefs).toStrictEqual(['b', 'd', 'e'])
   assertCode(code)
 })
 
@@ -301,7 +300,7 @@ test('$$', () => {
 })
 
 test('nested scopes', () => {
-  const { code, rootVars } = transform(`
+  const { code, rootRefs } = transform(`
     let a = $ref(0)
     let b = $ref(0)
     let c = 0
@@ -334,7 +333,7 @@ test('nested scopes', () => {
       return $$({ a, b, c, d })
     }
     `)
-  expect(rootVars).toStrictEqual(['a', 'b', 'bar'])
+  expect(rootRefs).toStrictEqual(['a', 'b', 'bar'])
 
   expect(code).toMatch('a.value++ // outer a')
   expect(code).toMatch('b.value++ // outer b')
