@@ -752,11 +752,11 @@ export function finishComponentSetup(
 
   // template / render function normalization
   // could be already set when returned from setup()
-  // fixed by xxxxxx
-  if (false && !instance.render) {
+  if (!instance.render) {
     // only do on-the-fly compile if not in SSR - SSR on-the-fly compliation
     // is done by server-renderer
-    if (!isSSR && compile && !Component.render) {
+    // fixed by xxxxxx
+    if (false && !isSSR && compile && !Component.render) {
       const template =
         (__COMPAT__ &&
           instance.vnode.props &&

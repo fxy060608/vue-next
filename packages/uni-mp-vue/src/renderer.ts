@@ -1,8 +1,14 @@
-import { ShapeFlags, invokeArrayFns, NOOP } from '@vue/shared'
+import { ShapeFlags, invokeArrayFns, NOOP, isOn } from '@vue/shared'
 
 import { ReactiveEffect } from '@vue/reactivity'
 
-import { warn, VNodeProps, ComponentOptions } from '@vue/runtime-core'
+import {
+  warn,
+  VNodeProps,
+  ComponentOptions,
+  ErrorCodes,
+  handleError
+} from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
 import { queuePostFlushCb } from '@vue/runtime-core'
 import { ComponentInternalInstance } from '@vue/runtime-core'
@@ -16,10 +22,13 @@ import {
 import {
   createComponentInstance,
   setupComponent,
-  Component
+  Component,
+  Data,
+  FunctionalComponent
 } from '../../runtime-core/src/component'
 
 import { queueJob, SchedulerJob } from '../../runtime-core/src/scheduler'
+import { setCurrentRenderingInstance } from '../../runtime-core/src/componentRenderContext'
 
 import { patch } from './patch'
 import { initAppConfig } from './appConfig'
@@ -88,11 +97,72 @@ function mountComponent(
   return instance.proxy as ComponentPublicInstance
 }
 
+const getFunctionalFallthrough = (attrs: Data): Data | undefined => {
+  let res: Data | undefined
+  for (const key in attrs) {
+    if (key === 'class' || key === 'style' || isOn(key)) {
+      ;(res || (res = {}))[key] = attrs[key]
+    }
+  }
+  return res
+}
+
+function renderComponentRoot(instance: ComponentInternalInstance): Data {
+  const {
+    type: Component,
+    vnode,
+    proxy,
+    withProxy,
+    props,
+    slots,
+    attrs,
+    emit,
+    render,
+    renderCache,
+    data,
+    setupState,
+    ctx
+  } = instance
+
+  let result
+  const prev = setCurrentRenderingInstance(instance)
+
+  try {
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      // withProxy is a proxy with a different `has` trap only for
+      // runtime-compiled render functions using `with` block.
+      const proxyToUse = withProxy || proxy
+      result = render!.call(
+        proxyToUse,
+        proxyToUse!,
+        renderCache,
+        props,
+        setupState,
+        data,
+        ctx
+      )
+    } else {
+      // functional
+      const render = Component as FunctionalComponent
+      result =
+        render.length > 1
+          ? render(props, { attrs, slots, emit })
+          : render(props, null as any /* we know it doesn't need it */)
+          ? attrs
+          : getFunctionalFallthrough(attrs)
+    }
+  } catch (err) {
+    handleError(err, instance, ErrorCodes.RENDER_FUNCTION)
+    result = false
+  }
+  setCurrentRenderingInstance(prev)
+  return result
+}
+
 function setupRenderEffect(instance: ComponentInternalInstance) {
   const componentUpdateFn = () => {
     if (!instance.isMounted) {
-      instance.render && (instance.render as any).call(instance.proxy)
-      patch(instance)
+      patch(instance, renderComponentRoot(instance))
     } else {
       instance.render && (instance.render as any).call(instance.proxy)
       // updateComponent
@@ -103,7 +173,7 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
         invokeArrayFns(bu)
       }
       effect.allowRecurse = true
-      patch(instance)
+      patch(instance, renderComponentRoot(instance))
       // updated hook
       if (u) {
         queuePostRenderEffect(u)
