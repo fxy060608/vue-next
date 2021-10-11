@@ -162,7 +162,8 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
 function setupRenderEffect(instance: ComponentInternalInstance) {
   const componentUpdateFn = () => {
     if (!instance.isMounted) {
-      patch(instance, renderComponentRoot(instance))
+      renderComponentRoot(instance)
+      patch(instance)
     } else {
       instance.render && (instance.render as any).call(instance.proxy)
       // updateComponent
@@ -173,7 +174,8 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
         invokeArrayFns(bu)
       }
       effect.allowRecurse = true
-      patch(instance, renderComponentRoot(instance))
+      renderComponentRoot(instance)
+      patch(instance)
       // updated hook
       if (u) {
         queuePostRenderEffect(u)
