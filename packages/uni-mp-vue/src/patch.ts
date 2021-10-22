@@ -6,6 +6,7 @@ import { flushCallbacks } from './nextTick'
 
 import { flushPreFlushCbs } from '../../runtime-core/src/scheduler'
 import { Data } from '../../runtime-core/src/component'
+import { pauseTracking, resetTracking } from '@vue/reactivity'
 
 export interface MPInstance {
   data: any
@@ -29,6 +30,13 @@ function getMPInstanceData(instance: MPInstance, keys: string[]) {
 }
 
 export function patch(instance: ComponentInternalInstance, data: Data) {
+  if (!data) {
+    return
+  }
+  // 序列化
+  pauseTracking()
+  data = JSON.parse(JSON.stringify(data))
+  resetTracking()
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType
   if (mpType === 'page' || mpType === 'component') {
