@@ -32,6 +32,7 @@ export function patch(instance: ComponentInternalInstance, data: Data) {
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType
   if (mpType === 'page' || mpType === 'component') {
+    data.r0 = 1 // ready
     const start = Date.now()
     const mpInstance = ctx.$scope as MPInstance
     const keys = Object.keys(data)

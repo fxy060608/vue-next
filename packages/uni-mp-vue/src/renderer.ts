@@ -124,6 +124,8 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     ctx
   } = instance
 
+  ;(instance as unknown as { $ei: number }).$ei = 0
+
   let result
   const prev = setCurrentRenderingInstance(instance)
 
@@ -164,7 +166,6 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
     if (!instance.isMounted) {
       patch(instance, renderComponentRoot(instance))
     } else {
-      instance.render && (instance.render as any).call(instance.proxy)
       // updateComponent
       const { bu, u } = instance
       effect.allowRecurse = false
