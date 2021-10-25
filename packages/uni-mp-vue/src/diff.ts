@@ -1,6 +1,10 @@
 import { toTypeString } from '@vue/shared'
 import { unref } from '@vue/reactivity'
 
+function unwrapper<T>(target: T) {
+  return unref(target)
+}
+
 // import deepCopy from './deepCopy'
 
 /**
@@ -18,7 +22,7 @@ export default function diff(current: any, pre: any) {
 }
 
 function syncKeys(current: any, pre: any) {
-  current = unref(current)
+  current = unwrapper(current)
   if (current === pre) return
   const rootCurrentType = toTypeString(current)
   const rootPreType = toTypeString(pre)
@@ -41,7 +45,7 @@ function syncKeys(current: any, pre: any) {
 }
 
 function _diff(current: any, pre: any, path: string, result: any) {
-  current = unref(current)
+  current = unwrapper(current)
   if (current === pre) return
   const rootCurrentType = toTypeString(current)
   const rootPreType = toTypeString(pre)
@@ -53,7 +57,7 @@ function _diff(current: any, pre: any, path: string, result: any) {
       setResult(result, path, current)
     } else {
       for (let key in current) {
-        const currentValue = unref(current[key])
+        const currentValue = unwrapper(current[key])
         const preValue = pre[key]
         const currentType = toTypeString(currentValue)
         const preType = toTypeString(preValue)
