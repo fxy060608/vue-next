@@ -44,6 +44,7 @@ importers:
       serve: ^12.0.0
       todomvc-app-css: ^2.3.0
       ts-jest: ^27.0.5
+      tslib: ^2.3.1
       typescript: ^4.2.2
       vite: ^2.6.0
       vue: workspace:*
@@ -89,6 +90,7 @@ importers:
       serve: 12.0.1
       todomvc-app-css: 2.4.1
       ts-jest: 27.0.5_c167855b7a039eaaa2a6b38847c1969c
+      tslib: 2.3.1
       typescript: 4.4.3
       vite: 2.6.5
       vue: link:packages/vue
@@ -98,7 +100,7 @@ importers:
     specifiers:
       '@babel/parser': ^7.15.0
       '@babel/types': ^7.15.0
-      '@vue/shared': 3.2.20
+      '@vue/shared': 3.2.21
       estree-walker: ^2.0.2
       source-map: ^0.6.1
     dependencies:
@@ -111,8 +113,8 @@ importers:
 
   packages/compiler-dom:
     specifiers:
-      '@vue/compiler-core': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/compiler-core': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/compiler-core': link:../compiler-core
       '@vue/shared': link:../shared
@@ -123,12 +125,12 @@ importers:
       '@babel/types': ^7.15.0
       '@types/estree': ^0.0.48
       '@types/lru-cache': ^5.1.0
-      '@vue/compiler-core': 3.2.20
-      '@vue/compiler-dom': 3.2.20
-      '@vue/compiler-ssr': 3.2.20
+      '@vue/compiler-core': 3.2.21
+      '@vue/compiler-dom': 3.2.21
+      '@vue/compiler-ssr': 3.2.21
       '@vue/consolidate': ^0.17.3
-      '@vue/ref-transform': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/ref-transform': 3.2.21
+      '@vue/shared': 3.2.21
       estree-walker: ^2.0.2
       hash-sum: ^2.0.0
       lru-cache: ^5.1.1
@@ -166,15 +168,15 @@ importers:
 
   packages/compiler-ssr:
     specifiers:
-      '@vue/compiler-dom': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/compiler-dom': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/compiler-dom': link:../compiler-dom
       '@vue/shared': link:../shared
 
   packages/reactivity:
     specifiers:
-      '@vue/shared': 3.2.20
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/shared': link:../shared
 
@@ -182,8 +184,8 @@ importers:
     specifiers:
       '@babel/core': ^7.15.0
       '@babel/parser': ^7.15.0
-      '@vue/compiler-core': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/compiler-core': 3.2.21
+      '@vue/shared': 3.2.21
       estree-walker: ^2.0.2
       magic-string: ^0.25.7
     dependencies:
@@ -198,8 +200,8 @@ importers:
   packages/runtime-core:
     specifiers:
       '@dcloudio/uni-shared': /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
-      '@vue/reactivity': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/reactivity': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@dcloudio/uni-shared': link:../../../uni-app-next/packages/uni-shared
       '@vue/reactivity': link:../reactivity
@@ -207,8 +209,8 @@ importers:
 
   packages/runtime-dom:
     specifiers:
-      '@vue/runtime-core': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/runtime-core': 3.2.21
+      '@vue/shared': 3.2.21
       csstype: ^2.6.8
     dependencies:
       '@vue/runtime-core': link:../runtime-core
@@ -217,16 +219,16 @@ importers:
 
   packages/runtime-test:
     specifiers:
-      '@vue/runtime-core': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/runtime-core': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/runtime-core': link:../runtime-core
       '@vue/shared': link:../shared
 
   packages/server-renderer:
     specifiers:
-      '@vue/compiler-ssr': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/compiler-ssr': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/compiler-ssr': link:../compiler-ssr
       '@vue/shared': link:../shared
@@ -237,7 +239,7 @@ importers:
       '@vue/repl': ^0.4.3
       file-saver: ^2.0.5
       jszip: ^3.6.0
-      vue: workspace:*
+      vue: 3.2.21
     dependencies:
       '@vue/repl': 0.4.3
       file-saver: 2.0.5
@@ -274,11 +276,11 @@ importers:
 
   packages/vue:
     specifiers:
-      '@vue/compiler-dom': 3.2.20
-      '@vue/compiler-sfc': 3.2.20
-      '@vue/runtime-dom': 3.2.20
-      '@vue/server-renderer': 3.2.20
-      '@vue/shared': 3.2.20
+      '@vue/compiler-dom': 3.2.21
+      '@vue/compiler-sfc': 3.2.21
+      '@vue/runtime-dom': 3.2.21
+      '@vue/server-renderer': 3.2.21
+      '@vue/shared': 3.2.21
     dependencies:
       '@vue/compiler-dom': link:../compiler-dom
       '@vue/compiler-sfc': link:../compiler-sfc
@@ -6545,6 +6547,10 @@ packages:
 
   /tslib/2.0.1:
     resolution: {integrity: sha512-SgIkNheinmEBgx1IUNirK0TUD4X9yjjBRTqqjggWCU3pUEqIk3/Uwl3yRixYKT6WjQuGiwDv4NomL3wqRCj+CQ==}
+    dev: true
+
+  /tslib/2.3.1:
+    resolution: {integrity: sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==}
     dev: true
 
   /tsutils/3.21.0_typescript@4.4.3:
