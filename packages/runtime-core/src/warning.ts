@@ -40,6 +40,8 @@ export function warn(msg: string, ...args: any[]) {
   const trace = getComponentTrace()
 
   if (appWarnHandler) {
+    // fixed by xxxxxx Cannot convert a Symbol value to a string
+    args[0] = String(args[0])
     callWithErrorHandling(
       appWarnHandler,
       instance,
