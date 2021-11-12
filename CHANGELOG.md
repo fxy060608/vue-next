@@ -1,3 +1,37 @@
+## [3.2.21](https://github.com/vuejs/vue-next/compare/v3.2.20...v3.2.21) (2021-11-02)
+
+
+### Bug Fixes
+
+* **custom-element:** fix custom element props access on initial render ([4b7f76e](https://github.com/vuejs/vue-next/commit/4b7f76e36a7fc650986a20eca258f7a5d912424f)), closes [#4792](https://github.com/vuejs/vue-next/issues/4792)
+* **custom-element:** fix initial attr type casting for programmtically created elements ([3ca8317](https://github.com/vuejs/vue-next/commit/3ca83179d1a798f65e4e70215c511e2f1b64adb6)), closes [#4772](https://github.com/vuejs/vue-next/issues/4772)
+* **devtools:** avoid open handle in non-browser env ([6916d72](https://github.com/vuejs/vue-next/commit/6916d725a06a57e92ff9d046ccf132c305cd0a51)), closes [#4815](https://github.com/vuejs/vue-next/issues/4815)
+* **devtools:** fix memory leak when devtools is not installed ([#4833](https://github.com/vuejs/vue-next/issues/4833)) ([6b32f0d](https://github.com/vuejs/vue-next/commit/6b32f0d976c0aac8bb2c1b78fedd03e76fb391eb)), closes [#4829](https://github.com/vuejs/vue-next/issues/4829)
+* **runtime-core:** add `v-memo` to built-in directives check ([#4787](https://github.com/vuejs/vue-next/issues/4787)) ([5eb7263](https://github.com/vuejs/vue-next/commit/5eb72630a53a8dd82c2b8a9705c21a8075161a3d))
+* **runtime-dom:** fix behavior regression for v-show + style display binding ([3f38d59](https://github.com/vuejs/vue-next/commit/3f38d599f5aacdd3eeaa9475251a24f74e7ae3b4)), closes [#4768](https://github.com/vuejs/vue-next/issues/4768)
+* **types:** fix ref unwrapping type inference for nested shallowReactive & shallowRef ([20a3615](https://github.com/vuejs/vue-next/commit/20a361541cc5faffa82cbf3f2d49639a97b3b678)), closes [#4771](https://github.com/vuejs/vue-next/issues/4771)
+
+
+
+## [3.2.20](https://github.com/vuejs/vue-next/compare/v3.2.19...v3.2.20) (2021-10-08)
+
+
+### Bug Fixes
+
+* **compiler-sfc:** fix props codegen w/ leading import ([d4c04e9](https://github.com/vuejs/vue-next/commit/d4c04e979934b81a30467aa4b1e717175b9b2d80)), closes [#4764](https://github.com/vuejs/vue-next/issues/4764)
+* **compiler-sfc:** support runtime Enum in normal script ([#4698](https://github.com/vuejs/vue-next/issues/4698)) ([f66d456](https://github.com/vuejs/vue-next/commit/f66d456b7a39db9dae7e70c28bb431ff293d8fef))
+* **devtools:** clear devtools buffer after timeout ([f4639e0](https://github.com/vuejs/vue-next/commit/f4639e0a36abe16828b202d7297e1486653b1217)), closes [#4738](https://github.com/vuejs/vue-next/issues/4738)
+* **hmr:** fix hmr for components with no active instance yet ([9e3d773](https://github.com/vuejs/vue-next/commit/9e3d7731c7839638f49157123c6b372fec9e4d46)), closes [#4757](https://github.com/vuejs/vue-next/issues/4757)
+* **types:** ensure that DeepReadonly handles Ref type properly ([#4714](https://github.com/vuejs/vue-next/issues/4714)) ([ed0071a](https://github.com/vuejs/vue-next/commit/ed0071ac1a6d18439f3212711c6901fbb7193288))
+* **types:** make `toRef` return correct type(fix [#4732](https://github.com/vuejs/vue-next/issues/4732)) ([#4734](https://github.com/vuejs/vue-next/issues/4734)) ([925bc34](https://github.com/vuejs/vue-next/commit/925bc346fe85091467fcd2e40d6c1ff07f3b51c4))
+
+
+### Features
+
+* **compiler-sfc:** `<script setup>` defineProps destructure transform ([#4690](https://github.com/vuejs/vue-next/issues/4690)) ([467e113](https://github.com/vuejs/vue-next/commit/467e113b95a3c9c97f8dc309b61c0b2e3caba66f))
+
+
+
 ## [3.2.19](https://github.com/vuejs/vue-next/compare/v3.2.18...v3.2.19) (2021-09-25)
 
 

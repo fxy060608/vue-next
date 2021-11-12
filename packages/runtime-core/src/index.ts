@@ -70,6 +70,7 @@ export {
   withDefaults,
   // internal
   mergeDefaults,
+  createPropsRestProxy,
   withAsyncContext
 } from './apiSetupHelpers'
 
@@ -160,7 +161,8 @@ export {
   UnwrapRef,
   ShallowUnwrapRef,
   WritableComputedOptions,
-  DeepReadonly
+  DeepReadonly,
+  ShallowReactive
 } from '@vue/reactivity'
 export {
   WatchEffect,
