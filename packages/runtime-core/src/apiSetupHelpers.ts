@@ -127,15 +127,17 @@ export function defineExpose(exposed?: Record<string, any>) {
 type NotUndefined<T> = T extends undefined ? never : T
 
 type InferDefaults<T> = {
-  [K in keyof T]?: NotUndefined<T[K]> extends
-    | number
-    | string
-    | boolean
-    | symbol
-    | Function
-    ? NotUndefined<T[K]>
-    : (props: T) => NotUndefined<T[K]>
+  [K in keyof T]?: InferDefault<T, NotUndefined<T[K]>>
 }
+
+type InferDefault<P, T> = T extends
+  | number
+  | string
+  | boolean
+  | symbol
+  | Function
+  ? T
+  : (props: P) => T
 
 type PropsWithDefaults<Base, Defaults> = Base & {
   [K in keyof Defaults]: K extends keyof Base ? NotUndefined<Base[K]> : never
