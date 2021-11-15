@@ -263,6 +263,14 @@ importers:
       monaco-editor: 0.20.0
       source-map: 0.6.1
 
+  packages/uni-app-nvue:
+    specifiers:
+      '@vue/shared': 3.2.22
+      vue: 3.2.22
+    dependencies:
+      '@vue/shared': link:../shared
+      vue: link:../vue
+
   packages/vue:
     specifiers:
       '@vue/compiler-dom': 3.2.22
