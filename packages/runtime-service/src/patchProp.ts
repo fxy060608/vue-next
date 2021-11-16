@@ -1,10 +1,4 @@
-import {
-  JSON_PROTOCOL,
-  UniNode,
-  UniElement,
-  forcePatchPropKeys,
-  forcePatchProps
-} from '@dcloudio/uni-shared'
+import { JSON_PROTOCOL, UniNode, UniElement } from '@dcloudio/uni-shared'
 import { isModelListener, isObject, isOn } from '@vue/shared'
 import { RendererOptions } from '@vue/runtime-core'
 
@@ -16,20 +10,7 @@ import { patchEvent } from './modules/events'
 
 type DOMRendererOptions = RendererOptions<UniNode, UniElement>
 
-export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (
-  _,
-  key
-) => {
-  if (forcePatchPropKeys.indexOf(key) > -1) {
-    return true
-  }
-  const keys = forcePatchProps[_.nodeName as keyof typeof forcePatchProps]
-  if (keys && keys.indexOf(key) > -1) {
-    return true
-  }
-  return false
-}
-
+export { forcePatchProp } from '@dcloudio/uni-shared'
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,
   key,
