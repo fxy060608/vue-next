@@ -1,4 +1,10 @@
-import { JSON_PROTOCOL, UniNode, UniElement } from '@dcloudio/uni-shared'
+import {
+  JSON_PROTOCOL,
+  UniNode,
+  UniElement,
+  forcePatchPropKeys,
+  forcePatchProps
+} from '@dcloudio/uni-shared'
 import { isModelListener, isObject, isOn } from '@vue/shared'
 import { RendererOptions } from '@vue/runtime-core'
 
@@ -9,27 +15,6 @@ import { patchAttr } from './modules/attrs'
 import { patchEvent } from './modules/events'
 
 type DOMRendererOptions = RendererOptions<UniNode, UniElement>
-
-const forcePatchProps = {
-  AD: ['data'],
-  'AD-DRAW': ['data'],
-  'LIVE-PLAYER': ['picture-in-picture-mode'],
-  MAP: [
-    'markers',
-    'polyline',
-    'circles',
-    'controls',
-    'include-points',
-    'polygons'
-  ],
-  PICKER: ['range', 'value'],
-  'PICKER-VIEW': ['value'],
-  'RICH-TEXT': ['nodes'],
-  VIDEO: ['danmu-list', 'header'],
-  'WEB-VIEW': ['webview-styles']
-}
-
-const forcePatchPropKeys = ['animation']
 
 export const forcePatchProp: DOMRendererOptions['forcePatchProp'] = (
   _,
