@@ -227,7 +227,9 @@ export const publicPropertiesMap: PublicPropertiesMap = /*#__PURE__*/ extend(
   Object.create(null),
   {
     $: i => i,
-    $el: i => i.vnode.el,
+    // fixed by xxxxxx vue-i18n 在 dev 模式，访问了 $el，故模拟一个假的
+    // $el: i => i.vnode.el,
+    $el: i => (i as any).__$el || ((i as any).__$el = {}),
     $data: i => i.data,
     $props: i => (__DEV__ ? shallowReadonly(i.props) : i.props),
     $attrs: i => (__DEV__ ? shallowReadonly(i.attrs) : i.attrs),

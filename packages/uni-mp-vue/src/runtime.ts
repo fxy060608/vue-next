@@ -3,7 +3,7 @@ export { createVueApp } from './renderer'
 export { logError } from 'packages/runtime-core/src/errorHandling'
 export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
 export { isInSSRComponentSetup } from 'packages/runtime-core/src/component'
-
+export { setCurrentRenderingInstance } from 'packages/runtime-core/src/componentRenderContext'
 // @vue/reactivity
 export {
   EffectScope,
@@ -85,5 +85,8 @@ export {
   // withKeys,
   // withMemo,
   // withModifiers,
-  withScopeId
+  withScopeId,
+  // vue-i18n 使用到了
+  Text,
+  Fragment
 } from '@vue/runtime-core'
