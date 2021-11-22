@@ -90,3 +90,5 @@ export {
   Text,
   Fragment
 } from '@vue/runtime-core'
+export { useCssModule } from '@vue/runtime-dom'
+export { useCssVars } from './helpers/useCssVars'
