@@ -4,12 +4,12 @@ import {
   VNode,
   Fragment,
   Static,
-  watchPostEffect,
   onMounted,
-  onUnmounted
+  watchEffect,
+  onUpdated
 } from '@vue/runtime-core'
 import { ShapeFlags } from '@vue/shared'
-
+import { UniElement } from '@dcloudio/uni-shared'
 /**
  * Runtime helper for SFC's CSS variable injection feature.
  * @private
@@ -27,12 +27,8 @@ export function useCssVars(getter: (ctx: any) => Record<string, string>) {
 
   const setVars = () =>
     setVarsOnVNode(instance.subTree, getter(instance.proxy!))
-  watchPostEffect(setVars)
-  onMounted(() => {
-    const ob = new MutationObserver(setVars)
-    ob.observe(instance.subTree.el!.parentNode, { childList: true })
-    onUnmounted(() => ob.disconnect())
-  })
+  onMounted(() => watchEffect(setVars, { flush: 'post' }))
+  onUpdated(setVars)
 }
 
 function setVarsOnVNode(vnode: VNode, vars: Record<string, string>) {
@@ -67,9 +63,8 @@ function setVarsOnVNode(vnode: VNode, vars: Record<string, string>) {
 
 function setVarsOnNode(el: Node, vars: Record<string, string>) {
   if (el.nodeType === 1) {
-    const style = (el as HTMLElement).style
     for (const key in vars) {
-      style.setProperty(`--${key}`, vars[key])
+      ;(el as unknown as UniElement).setAttribute(`--${key}`, vars[key])
     }
   }
 }
