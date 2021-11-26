@@ -39,6 +39,7 @@ import { createPropsDefaultThis } from './compat/props'
 import { isCompatEnabled, softAssertCompatEnabled } from './compat/compatConfig'
 import { DeprecationTypes } from './compat/compatConfig'
 import { shouldSkipAttr } from './compat/attrsFallthrough'
+import { IfAny } from './helpers/typeUtils'
 
 export type ComponentPropsOptions<P = Data> =
   | ComponentObjectPropsOptions<P>
@@ -115,14 +116,14 @@ type InferPropType<T> = [T] extends [null]
     : InferPropType<U>
   : [T] extends [Prop<infer V, infer D>]
   ? unknown extends V
-    ? D
+    ? IfAny<V, V, D>
     : V
   : T
 
 export type ExtractPropTypes<O> = O extends object
-  ? { [K in keyof O]?: unknown } & // This is needed to keep the relation between the option prop and the props, allowing to use ctrl+click to navigate to the prop options. see: #3656
-      { [K in RequiredKeys<O>]: InferPropType<O[K]> } &
-      { [K in OptionalKeys<O>]?: InferPropType<O[K]> }
+  ? { [K in keyof O]?: unknown } & { // This is needed to keep the relation between the option prop and the props, allowing to use ctrl+click to navigate to the prop options. see: #3656
+      [K in RequiredKeys<O>]: InferPropType<O[K]>
+    } & { [K in OptionalKeys<O>]?: InferPropType<O[K]> }
   : { [K in string]: any }
 
 const enum BooleanFlags {
