@@ -118,6 +118,7 @@ export interface RendererOptions<
     parentSuspense?: SuspenseBoundary | null,
     unmountChildren?: UnmountChildrenFn
   ): void
+  forcePatchProp?(el: HostElement, key: string): boolean // fixed by xxxxxx
   insert(el: HostNode, parent: HostElement, anchor?: HostNode | null): void
   remove(el: HostNode): void
   createElement(
@@ -350,6 +351,7 @@ function baseCreateRenderer(
     insert: hostInsert,
     remove: hostRemove,
     patchProp: hostPatchProp,
+    forcePatchProp: hostForcePatchProp, // fixed by xxxxxx
     createElement: hostCreateElement,
     createText: hostCreateText,
     createComment: hostCreateComment,
@@ -914,7 +916,11 @@ function baseCreateRenderer(
             const prev = oldProps[key]
             const next = newProps[key]
             // #1471 force patch value
-            if (next !== prev || key === 'value') {
+            if (
+              next !== prev ||
+              key === 'value' ||
+              (hostForcePatchProp && hostForcePatchProp(el, key)) // fixed by xxxxxx
+            ) {
               hostPatchProp(
                 el,
                 key,
@@ -1019,7 +1025,10 @@ function baseCreateRenderer(
         const next = newProps[key]
         const prev = oldProps[key]
         // defer patching value
-        if (next !== prev && key !== 'value') {
+        if (
+          (next !== prev && key !== 'value') ||
+          (hostForcePatchProp && hostForcePatchProp(el, key)) // fixed by xxxxxx
+        ) {
           hostPatchProp(
             el,
             key,

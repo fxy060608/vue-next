@@ -313,6 +313,10 @@ const _ssrUtils = {
   normalizeVNode
 }
 
+// fixed by xxxxxx
+export { injectHook } from './apiLifecycle'
+export { isInSSRComponentSetup } from './component'
+
 /**
  * SSR utils for \@vue/server-renderer. Only exposed in cjs builds.
  * @internal

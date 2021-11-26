@@ -215,6 +215,12 @@ importers:
       '@vue/shared': link:../shared
       csstype: 2.6.18
 
+  packages/runtime-nvue:
+    specifiers:
+      '@dcloudio/uni-shared': /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
+    dependencies:
+      '@dcloudio/uni-shared': link:../../../uni-app-next/packages/uni-shared
+
   packages/runtime-test:
     specifiers:
       '@vue/runtime-core': 3.2.22
