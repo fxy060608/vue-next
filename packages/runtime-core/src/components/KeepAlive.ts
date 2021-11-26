@@ -467,7 +467,7 @@ function registerKeepAliveHook(
         }
         current = current.parent
       }
-      hook()
+      return hook()
     })
   wrappedHook.__called = false
   injectHook(type, wrappedHook, target)
