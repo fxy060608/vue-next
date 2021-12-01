@@ -50,7 +50,10 @@ export function injectHook(
     }
     return wrappedHook
   } else if (__DEV__) {
-    const apiName = toHandlerKey(ErrorTypeStrings[type].replace(/ hook$/, ''))
+    // fixed by xxxxxx
+    const apiName = toHandlerKey(
+      (ErrorTypeStrings[type] || type.replace(/^on/, '')).replace(/ hook$/, '')
+    )
     warn(
       `${apiName} is called when there is no active component instance to be ` +
         `associated with. ` +
