@@ -109,7 +109,8 @@ export function handleError(
     // the exposed instance is the render proxy to keep it consistent with 2.x
     const exposedInstance = instance.proxy
     // in production the hook receives only the error code
-    const errorInfo = __DEV__ ? ErrorTypeStrings[type] : type
+    // fixed by xxxxxx
+    const errorInfo = __DEV__ ? ErrorTypeStrings[type] || type : type
     while (cur) {
       const errorCapturedHooks = cur.ec
       if (errorCapturedHooks) {
@@ -145,7 +146,7 @@ function logError(
   throwInDev = true
 ) {
   if (__DEV__) {
-    const info = ErrorTypeStrings[type]
+    const info = ErrorTypeStrings[type] || type // fixed by xxxxxx
     if (contextVNode) {
       pushWarningContext(contextVNode)
     }

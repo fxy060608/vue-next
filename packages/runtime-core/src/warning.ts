@@ -41,7 +41,9 @@ export function warn(msg: string, ...args: any[]) {
 
   if (appWarnHandler) {
     // fixed by xxxxxx Cannot convert a Symbol value to a string
-    args[0] = String(args[0])
+    if (args.length) {
+      args[0] = String(args[0])
+    }
     callWithErrorHandling(
       appWarnHandler,
       instance,
