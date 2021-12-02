@@ -6,6 +6,7 @@ import { flushCallbacks } from './nextTick'
 
 import { flushPreFlushCbs } from '../../runtime-core/src/scheduler'
 import { Data } from '../../runtime-core/src/component'
+import { deepCopy } from './deepCopy'
 export interface MPInstance {
   data: any
   is: string
@@ -39,7 +40,8 @@ export function patch(
   // 举例：
   // uni-indexed-list 组件传递 item 给 uni-indexed-list-item 组件，uni-indexed-list-item 发送点击到 uni-indexed-list 组件中修改 item.checked
   // uni-indexed-list 组件 render 中并未访问 item.checked（在 uni-indexed-list-item 中访问了，但被小程序序列化了，无法响应式），故无法收集依赖
-  data = JSON.parse(JSON.stringify(data))
+  data = deepCopy(data) as Data
+  // data = JSON.parse(JSON.stringify(data))
 
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType

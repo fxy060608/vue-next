@@ -1,4 +1,4 @@
-import deepCopy from '../src/deepCopy'
+import { deepCopy } from '../src/deepCopy'
 
 type PlainObject = {
   [key: string]: any
@@ -20,6 +20,17 @@ const SIMPLE_TYPES: PlainObject = {
 const COMPLEX_TYPES: PlainObject = {
   array: ['foo', { bar: 'baz' }],
   object: { foo: { bar: 'baz' } }
+}
+
+const circularObj: PlainObject = {
+  foo: { bar: 'baz' }
+}
+
+circularObj.circular = circularObj
+
+const COMPLEX_CIRCULAR_TYPES: PlainObject = {
+  array: [circularObj],
+  object: circularObj
 }
 
 const UNSUPPORTED_TYPES: PlainObject = {
@@ -60,6 +71,11 @@ describe('deepCopy', () => {
     const result = deepCopy(COMPLEX_TYPES)
     expect(result).not.toBe(COMPLEX_TYPES)
     expect(result).toEqual(COMPLEX_TYPES)
+  })
+  test('circular', () => {
+    const result = deepCopy(COMPLEX_CIRCULAR_TYPES)
+    expect(result).not.toBe(COMPLEX_CIRCULAR_TYPES)
+    expect(result).toEqual(COMPLEX_CIRCULAR_TYPES)
   })
   test('unsupported', () => {
     Object.keys(UNSUPPORTED_TYPES).forEach(name => {
