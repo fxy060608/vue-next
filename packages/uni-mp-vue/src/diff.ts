@@ -1,9 +1,5 @@
 import { toTypeString } from '@vue/shared'
-import { unref } from '@vue/reactivity'
-
-function unwrapper<T>(target: T) {
-  return unref(target)
-}
+import { unwrapper } from './utils'
 
 // import deepCopy from './deepCopy'
 

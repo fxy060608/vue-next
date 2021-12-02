@@ -1,9 +1,11 @@
 import { hasOwn, isArray } from '@vue/shared'
+import { unwrapper } from './utils'
 
 function clone(
   src: object,
   seen: WeakMap<object, unknown> | Map<object, unknown>
 ) {
+  src = unwrapper(src)
   const type = typeof src
   if (type === 'object' && src !== null) {
     let copy = seen.get(src)
