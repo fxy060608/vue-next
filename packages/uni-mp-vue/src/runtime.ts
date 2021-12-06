@@ -1,5 +1,6 @@
 export { createVueApp } from './renderer'
-
+// vue-global-api
+export { defineAsyncComponent } from './utils'
 export { logError } from 'packages/runtime-core/src/errorHandling'
 export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
 export { isInSSRComponentSetup } from 'packages/runtime-core/src/component'
@@ -59,6 +60,7 @@ export {
   onRenderTracked,
   onRenderTriggered,
   onUnmounted,
+  onServerPrefetch,
   onUpdated,
   provide,
   queuePostFlushCb,
