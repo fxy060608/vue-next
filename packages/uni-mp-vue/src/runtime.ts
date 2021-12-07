@@ -5,6 +5,8 @@ export { logError } from 'packages/runtime-core/src/errorHandling'
 export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
 export { isInSSRComponentSetup } from 'packages/runtime-core/src/component'
 export { setCurrentRenderingInstance } from 'packages/runtime-core/src/componentRenderContext'
+export { updateProps } from 'packages/runtime-core/src/componentProps'
+export { invalidateJob } from 'packages/runtime-core/src/scheduler'
 // @vue/reactivity
 export {
   EffectScope,
@@ -87,6 +89,7 @@ export {
   // withKeys,
   // withMemo,
   // withModifiers,
+  guardReactiveProps,
   withScopeId,
   // vue-i18n 使用到了
   Text,

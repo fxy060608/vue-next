@@ -121,10 +121,21 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     renderCache,
     data,
     setupState,
-    ctx
+    ctx,
+    uid,
+    appContext: {
+      app: {
+        config: {
+          globalProperties: { pruneComponentPropsCache }
+        }
+      }
+    }
   } = instance
 
+  // event
   ;(instance as unknown as { $ei: number }).$ei = 0
+  // props
+  pruneComponentPropsCache(uid)
 
   let result
   const prev = setCurrentRenderingInstance(instance)
