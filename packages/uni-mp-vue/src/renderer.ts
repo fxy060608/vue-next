@@ -136,6 +136,8 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
   ;(instance as unknown as { $ei: number }).$ei = 0
   // props
   pruneComponentPropsCache(uid)
+  ;(instance as unknown as { __counter: number }).__counter =
+    (instance as unknown as { __counter: number }).__counter === 0 ? 1 : 0
 
   let result
   const prev = setCurrentRenderingInstance(instance)
