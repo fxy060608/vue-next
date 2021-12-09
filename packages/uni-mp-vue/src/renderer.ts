@@ -1,6 +1,6 @@
 import { ShapeFlags, invokeArrayFns, NOOP, isOn } from '@vue/shared'
 
-import { ReactiveEffect } from '@vue/reactivity'
+import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
 
 import {
   warn,
@@ -27,7 +27,11 @@ import {
   FunctionalComponent
 } from '../../runtime-core/src/component'
 
-import { queueJob, SchedulerJob } from '../../runtime-core/src/scheduler'
+import {
+  flushPreFlushCbs,
+  queueJob,
+  SchedulerJob
+} from '../../runtime-core/src/scheduler'
 import { setCurrentRenderingInstance } from '../../runtime-core/src/componentRenderContext'
 
 import { patch } from './patch'
@@ -174,6 +178,14 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
   return result
 }
 
+const updateComponentPreRender = (instance: ComponentInternalInstance) => {
+  pauseTracking()
+  // props update may have triggered pre-flush watchers.
+  // flush them before the render update.
+  flushPreFlushCbs(undefined, instance.update)
+  resetTracking()
+}
+
 function setupRenderEffect(instance: ComponentInternalInstance) {
   const componentUpdateFn = () => {
     if (!instance.isMounted) {
@@ -182,6 +194,9 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
       // updateComponent
       const { bu, u } = instance
       effect.allowRecurse = false
+
+      updateComponentPreRender(instance)
+
       // beforeUpdate hook
       if (bu) {
         invokeArrayFns(bu)
