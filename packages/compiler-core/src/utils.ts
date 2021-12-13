@@ -282,14 +282,17 @@ export function findProp(
     } else if (
       p.name === 'bind' &&
       (p.exp || allowEmpty) &&
-      isBindKey(p.arg, name)
+      isStaticArgOf(p.arg, name)
     ) {
       return p
     }
   }
 }
 
-export function isBindKey(arg: DirectiveNode['arg'], name: string): boolean {
+export function isStaticArgOf(
+  arg: DirectiveNode['arg'],
+  name: string
+): boolean {
   return !!(arg && isStaticExp(arg) && arg.content === name)
 }
 
