@@ -242,6 +242,13 @@ function componentUpdateScopedSlotsFn(
   }
 }
 
+function toggleRecurse(
+  { effect, update }: ComponentInternalInstance,
+  allowed: boolean
+) {
+  effect.allowRecurse = update.allowRecurse = allowed
+}
+
 function setupRenderEffect(instance: ComponentInternalInstance) {
   const updateScopedSlots = componentUpdateScopedSlotsFn.bind(
     instance as ComponentInternalInstanceScopedSlots
@@ -256,15 +263,14 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
     } else {
       // updateComponent
       const { bu, u } = instance
-      effect.allowRecurse = false
-
+      // Disallow component effect recursion during pre-lifecycle hooks.
+      toggleRecurse(instance, false)
       updateComponentPreRender(instance)
-
       // beforeUpdate hook
       if (bu) {
         invokeArrayFns(bu)
       }
-      effect.allowRecurse = true
+      toggleRecurse(instance, true)
       patch(instance, renderComponentRoot(instance))
       // updated hook
       if (u) {
@@ -284,7 +290,7 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
   update.id = instance.uid
   // allowRecurse
   // #1801, #2043 component render effects should allow recursive updates
-  effect.allowRecurse = update.allowRecurse = true
+  toggleRecurse(instance, true)
 
   if (__DEV__) {
     effect.onTrack = instance.rtc
