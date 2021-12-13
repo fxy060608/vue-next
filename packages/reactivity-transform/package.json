@@ -1,26 +1,22 @@
 {
-  "name": "@vue/compiler-core",
+  "name": "@vue/reactivity-transform",
   "version": "3.2.26",
-  "description": "@vue/compiler-core",
-  "main": "index.js",
-  "module": "dist/compiler-core.esm-bundler.js",
-  "types": "dist/compiler-core.d.ts",
+  "description": "@vue/reactivity-transform",
+  "main": "dist/reactivity-transform.cjs.js",
   "files": [
-    "index.js",
     "dist"
   ],
   "buildOptions": {
-    "name": "VueCompilerCore",
-    "compat": true,
     "formats": [
-      "esm-bundler",
       "cjs"
-    ]
+    ],
+    "prod": false
   },
+  "types": "dist/reactivity-transform.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vuejs/vue-next.git",
-    "directory": "packages/compiler-core"
+    "directory": "packages/reactivity-transform"
   },
   "keywords": [
     "vue"
@@ -30,14 +26,16 @@
   "bugs": {
     "url": "https://github.com/vuejs/vue-next/issues"
   },
-  "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/compiler-core#readme",
+  "homepage": "https://github.com/vuejs/vue-next/tree/dev/packages/reactivity-transform#readme",
   "dependencies": {
-    "@vue/shared": "3.2.26",
     "@babel/parser": "^7.16.4",
+    "@vue/compiler-core": "3.2.26",
+    "@vue/shared": "3.2.26",
     "estree-walker": "^2.0.2",
-    "source-map": "^0.6.1"
+    "magic-string": "^0.25.7"
   },
   "devDependencies": {
+    "@babel/core": "^7.16.0",
     "@babel/types": "^7.16.0"
   }
 }
