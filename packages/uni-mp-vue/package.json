@@ -23,6 +23,7 @@
     "url": "https://github.com/dcloudio/uni-app/issues"
   },
   "dependencies": {
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
     "@vue/shared": "^3.2.19"
   }
 }

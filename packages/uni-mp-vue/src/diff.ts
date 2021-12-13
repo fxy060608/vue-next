@@ -10,7 +10,7 @@ const ARRAYTYPE = '[object Array]'
 const OBJECTTYPE = '[object Object]'
 // const FUNCTIONTYPE = '[object Function]'
 
-export default function diff(current: any, pre: any) {
+export function diff(current: any, pre: any) {
   const result = {}
   syncKeys(current, pre)
   _diff(current, pre, '', result)

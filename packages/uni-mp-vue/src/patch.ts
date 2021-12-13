@@ -1,7 +1,7 @@
 import { ComponentInternalInstance } from '@vue/runtime-core'
 import { MPType } from './renderer'
 
-import diff from './diff'
+import { diff } from './diff'
 import { flushCallbacks } from './nextTick'
 
 import { flushPreFlushCbs } from '../../runtime-core/src/scheduler'

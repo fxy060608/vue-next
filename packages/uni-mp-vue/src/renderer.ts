@@ -10,10 +10,10 @@ import {
   handleError
 } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
-import { queuePostFlushCb } from '@vue/runtime-core'
+import { nextTick, queuePostFlushCb } from '@vue/runtime-core'
 import { ComponentInternalInstance } from '@vue/runtime-core'
 import { ComponentPublicInstance } from '@vue/runtime-core'
-
+import { getValueByDataPath } from '@dcloudio/uni-shared'
 import { createAppAPI } from '../../runtime-core/src/apiCreateApp'
 import {
   pushWarningContext,
@@ -34,9 +34,10 @@ import {
 } from '../../runtime-core/src/scheduler'
 import { setCurrentRenderingInstance } from '../../runtime-core/src/componentRenderContext'
 
-import { patch } from './patch'
+import { MPInstance, patch } from './patch'
 import { initAppConfig } from './appConfig'
 import { onApplyOptions } from './componentOptions'
+import { diff } from '.'
 
 export enum MPType {
   APP = 'app',
@@ -186,7 +187,69 @@ const updateComponentPreRender = (instance: ComponentInternalInstance) => {
   resetTracking()
 }
 
+interface ComponentInternalInstanceScopedSlots
+  extends ComponentInternalInstance {
+  $updateScopedSlots: () => void
+  $scopedSlotsData?: { path: string; index: number; data: Data }[]
+}
+
+function componentUpdateScopedSlotsFn(
+  this: ComponentInternalInstanceScopedSlots
+) {
+  const scopedSlotsData = this.$scopedSlotsData
+  if (!scopedSlotsData || scopedSlotsData.length === 0) {
+    return
+  }
+  const start = Date.now()
+  const mpInstance = this.ctx.$scope as MPInstance
+  const oldData = mpInstance.data
+  const diffData = Object.create(null)
+  scopedSlotsData.forEach(({ path, index, data }) => {
+    const oldScopedSlotData = getValueByDataPath(oldData, path) as Data[]
+    const diffPath = `${path}[${index}]`
+    if (
+      typeof oldScopedSlotData === 'undefined' ||
+      typeof oldScopedSlotData[index] === 'undefined'
+    ) {
+      diffData[diffPath] = data
+    } else {
+      const diffScopedSlotData: Record<string, any> = diff(
+        data,
+        oldScopedSlotData[index]
+      )
+      Object.keys(diffScopedSlotData).forEach(name => {
+        diffData[diffPath + '.' + name] = diffScopedSlotData[name]
+      })
+    }
+  })
+  scopedSlotsData.length = 0
+  if (Object.keys(diffData).length) {
+    if (process.env.UNI_DEBUG) {
+      console.log(
+        '[' +
+          +new Date() +
+          '][' +
+          (mpInstance.is || mpInstance.route) +
+          '][' +
+          this.uid +
+          '][耗时' +
+          (Date.now() - start) +
+          ']作用域插槽差量更新',
+        JSON.stringify(diffData)
+      )
+    }
+    mpInstance.setData(diffData)
+  }
+}
+
 function setupRenderEffect(instance: ComponentInternalInstance) {
+  const updateScopedSlots = componentUpdateScopedSlotsFn.bind(
+    instance as ComponentInternalInstanceScopedSlots
+  )
+
+  ;(instance as ComponentInternalInstanceScopedSlots).$updateScopedSlots = () =>
+    nextTick(() => queueJob(updateScopedSlots))
+
   const componentUpdateFn = () => {
     if (!instance.isMounted) {
       patch(instance, renderComponentRoot(instance))
