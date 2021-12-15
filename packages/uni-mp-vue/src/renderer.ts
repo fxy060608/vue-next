@@ -7,7 +7,8 @@ import {
   VNodeProps,
   ComponentOptions,
   ErrorCodes,
-  handleError
+  handleError,
+  onBeforeUnmount
 } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
 import { nextTick, queuePostFlushCb } from '@vue/runtime-core'
@@ -38,6 +39,7 @@ import { MPInstance, patch } from './patch'
 import { initAppConfig } from './appConfig'
 import { onApplyOptions } from './componentOptions'
 import { diff } from '.'
+import { setRef, TemplateRef } from './rendererTemplateRef'
 
 export enum MPType {
   APP = 'app',
@@ -136,7 +138,8 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
       }
     }
   } = instance
-
+  // template refs
+  ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
   // event
   ;(instance as unknown as { $ei: number }).$ei = 0
   // props
@@ -175,6 +178,7 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     handleError(err, instance, ErrorCodes.RENDER_FUNCTION)
     result = false
   }
+  setRef(instance)
   setCurrentRenderingInstance(prev)
   return result
 }
@@ -259,6 +263,9 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
 
   const componentUpdateFn = () => {
     if (!instance.isMounted) {
+      onBeforeUnmount(() => {
+        setRef(instance, true)
+      }, instance)
       patch(instance, renderComponentRoot(instance))
     } else {
       // updateComponent

@@ -1,4 +1,7 @@
-import { ComponentInternalInstance } from '@vue/runtime-core'
+import {
+  ComponentInternalInstance,
+  ComponentPublicInstance
+} from '@vue/runtime-core'
 import { MPType } from './renderer'
 
 import { diff } from './diff'
@@ -11,11 +14,15 @@ export interface MPInstance {
   data: any
   is: string
   route: string
+  props: Data // mp-alipay
+  properties: Data
   setData: (data: Record<string, any>, callback?: () => void) => void
   createSelectorQuery: Function
   createIntersectionObserver: Function
   selectAllComponents: Function
   selectComponent: Function
+  _$setRef: Function
+  $vm: ComponentPublicInstance
 }
 
 function getMPInstanceData(instance: MPInstance, keys: string[]) {
