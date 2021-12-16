@@ -101,7 +101,14 @@ function rerender(id: string, newRender?: Function) {
 function reload(id: string, newComp: HMRComponent) {
   const record = map.get(id)
   if (!record) return
-
+  // fixed by xxxxxx 解决页面刷新 setupPage
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).__setupPage &&
+    record.initialDef.__mpType === 'page'
+  ) {
+    ;(window as any).__setupPage(newComp)
+  }
   newComp = normalizeClassComponent(newComp)
   // update initial def (for not-yet-rendered components)
   updateComponentDef(record.initialDef, newComp)
