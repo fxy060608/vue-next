@@ -21,7 +21,7 @@ function clone(
         ;(copy as unknown[])[i] = clone(src[i], seen)
       }
     } else {
-      copy = Object.create(null)
+      copy = {}
       seen.set(src, copy)
       for (const name in src) {
         if (hasOwn(src, name)) {
