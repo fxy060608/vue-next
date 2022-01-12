@@ -17,7 +17,7 @@ import {
   exposePropsOnRenderContext,
   exposeSetupStateOnRenderContext,
   ComponentPublicInstanceConstructor,
-  publicPropertiesMap,
+  // publicPropertiesMap,
   RuntimeCompiledPublicInstanceProxyHandlers
 } from './componentPublicInstance'
 import {
@@ -919,9 +919,12 @@ export function getExposeProxy(instance: ComponentInternalInstance) {
         get(target, key: string) {
           if (key in target) {
             return target[key]
-          } else if (key in publicPropertiesMap) {
-            return publicPropertiesMap[key](instance)
           }
+          // fixed by xxxxxx 框架内部需要访问很多非 public 属性，暂不做限制
+          return (instance.proxy as any)[key]
+          // else if (key in publicPropertiesMap) {
+          //   return publicPropertiesMap[key](instance)
+          // }
         }
       }))
     )

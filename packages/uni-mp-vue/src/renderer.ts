@@ -25,7 +25,8 @@ import {
   setupComponent,
   Component,
   Data,
-  FunctionalComponent
+  FunctionalComponent,
+  getExposeProxy
 } from '../../runtime-core/src/component'
 
 import {
@@ -93,8 +94,11 @@ function mountComponent(
     // $children
     if (options.parentComponent && instance.proxy) {
       ;(
-        options.parentComponent.ctx.$children as ComponentPublicInstance[]
-      ).push(instance.proxy)
+        options.parentComponent.ctx.$children as (
+          | ComponentPublicInstance
+          | Record<string, any>
+        )[]
+      ).push(getExposeProxy(instance) || instance.proxy)
     }
   }
   setupRenderEffect(instance)
