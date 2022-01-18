@@ -282,14 +282,17 @@ export function findProp(
     } else if (
       p.name === 'bind' &&
       (p.exp || allowEmpty) &&
-      isBindKey(p.arg, name)
+      isStaticArgOf(p.arg, name)
     ) {
       return p
     }
   }
 }
 
-export function isBindKey(arg: DirectiveNode['arg'], name: string): boolean {
+export function isStaticArgOf(
+  arg: DirectiveNode['arg'],
+  name: string
+): boolean {
   return !!(arg && isStaticExp(arg) && arg.content === name)
 }
 
@@ -371,7 +374,8 @@ export function injectProp(
    *
    * we need to get the real props before normalization
    */
-  let props = node.type === NodeTypes.VNODE_CALL ? node.props : node.arguments[2]
+  let props =
+    node.type === NodeTypes.VNODE_CALL ? node.props : node.arguments[2]
   let callPath: CallExpression[] = []
   let parentCall: CallExpression | undefined
   if (
