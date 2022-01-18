@@ -130,7 +130,9 @@ export interface RendererOptions<
     content: string,
     parent: HostElement,
     anchor: HostNode | null,
-    isSVG: boolean
+    isSVG: boolean,
+    start?: HostNode | null,
+    end?: HostNode | null
   ): [HostNode, HostNode]
 }
 
@@ -518,7 +520,9 @@ function baseCreateRenderer(
       n2.children as string,
       container,
       anchor,
-      isSVG
+      isSVG,
+      n2.el,
+      n2.anchor
     )
   }
 
