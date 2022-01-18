@@ -308,19 +308,19 @@ export { transformVNodeArgs } from './vnode'
 // **IMPORTANT** These APIs are exposed solely for @vue/server-renderer and may
 // change without notice between versions. User code should never rely on them.
 
-import { createComponentInstance, setupComponent } from './component'
-import { renderComponentRoot } from './componentRenderUtils'
-import { setCurrentRenderingInstance } from './componentRenderContext'
-import { isVNode, normalizeVNode } from './vnode'
+// import { createComponentInstance, setupComponent } from './component'
+// import { renderComponentRoot } from './componentRenderUtils'
+// import { setCurrentRenderingInstance } from './componentRenderContext'
+// import { isVNode, normalizeVNode } from './vnode'
 
-const _ssrUtils = {
-  createComponentInstance,
-  setupComponent,
-  renderComponentRoot,
-  setCurrentRenderingInstance,
-  isVNode,
-  normalizeVNode
-}
+// const _ssrUtils = {
+//   createComponentInstance,
+//   setupComponent,
+//   renderComponentRoot,
+//   setCurrentRenderingInstance,
+//   isVNode,
+//   normalizeVNode
+// }
 
 // fixed by xxxxxx
 export { injectHook } from './apiLifecycle'
@@ -330,8 +330,8 @@ export { isInSSRComponentSetup } from './component'
  * SSR utils for \@vue/server-renderer. Only exposed in cjs builds.
  * @internal
  */
-export const ssrUtils = (__SSR__ ? _ssrUtils : null) as typeof _ssrUtils
-
+// export const ssrUtils = (__SSR__ ? _ssrUtils : null) as typeof _ssrUtils
+// fixed by xxxxxx
 // 2.x COMPAT ------------------------------------------------------------------
 
 export { DeprecationTypes } from './compat/compatConfig'

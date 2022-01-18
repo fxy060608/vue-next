@@ -33,7 +33,6 @@ export const createApp = ((...args) => {
 
   const { mount } = app
   app.mount = (container: string): any => {
-    if (container !== '#root') return
     return mount(container)
   }
 

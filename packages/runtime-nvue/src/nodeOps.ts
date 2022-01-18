@@ -26,12 +26,10 @@ export const nodeOps: Omit<
   createText: text => new NVueTextNode(text) as unknown as NVueElement,
   createComment: text => document.createComment(text) as unknown as NVueElement,
   setText: (node, text) => {
-    node.text = text
+    node.setAttr('value', text)
   },
   setElementText: (el, text) => {
-    if (el.parentNode) {
-      el.parentNode.setAttr('value', text)
-    }
+    el.setAttr('value', text)
   },
   parentNode: node => node.parentNode,
   nextSibling: node => node.nextSibling
