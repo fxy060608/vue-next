@@ -1,16 +1,18 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import type { NVueElement } from '@dcloudio/uni-shared'
 
 import { isString } from '@vue/shared'
 
 type Style = string | Record<string, string | string[]> | null
 
-export function patchStyle(el: UniElement, prev: Style, next: Style) {
+export function patchStyle(el: NVueElement, prev: Style, next: Style) {
   if (!next) {
-    el.removeAttribute('style')
+    // TODO remove styles
+    // el.setStyles({})
   } else if (isString(next)) {
-    if (prev !== next) {
-      el.setAttribute('style', next)
-    }
+    // TODO style
+    // if (prev !== next) {
+    //   el.setAttribute('style', next)
+    // }
   } else {
     const batchedStyles: Record<string, string | string[]> = {}
     const isPrevObj = prev && !isString(prev)
@@ -31,8 +33,6 @@ export function patchStyle(el: UniElement, prev: Style, next: Style) {
         batchedStyles[key] = next[key]
       }
     }
-    if (Object.keys(batchedStyles).length) {
-      el.setAttribute('style', batchedStyles)
-    }
+    el.setStyles(batchedStyles)
   }
 }

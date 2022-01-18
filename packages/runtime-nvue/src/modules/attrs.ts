@@ -1,9 +1,9 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import type { NVueElement } from '@dcloudio/uni-shared'
 
-export function patchAttr(el: UniElement, key: string, value: any) {
+export function patchAttr(el: NVueElement, key: string, value: any) {
   if (value == null) {
-    el.removeAttribute(key)
+    // TODO remove
   } else {
-    el.setAttribute(key, value)
+    el.setAttr(key, value)
   }
 }

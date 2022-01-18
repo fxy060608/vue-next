@@ -1,4 +1,8 @@
-import { UniElement, UniEvent, UniEventListener } from '@dcloudio/uni-shared'
+import type {
+  NVueElement,
+  UniEvent,
+  UniEventListener
+} from '@dcloudio/uni-shared'
 
 import { hyphenate, isArray } from '@vue/shared'
 import {
@@ -14,25 +18,20 @@ interface Invoker extends UniEventListener {
 type EventValue = Function | Function[]
 
 export function addEventListener(
-  el: UniElement,
+  el: NVueElement,
   event: string,
   handler: UniEventListener,
   options?: EventListenerOptions
 ) {
-  el.addEventListener(event, handler, options)
+  el.addEvent(event, handler)
 }
 
-export function removeEventListener(
-  el: UniElement,
-  event: string,
-  handler: UniEventListener,
-  options?: EventListenerOptions
-) {
-  el.removeEventListener(event, handler, options)
+export function removeEventListener(el: NVueElement, event: string) {
+  el.removeEvent(event)
 }
 
 export function patchEvent(
-  el: UniElement & { _vei?: Record<string, Invoker | undefined> },
+  el: NVueElement & { _vei?: Record<string, Invoker | undefined> },
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
@@ -52,7 +51,7 @@ export function patchEvent(
       addEventListener(el, name, invoker, options)
     } else if (existingInvoker) {
       // remove
-      removeEventListener(el, name, existingInvoker, options)
+      removeEventListener(el, name)
       invokers[rawName] = undefined
     }
   }
@@ -116,7 +115,7 @@ function initWxsEvent(
   if (!instance) {
     return
   }
-  const { $wxsModules } = (instance as unknown) as { $wxsModules: string[] }
+  const { $wxsModules } = instance as unknown as { $wxsModules: string[] }
   if (!$wxsModules) {
     return
   }
