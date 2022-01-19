@@ -23,7 +23,7 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   unmountChildren
 ) => {
   if (key === 'class') {
-    patchClass(el, nextValue)
+    patchClass(el, prevValue, nextValue, parentComponent)
   } else if (key === 'style') {
     patchStyle(el, prevValue, nextValue)
   } else if (isOn(key)) {
@@ -32,6 +32,6 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
       patchEvent(el, key, prevValue, nextValue, parentComponent)
     }
   } else {
-    patchAttr(el, key, nextValue)
+    patchAttr(el, key, nextValue, parentComponent)
   }
 }
