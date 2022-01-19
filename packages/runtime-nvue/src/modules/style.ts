@@ -1,20 +1,11 @@
 import type { NVueElement } from '@dcloudio/uni-shared'
 
-import { camelize, isString, NormalizedStyle } from '@vue/shared'
-
-const listDelimiterRE = /;(?![^(]*\))/g
-const propertyDelimiterRE = /:(.+)/
-
-function parseStringStyle(cssText: string): NormalizedStyle {
-  const ret: NormalizedStyle = {}
-  cssText.split(listDelimiterRE).forEach(item => {
-    if (item) {
-      const tmp = item.split(propertyDelimiterRE)
-      tmp.length > 1 && (ret[camelize(tmp[0].trim())] = tmp[1].trim())
-    }
-  })
-  return ret
-}
+import {
+  camelize,
+  isString,
+  NormalizedStyle,
+  parseStringStyle
+} from '@vue/shared'
 
 export function patchStyle(
   el: NVueElement,
@@ -34,18 +25,18 @@ export function patchStyle(
   if (isPrevObj) {
     for (const key in prev) {
       if (next[key] == null) {
-        batchedStyles[key] = ''
+        batchedStyles[camelize(key)] = ''
       }
     }
     for (const key in next) {
       const value = next[key]
       if (value !== prev[key]) {
-        batchedStyles[key] = value
+        batchedStyles[camelize(key)] = value
       }
     }
   } else {
     for (const key in next) {
-      batchedStyles[key] = next[key]
+      batchedStyles[camelize(key)] = next[key]
     }
   }
   el.setStyles(batchedStyles)
