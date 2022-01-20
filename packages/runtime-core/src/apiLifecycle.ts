@@ -28,6 +28,10 @@ export function injectHook(
   if (target) {
     // fixed by xxxxxx
     if (isRootHook(type)) {
+      // 系统保留组件，如 view,app 等
+      if ((target.type as any).__reserved) {
+        return
+      }
       target = target.root
     }
     const hooks = target[type] || (target[type] = [])
