@@ -150,6 +150,9 @@ function createSetter(shallow = false) {
     receiver: object
   ): boolean {
     let oldValue = (target as any)[key]
+    if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
+      return false
+    }
     if (!shallow && !isReadonly(value)) {
       if (!isShallow(value)) {
         value = toRaw(value)
