@@ -50,6 +50,8 @@ module.exports = {
     // Packages targeting Node
     {
       files: [
+        '.eslintrc.js',
+        'scripts/*.js',
         'packages/{compiler-sfc,compiler-ssr,server-renderer,reactivity-transform}/**'
       ],
       rules: {

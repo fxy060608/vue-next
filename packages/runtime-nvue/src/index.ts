@@ -42,7 +42,7 @@ export const createApp = ((...args) => {
 // SFC CSS utilities
 export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
-
+export { useCssStyles } from './helpers/useCssStyles'
 // **Internal** DOM-only runtime directive helpers
 // export { vModelText } from './directives/vModel'
 // export { withModifiers, withKeys } from './directives/vOn'
