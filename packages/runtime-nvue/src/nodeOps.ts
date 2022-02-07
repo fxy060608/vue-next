@@ -1,4 +1,4 @@
-import { NVueDocument, NVueElement, NVueTextNode } from '@dcloudio/uni-shared'
+import type { NVueDocument, NVueElement } from '@dcloudio/uni-shared'
 
 import { RendererOptions } from '@vue/runtime-core'
 
@@ -23,7 +23,7 @@ export const nodeOps: Omit<
   createElement: (tag): NVueElement => {
     return document.createElement(tag)
   },
-  createText: text => new NVueTextNode(text) as unknown as NVueElement,
+  createText: text => document.createText(text) as unknown as NVueElement,
   createComment: text => document.createComment(text) as unknown as NVueElement,
   setText: (node, text) => {
     node.setAttr('value', text)

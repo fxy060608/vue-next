@@ -1,6 +1,11 @@
 import type { NVueElement } from '@dcloudio/uni-shared'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
-import { normalizeStyle, parseStringStyle, isString } from '@vue/shared'
+import {
+  normalizeStyle,
+  parseStringStyle,
+  isString,
+  camelize
+} from '@vue/shared'
 import { parseStylesheet } from '../helpers'
 
 export function patchAttr(
@@ -10,7 +15,7 @@ export function patchAttr(
   instance: ComponentInternalInstance | null = null
 ) {
   if (instance) {
-    value = transformAttr(el, key, value, instance)
+    ;[key, value] = transformAttr(el, key, value, instance)
   }
   if (value == null) {
     // TODO remove
@@ -59,21 +64,22 @@ function transformAttr(
   key: string,
   value: unknown,
   instance: ComponentInternalInstance
-) {
+): [string, unknown] {
   if (!value) {
-    return value
+    return [key, value]
   }
   const opts = CLASS_AND_STYLES[el.type]
   if (opts) {
-    if (opts['class'].indexOf(key) !== -1) {
-      return parseStylesheet(instance)[value as string] || {}
+    const camelized = camelize(key)
+    if (opts['class'].indexOf(camelized) > -1) {
+      return [camelized, parseStylesheet(instance)[value as string] || {}]
     }
-    if (opts['style'].indexOf(key) !== -1) {
+    if (opts['style'].indexOf(key) > -1) {
       if (isString(value)) {
-        return parseStringStyle(value)
+        return [camelized, parseStringStyle(value)]
       }
-      return normalizeStyle(value)
+      return [camelized, normalizeStyle(value)]
     }
   }
-  return value
+  return [key, value]
 }
