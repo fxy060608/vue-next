@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dcloudio/runtime-nvue",
-  "version": "3.1.1",
+  "version": "3.2.30",
   "sideEffects": false,
   "dependencies": {
     "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared"

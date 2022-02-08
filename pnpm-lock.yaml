@@ -224,8 +224,10 @@ importers:
   packages/runtime-nvue:
     specifiers:
       '@dcloudio/uni-shared': /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
+      '@vue/reactivity': 3.2.30
     dependencies:
       '@dcloudio/uni-shared': link:../../../uni-app-next/packages/uni-shared
+      '@vue/reactivity': link:../reactivity
 
   packages/runtime-test:
     specifiers:

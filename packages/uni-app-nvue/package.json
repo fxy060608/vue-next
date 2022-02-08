@@ -23,7 +23,8 @@
     "url": "https://github.com/dcloudio/uni-app/issues"
   },
   "dependencies": {
-    "@vue/shared": "3.2.22",
-    "vue": "3.2.22"
+    "@vue/shared": "3.2.30",
+    "@vue/reactivity": "3.2.30",
+    "vue": "3.2.30"
   }
 }
