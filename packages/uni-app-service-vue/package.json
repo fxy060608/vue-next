@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/vuejs/vue-next/issues"
   },
-  "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/vue#readme"
+  "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/vue#readme",
+  "dependencies": {
+    "@vue/reactivity": "3.2.30"
+  }
 }

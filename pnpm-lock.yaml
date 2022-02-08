@@ -275,7 +275,10 @@ importers:
       source-map: 0.6.1
 
   packages/uni-app-service-vue:
-    specifiers: {}
+    specifiers:
+      '@vue/reactivity': 3.2.30
+    dependencies:
+      '@vue/reactivity': link:../reactivity
 
   packages/vue:
     specifiers:
