@@ -813,6 +813,13 @@ export function applyOptions(instance: ComponentInternalInstance) {
   ) {
     instance.filters = filters
   }
+
+  // fixed by xxxxxx
+  const customApplyOptions = instance.appContext.config.globalProperties
+    .$applyOptions as Function
+  if (customApplyOptions) {
+    customApplyOptions(options, instance, publicThis)
+  }
 }
 
 export function resolveInjections(
