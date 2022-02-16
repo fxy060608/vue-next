@@ -107,7 +107,7 @@ function reload(id: string, newComp: HMRComponent) {
     (window as any).__setupPage &&
     record.initialDef.__mpType === 'page'
   ) {
-    ;(window as any).__setupPage(newComp)
+    newComp = (window as any).__setupPage(newComp)
   }
   newComp = normalizeClassComponent(newComp)
   // update initial def (for not-yet-rendered components)
