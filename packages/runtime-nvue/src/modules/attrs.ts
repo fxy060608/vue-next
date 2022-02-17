@@ -6,7 +6,7 @@ import {
   isString,
   camelize
 } from '@vue/shared'
-import { parseStylesheet } from '../helpers'
+import { parseClassList } from '../helpers'
 
 export function patchAttr(
   el: NVueElement,
@@ -72,7 +72,7 @@ function transformAttr(
   if (opts) {
     const camelized = camelize(key)
     if (opts['class'].indexOf(camelized) > -1) {
-      return [camelized, parseStylesheet(instance)[value as string] || {}]
+      return [camelized, parseClassList([value as string], instance, el)]
     }
     if (opts['style'].indexOf(key) > -1) {
       if (isString(value)) {

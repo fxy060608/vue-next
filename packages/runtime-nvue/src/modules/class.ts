@@ -1,7 +1,6 @@
 import type { NVueElement } from '@dcloudio/uni-shared'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
-import { extend } from '@vue/shared'
-import { isUndef, parseStylesheet } from '../helpers'
+import { isUndef, parseClassList } from '../helpers'
 
 // compiler should normalize class + :class bindings on the same element
 // into a single binding ['staticClass', dynamic]
@@ -13,13 +12,16 @@ export function patchClass(
 ) {
   // 移除 class
   if (next == null) {
+    el.setClassList([])
     return
   }
   if (!instance) {
     return
   }
-  const oldStyle = getStyle(pre, instance)
-  const newStyle = getStyle(next, instance)
+  const preClassList = pre ? pre.split(' ') : []
+  const classList = next ? next.split(' ') : []
+  const oldStyle = getStyle(preClassList, el, instance)
+  const newStyle = getStyle(classList, el, instance)
   let cur, name
   const batchedStyles: Record<string, unknown> = {}
   for (name in oldStyle) {
@@ -33,19 +35,14 @@ export function patchClass(
       batchedStyles[name] = cur
     }
   }
+  el.setClassList(classList)
   el.setStyles(batchedStyles)
 }
 
-function getStyle(clazz: string | null, instance: ComponentInternalInstance) {
-  if (!clazz) {
-    return {}
-  }
-  const classList = clazz.split(' ')
-  const stylesheet = parseStylesheet(instance)
-  const result: Record<string, unknown> = {}
-  classList.forEach(name => {
-    const style = stylesheet[name]
-    extend(result, style)
-  })
-  return result
+function getStyle(
+  classList: string[],
+  el: NVueElement,
+  instance: ComponentInternalInstance
+) {
+  return parseClassList(classList, instance, el)
 }
