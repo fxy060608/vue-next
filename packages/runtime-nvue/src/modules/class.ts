@@ -20,6 +20,7 @@ export function patchClass(
   }
   const preClassList = pre ? pre.split(' ') : []
   const classList = next ? next.split(' ') : []
+  // 此时 parentNode，previousSibling 等节点信息还未更新
   const oldStyle = getStyle(preClassList, el, instance)
   const newStyle = getStyle(classList, el, instance)
   let cur, name
