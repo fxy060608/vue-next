@@ -129,18 +129,17 @@ interface ParseStyleContext {
   weights: Record<string, number>
 }
 
-export function parseClassList(
+function parseClassListWithStyleSheet(
   classList: string[],
-  instance: ComponentInternalInstance,
+  stylesheet: NVueStyle,
   el: NVueElement | null = null
 ) {
   const context: ParseStyleContext = {
     styles: {},
     weights: {}
   }
-  const styles = parseStylesheet(instance)
   classList.forEach(className => {
-    const parentStyles = styles[className]
+    const parentStyles = stylesheet[className]
     if (parentStyles) {
       parseClassName(context, parentStyles, el)
     }
@@ -148,9 +147,21 @@ export function parseClassList(
   return context.styles
 }
 
-function parseStylesheet({
+export function parseClassStyles(el: NVueElement) {
+  return parseClassListWithStyleSheet(el.classList, el.styleSheet, el)
+}
+
+export function parseClassList(
+  classList: string[],
+  instance: ComponentInternalInstance,
+  el: NVueElement | null = null
+) {
+  return parseClassListWithStyleSheet(classList, parseStyleSheet(instance), el)
+}
+
+export function parseStyleSheet({
   type,
-  vnode: { appContext }
+  appContext
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
   if (!component.__styles) {
