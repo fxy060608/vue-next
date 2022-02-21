@@ -17,11 +17,7 @@ export function patchAttr(
   if (instance) {
     ;[key, value] = transformAttr(el, key, value, instance)
   }
-  if (value == null) {
-    // TODO remove
-  } else {
-    el.setAttr(key, value)
-  }
+  el.setAttr(key, value)
 }
 
 const ATTR_HOVER_CLASS = 'hoverClass'

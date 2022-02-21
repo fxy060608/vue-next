@@ -11,6 +11,8 @@ type DOMRendererOptions = RendererOptions<NVueElement, NVueElement>
 
 export { forcePatchProp } from '@dcloudio/uni-shared'
 
+const vModelTags = ['u-input', 'u-textarea']
+
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,
   key,
@@ -31,6 +33,9 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     if (!isModelListener(key)) {
       patchEvent(el, key, prevValue, nextValue, parentComponent)
     }
+  } else if (key === 'modelValue' && vModelTags.includes(el.type)) {
+    // v-model 时，原生 input 和 textarea 接收的是 value
+    el.setAttrs({ modelValue: nextValue, value: nextValue })
   } else {
     patchAttr(el, key, nextValue, parentComponent)
   }
