@@ -97,9 +97,9 @@ export interface RendererOptions<
     key: string,
     prevValue: any,
     nextValue: any,
-    isSVG?: boolean,
-    prevChildren?: VNode<HostNode, HostElement>[],
-    parentComponent?: ComponentInternalInstance | null,
+    isSVG: boolean,
+    prevChildren: VNode<HostNode, HostElement>[],
+    parentComponent: ComponentInternalInstance | null,
     parentSuspense?: SuspenseBoundary | null,
     unmountChildren?: UnmountChildrenFn
   ): void
@@ -687,7 +687,16 @@ function baseCreateRenderer(
          * affect non-DOM renderers)
          */
         if ('value' in props) {
-          hostPatchProp(el, 'value', null, props.value)
+          // fixed by xxxxxx
+          hostPatchProp(
+            el,
+            'value',
+            null,
+            props.value,
+            false,
+            [],
+            parentComponent
+          )
         }
         if ((vnodeHook = props.onVnodeBeforeMount)) {
           invokeVNodeHook(vnodeHook, parentComponent, vnode)
@@ -884,14 +893,32 @@ function baseCreateRenderer(
         // this flag is matched when the element has dynamic class bindings.
         if (patchFlag & PatchFlags.CLASS) {
           if (oldProps.class !== newProps.class) {
-            hostPatchProp(el, 'class', null, newProps.class, isSVG)
+            // fixed by xxxxxx
+            hostPatchProp(
+              el,
+              'class',
+              null,
+              newProps.class,
+              isSVG,
+              [],
+              parentComponent
+            )
           }
         }
 
         // style
         // this flag is matched when the element has dynamic style bindings
         if (patchFlag & PatchFlags.STYLE) {
-          hostPatchProp(el, 'style', oldProps.style, newProps.style, isSVG)
+          // fixed by xxxxxx
+          hostPatchProp(
+            el,
+            'style',
+            oldProps.style,
+            newProps.style,
+            isSVG,
+            [],
+            parentComponent
+          )
         }
 
         // props
@@ -1052,7 +1079,16 @@ function baseCreateRenderer(
         }
       }
       if ('value' in newProps) {
-        hostPatchProp(el, 'value', oldProps.value, newProps.value)
+        // fixed by xxxxxx
+        hostPatchProp(
+          el,
+          'value',
+          oldProps.value,
+          newProps.value,
+          false,
+          [],
+          parentComponent
+        )
       }
     }
   }

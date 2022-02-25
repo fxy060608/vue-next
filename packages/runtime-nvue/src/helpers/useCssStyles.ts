@@ -61,19 +61,9 @@ function isMatchParentSelector(parentSelector: string, el: NVueElement | null) {
     const item = classArray[i]
     const type = item[item.length - 1]
     const className = item.replace(TYPE_RE, '')
-    let property:
-      | typeof PROPERTY_PARENT_NODE
-      | typeof PROPERTY_PREVIOUS_SIBLING = PROPERTY_PARENT_NODE
-    let recurse = true
-    if (type === '>') {
-      recurse = false
-    } else if (type === '+') {
-      property = PROPERTY_PREVIOUS_SIBLING
-      recurse = false
-    } else if (type === '~') {
-      property = PROPERTY_PREVIOUS_SIBLING
-    }
-    if (recurse) {
+    if (type === '~' || type === ' ') {
+      const property =
+        type === '~' ? PROPERTY_PREVIOUS_SIBLING : PROPERTY_PARENT_NODE
       while (el) {
         el = el[property]
         if (hasClass(className, el)) {
@@ -84,7 +74,11 @@ function isMatchParentSelector(parentSelector: string, el: NVueElement | null) {
         return false
       }
     } else {
-      el = el && el[property]
+      if (type === '>') {
+        el = el && el[PROPERTY_PARENT_NODE]
+      } else if (type === '+') {
+        el = el && el[PROPERTY_PREVIOUS_SIBLING]
+      }
       if (!hasClass(className, el)) {
         return false
       }
