@@ -98,7 +98,8 @@ export {
   withScopeId,
   // vue-i18n 使用到了
   Text,
-  Fragment
+  Fragment,
+  setDelayFlushJobs
 } from '@vue/runtime-core'
 export { useCssModule } from '@vue/runtime-dom'
 export { useCssVars } from './helpers/useCssVars'

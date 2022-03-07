@@ -105,6 +105,11 @@ export function queueJob(job: SchedulerJob) {
   }
 }
 // fixed by xxxxxx
+let delayFlushJobs = false
+export function setDelayFlushJobs(isDelay: boolean) {
+  delayFlushJobs = isDelay
+}
+// fixed by xxxxxx
 function sleep(ms: number) {
   return () => {
     return new Promise<any>(resolve => setTimeout(() => resolve(void 0), ms))
@@ -114,8 +119,12 @@ function sleep(ms: number) {
 function queueFlush() {
   if (!isFlushing && !isFlushPending) {
     isFlushPending = true
-    // fixed by xxxxxx 延迟执行，避免同一批次的事件执行时机不正确，对性能可能有略微影响 https://github.com/dcloudio/uni-app/issues/3228
-    currentFlushPromise = resolvedPromise.then(sleep(0)).then(flushJobs)
+    if (delayFlushJobs) {
+      // fixed by xxxxxx 延迟执行，避免同一批次的事件执行时机不正确，对性能可能有略微影响 https://github.com/dcloudio/uni-app/issues/3228
+      currentFlushPromise = resolvedPromise.then(sleep(0)).then(flushJobs)
+    } else {
+      currentFlushPromise = resolvedPromise.then(flushJobs)
+    }
   }
 }
 
@@ -228,6 +237,8 @@ const getId = (job: SchedulerJob): number =>
   job.id == null ? Infinity : job.id
 
 function flushJobs(seen?: CountMap) {
+  // fixed by xxxxxx
+  delayFlushJobs = false
   isFlushPending = false
   isFlushing = true
   if (__DEV__) {
