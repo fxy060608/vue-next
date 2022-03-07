@@ -11,7 +11,7 @@ import { callWithAsyncErrorHandling, ErrorTypeStrings } from './errorHandling'
 import { warn } from './warning'
 import { toHandlerKey } from '@vue/shared'
 import { DebuggerEvent, pauseTracking, resetTracking } from '@vue/reactivity'
-import { isRootHook } from '@dcloudio/uni-shared'
+import { isRootHook, isRootImmediateHook, ON_LOAD } from '@dcloudio/uni-shared'
 export { onActivated, onDeactivated } from './components/KeepAlive'
 
 export function injectHook(
@@ -22,8 +22,18 @@ export function injectHook(
 ): Function | undefined {
   if (target) {
     // fixed by xxxxxx
-    if (isRootHook(type)) {
+    if (isRootHook(type) && target !== target.root) {
       target = target.root
+      if (isRootImmediateHook(type)) {
+        // 作用域应该是组件还是页面？目前绑定的是页面
+        const proxy = target.proxy!
+        callWithAsyncErrorHandling(
+          hook.bind(proxy),
+          target,
+          type,
+          ON_LOAD === (type as string) ? [(proxy as any).$page.options] : []
+        )
+      }
     }
     const { __page_container__ } = target.root.vnode as any
     // 仅限 App 端
