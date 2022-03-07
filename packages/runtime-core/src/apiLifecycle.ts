@@ -11,7 +11,7 @@ import { callWithAsyncErrorHandling, ErrorTypeStrings } from './errorHandling'
 import { warn } from './warning'
 import { toHandlerKey } from '@vue/shared'
 import { DebuggerEvent, pauseTracking, resetTracking } from '@vue/reactivity'
-import { isRootHook } from '@dcloudio/uni-shared'
+import { isRootHook, isRootImmediateHook, ON_LOAD } from '@dcloudio/uni-shared'
 export {
   onActivated,
   onDeactivated,
@@ -32,7 +32,19 @@ export function injectHook(
       if ((target.type as any).__reserved) {
         return
       }
-      target = target.root
+      if (target !== target.root) {
+        target = target.root
+        if (isRootImmediateHook(type)) {
+          // 作用域应该是组件还是页面？目前绑定的是页面
+          const proxy = target.proxy!
+          callWithAsyncErrorHandling(
+            hook.bind(proxy),
+            target,
+            type,
+            ON_LOAD === (type as string) ? [(proxy as any).$page.options] : []
+          )
+        }
+      }
     }
     const hooks = target[type] || (target[type] = [])
     // cache the error handling wrapper for injected hooks so the same hook
