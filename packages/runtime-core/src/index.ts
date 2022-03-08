@@ -56,8 +56,7 @@ export {
   onServerPrefetch
 } from './apiLifecycle'
 export { provide, inject } from './apiInject'
-// fixed by xxxxxx
-export { nextTick, setDelayFlushJobs } from './scheduler'
+export { nextTick } from './scheduler'
 export { defineComponent } from './apiDefineComponent'
 export { defineAsyncComponent } from './apiAsyncComponent'
 export { useAttrs, useSlots } from './apiSetupHelpers'
