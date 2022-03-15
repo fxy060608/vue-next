@@ -1,4 +1,10 @@
-import { ShapeFlags, invokeArrayFns, NOOP, isOn } from '@vue/shared'
+import {
+  ShapeFlags,
+  invokeArrayFns,
+  NOOP,
+  isOn,
+  isModelListener
+} from '@vue/shared'
 
 import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
 
@@ -41,6 +47,7 @@ import { initAppConfig } from './appConfig'
 import { onApplyOptions } from './componentOptions'
 import { diff } from '.'
 import { setRef, TemplateRef } from './rendererTemplateRef'
+import { NormalizedProps } from 'packages/runtime-core/src/componentProps'
 
 export enum MPType {
   APP = 'app',
@@ -125,6 +132,7 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     proxy,
     withProxy,
     props,
+    propsOptions: [propsOptions],
     slots,
     attrs,
     emit,
@@ -140,7 +148,8 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
           globalProperties: { pruneComponentPropsCache }
         }
       }
-    }
+    },
+    inheritAttrs
   } = instance
   // template refs
   ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
@@ -153,9 +162,9 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
 
   let result
   const prev = setCurrentRenderingInstance(instance)
-
   try {
     if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      fallthroughAttrs(inheritAttrs, props, propsOptions, attrs)
       // withProxy is a proxy with a different `has` trap only for
       // runtime-compiled render functions using `with` block.
       const proxyToUse = withProxy || proxy
@@ -169,22 +178,52 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
         ctx
       )
     } else {
+      fallthroughAttrs(
+        inheritAttrs,
+        props,
+        propsOptions,
+        Component.props ? attrs : getFunctionalFallthrough(attrs)
+      )
       // functional
       const render = Component as FunctionalComponent
       result =
         render.length > 1
           ? render(props, { attrs, slots, emit })
           : render(props, null as any /* we know it doesn't need it */)
-          ? attrs
-          : getFunctionalFallthrough(attrs)
     }
   } catch (err) {
     handleError(err, instance, ErrorCodes.RENDER_FUNCTION)
     result = false
   }
+
   setRef(instance)
   setCurrentRenderingInstance(prev)
   return result
+}
+
+function fallthroughAttrs(
+  inheritAttrs?: boolean,
+  props?: Data,
+  propsOptions?: NormalizedProps,
+  fallthroughAttrs?: Data
+) {
+  if (props && fallthroughAttrs && inheritAttrs !== false) {
+    const keys = Object.keys(fallthroughAttrs).filter(
+      key => key !== 'class' && key !== 'style'
+    )
+    if (!keys.length) {
+      return
+    }
+    if (propsOptions && keys.some(isModelListener)) {
+      keys.forEach(key => {
+        if (!isModelListener(key) || !(key.slice(9) in propsOptions)) {
+          props[key] = fallthroughAttrs[key]
+        }
+      })
+    } else {
+      keys.forEach(key => (props[key] = fallthroughAttrs[key]))
+    }
+  }
 }
 
 const updateComponentPreRender = (instance: ComponentInternalInstance) => {
