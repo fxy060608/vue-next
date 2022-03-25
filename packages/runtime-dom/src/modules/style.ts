@@ -1,5 +1,4 @@
-import { isString, hyphenate, capitalize, isArray } from '@vue/shared'
-import { camelize } from '@vue/runtime-core'
+import { isString, hyphenate, isArray } from '@vue/shared'
 
 type Style = string | Record<string, string | string[]> | null
 
@@ -21,7 +20,9 @@ export function patchStyle(el: Element, prev: Style, next: Style) {
     const currentDisplay = style.display
     if (isCssString) {
       if (prev !== next) {
-        style.cssText = next as string
+        // fixed by xxxxxx
+        // @ts-ignore
+        style.cssText = normalizeStyleValue(next as string)
       }
     } else if (prev) {
       el.removeAttribute('style')
@@ -45,12 +46,16 @@ function setStyle(
   if (isArray(val)) {
     val.forEach(v => setStyle(style, name, v))
   } else {
-    val = normalizeRpx(val) // fixed by xxxxxx
+    // fixed by xxxxxx
+    // @ts-ignore
+    val = normalizeStyleValue(val) as string
     if (name.startsWith('--')) {
       // custom property definition
       style.setProperty(name, val)
     } else {
-      const prefixed = autoPrefix(style, name)
+      // fixed by xxxxxx
+      // @ts-ignore
+      const prefixed = normalizeStyleName(style, name)
       if (importantRE.test(val)) {
         // !important
         style.setProperty(
@@ -63,43 +68,4 @@ function setStyle(
       }
     }
   }
-}
-
-const prefixes = ['Webkit', 'Moz', 'ms']
-const prefixCache: Record<string, string> = {}
-
-function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
-  const cached = prefixCache[rawName]
-  if (cached) {
-    return cached
-  }
-  let name = camelize(rawName)
-  if (name !== 'filter' && name in style) {
-    return (prefixCache[rawName] = name)
-  }
-  name = capitalize(name)
-  for (let i = 0; i < prefixes.length; i++) {
-    const prefixed = prefixes[i] + name
-    if (prefixed in style) {
-      return (prefixCache[rawName] = prefixed)
-    }
-  }
-  return rawName
-}
-
-// fixed by xxxxxx
-// upx,rpx
-const rpxRE = /\b([+-]?\d+(\.\d+)?)[r|u]px\b/g
-const normalizeRpx = (val: string) => {
-  // @ts-ignore
-  if (typeof rpx2px !== 'function') {
-    return val
-  }
-  if (isString(val)) {
-    return val.replace(rpxRE, (a, b) => {
-      // @ts-ignore
-      return rpx2px(b) + 'px'
-    })
-  }
-  return val
 }
