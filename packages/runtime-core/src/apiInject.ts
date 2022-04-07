@@ -24,6 +24,10 @@ export function provide<T>(key: InjectionKey<T> | string | number, value: T) {
     }
     // TS doesn't allow symbol as index type
     provides[key as string] = value
+    // 当实例为 App 时，同步到全局 provide
+    if ((currentInstance.type as any).mpType === 'app') {
+      currentInstance.appContext.app.provide(key as string, value)
+    }
   }
 }
 
