@@ -19,7 +19,7 @@ module.exports = {
     // rest spread usage (both assign and destructure)
     'no-restricted-syntax': [
       'error',
-      'ObjectExpression > SpreadElement',
+      // 'ObjectExpression > SpreadElement',
       'ObjectPattern > RestElement',
       'AwaitExpression'
     ]
