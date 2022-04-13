@@ -1,6 +1,6 @@
 export { createVueApp } from './renderer'
 // vue-global-api
-export { defineAsyncComponent, invalidateJob } from './utils'
+export { defineAsyncComponent } from './utils'
 export { logError } from 'packages/runtime-core/src/errorHandling'
 export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
 export {
@@ -9,6 +9,7 @@ export {
 } from 'packages/runtime-core/src/component'
 export { setCurrentRenderingInstance } from 'packages/runtime-core/src/componentRenderContext'
 export { updateProps } from 'packages/runtime-core/src/componentProps'
+export { invalidateJob } from 'packages/runtime-core/src/scheduler'
 export { EMPTY_OBJ } from '@vue/shared'
 export { setTemplateRef } from './rendererTemplateRef'
 // @vue/reactivity

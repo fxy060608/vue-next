@@ -117,6 +117,8 @@ export function invalidateJob(job: SchedulerJob) {
   if (i > flushIndex) {
     queue.splice(i, 1)
   }
+  // fixed by xxxxxx
+  return i
 }
 
 function queueCb(
