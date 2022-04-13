@@ -19,7 +19,7 @@ module.exports = {
     // rest spread usage (both assign and destructure)
     'no-restricted-syntax': [
       'error',
-      'ObjectExpression > SpreadElement',
+      // 'ObjectExpression > SpreadElement',
       'ObjectPattern > RestElement',
       'AwaitExpression'
     ]
@@ -50,6 +50,8 @@ module.exports = {
     // Packages targeting Node
     {
       files: [
+        '.eslintrc.js',
+        'scripts/*.js',
         'packages/{compiler-sfc,compiler-ssr,server-renderer,reactivity-transform}/**'
       ],
       rules: {
