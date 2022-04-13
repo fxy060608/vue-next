@@ -246,7 +246,7 @@ importers:
       vite: ^2.7.1
       vue: 3.2.32
     dependencies:
-      '@vue/repl': 0.4.8_vue@packages+vue
+      '@vue/repl': 0.4.8
       file-saver: 2.0.5
       jszip: 3.7.1
       vue: link:../vue
@@ -267,6 +267,14 @@ importers:
     dependencies:
       monaco-editor: 0.20.0
       source-map: 0.6.1
+
+  packages/uni-vue:
+    specifiers:
+      '@vue/shared': 3.0.0-rc.5
+      vue: ^3.0.0-rc.5
+    dependencies:
+      '@vue/shared': 3.0.0-rc.5
+      vue: link:../vue
 
   packages/vue:
     specifiers:
@@ -1283,12 +1291,14 @@ packages:
     engines: {node: '>= 0.12.0'}
     dev: true
 
-  /@vue/repl/0.4.8_vue@packages+vue:
+  /@vue/repl/0.4.8:
     resolution: {integrity: sha512-MP4xVHMuInTQEo6b3Q8OQF3R4fTrfFzWqQl157/S6hOnPDW3b05pMisC2RRubp+scHzR/1M+OnCNCRfpAHzPGg==}
     peerDependencies:
       vue: ^3.2.13
-    dependencies:
-      vue: link:packages/vue
+    dev: false
+
+  /@vue/shared/3.0.0-rc.5:
+    resolution: {integrity: sha512-ZhcgGzBpp+pUzisZgQpM4ctIGgLpYjBj7/rZfbhEPxFHF/BuTV2jmhXvAl8aF9xDAejIcw85xCy92gDSwKtPag==}
     dev: false
 
   /@zeit/schemas/2.6.0:
