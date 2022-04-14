@@ -54,6 +54,8 @@ function setStyle(
   if (isArray(val)) {
     val.forEach(v => setStyle(style, name, v))
   } else {
+    if (val == null) val = ''
+    // fixed by xxxxxx
     val = normalizeRpx(val)
     if (name.startsWith('--')) {
       // custom property definition
@@ -95,7 +97,6 @@ function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
   }
   return rawName
 }
-
 // fixed by xxxxxx
 // upx,rpx
 const rpxRE = /\b([+-]?\d+(\.\d+)?)[r|u]px\b/g
