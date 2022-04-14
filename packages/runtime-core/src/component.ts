@@ -26,7 +26,7 @@ import {
   initProps,
   normalizePropsOptions
 } from './componentProps'
-import { Slots, /*initSlots, */ InternalSlots } from './componentSlots'
+import { Slots /*, initSlots*/, InternalSlots } from './componentSlots'
 import { warn } from './warning'
 import { ErrorCodes, callWithErrorHandling, handleError } from './errorHandling'
 import { AppContext, createAppContext, AppConfig } from './apiCreateApp'
@@ -584,7 +584,7 @@ export function setupComponent(
   isSSR = false
 ) {
   isInSSRComponentSetup = isSSR
-
+  // fixed by xxxxxx
   const { props /*, children*/ } = instance.vnode
   const isStateful = isStatefulComponent(instance)
   initProps(instance, props, isStateful, isSSR)
@@ -668,6 +668,15 @@ function setupStatefulComponent(
         // async setup returned Promise.
         // bail here and wait for re-entry.
         instance.asyncDep = setupResult
+        if (__DEV__ && !instance.suspense) {
+          const name = Component.name ?? 'Anonymous'
+          warn(
+            `Component <${name}>: setup function returned a promise, but no ` +
+              `<Suspense> boundary was found in the parent component tree. ` +
+              `A component with async setup() must be nested in a <Suspense> ` +
+              `in order to be rendered.`
+          )
+        }
       } else if (__DEV__) {
         warn(
           `setup() returned a Promise, but the version of Vue you are using ` +
@@ -771,7 +780,7 @@ export function finishComponentSetup(
       const template =
         (__COMPAT__ &&
           instance.vnode.props &&
-          instance.vnode.props!['inline-template']) ||
+          instance.vnode.props!['inline-template']) || // fixed by xxxxxx
         Component.template
       if (template) {
         if (__DEV__) {
