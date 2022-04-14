@@ -46,6 +46,7 @@ function setStyle(
   if (isArray(val)) {
     val.forEach(v => setStyle(style, name, v))
   } else {
+    if (val == null) val = ''
     // fixed by xxxxxx
     // @ts-ignore
     val = normalizeStyleValue(val) as string
