@@ -164,7 +164,7 @@ export function emit(
       instance,
       ErrorCodes.COMPONENT_EVENT_HANDLER,
       // fixed by xxxxxx
-      normalizeWxsEventArga(instance, handler, args)
+      normalizeWxsEventArgs(instance, handler, args)
     )
   }
 
@@ -182,7 +182,7 @@ export function emit(
       instance,
       ErrorCodes.COMPONENT_EVENT_HANDLER,
       // fixed by xxxxxx
-      normalizeWxsEventArga(instance, onceHandler, args)
+      normalizeWxsEventArgs(instance, onceHandler, args)
     )
   }
 
@@ -198,7 +198,7 @@ export function emit(
  * @param args
  * @returns
  */
-function normalizeWxsEventArga(
+function normalizeWxsEventArgs(
   instance: ComponentInternalInstance,
   handler: Function | Function[],
   args: any[]
