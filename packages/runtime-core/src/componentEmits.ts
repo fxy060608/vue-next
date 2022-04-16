@@ -163,7 +163,8 @@ export function emit(
       handler,
       instance,
       ErrorCodes.COMPONENT_EVENT_HANDLER,
-      args
+      // fixed by xxxxxx
+      normalizeWxsEventArga(instance, handler, args)
     )
   }
 
@@ -174,12 +175,14 @@ export function emit(
     } else if (instance.emitted[handlerName]) {
       return
     }
+
     instance.emitted[handlerName] = true
     callWithAsyncErrorHandling(
       onceHandler,
       instance,
       ErrorCodes.COMPONENT_EVENT_HANDLER,
-      args
+      // fixed by xxxxxx
+      normalizeWxsEventArga(instance, onceHandler, args)
     )
   }
 
@@ -187,6 +190,52 @@ export function emit(
     compatModelEmit(instance, event, args)
     return compatInstanceEmit(instance, event, args)
   }
+}
+/**
+ * 补充 wxs 事件参数
+ * @param instance
+ * @param handler
+ * @param args
+ * @returns
+ */
+function normalizeWxsEventArga(
+  instance: ComponentInternalInstance,
+  handler: Function | Function[],
+  args: any[]
+) {
+  // 系统组件事件参数长度一定是 1
+  if (args.length !== 1) {
+    return args
+  }
+  // 判断是否可能需要补充 ownerInstance 参数
+  if (isFunction(handler)) {
+    // 单函数，且参数小于 2 的直接返回
+    if (handler.length < 2) {
+      return args
+    }
+  } else {
+    // 多函数，且参数没有大于等于 2 的直接返回
+    if (!handler.find(item => item.length >= 2)) {
+      return args
+    }
+  }
+  // 系统组件事件对象
+  const $sysEvent = args[0]
+  if (
+    $sysEvent &&
+    hasOwn($sysEvent, 'type') &&
+    hasOwn($sysEvent, 'timeStamp') &&
+    hasOwn($sysEvent, 'target') &&
+    hasOwn($sysEvent, 'currentTarget') &&
+    hasOwn($sysEvent, 'detail')
+  ) {
+    const proxy = instance.proxy! as any
+    const $ownerInstance = proxy.$gcd(proxy, true)
+    if ($ownerInstance) {
+      args.push($ownerInstance)
+    }
+  }
+  return args
 }
 
 export function normalizeEmitsOptions(
