@@ -4,7 +4,6 @@ import {
   validateComponentName,
   Component,
   ComponentInternalInstance
-  // getExposeProxy
 } from './component'
 import {
   ComponentOptions,
@@ -16,12 +15,9 @@ import { Directive, validateDirectiveName } from './directives'
 import { RootRenderFunction } from './renderer'
 import { InjectionKey } from './apiInject'
 import { warn } from './warning'
-// import { createVNode, cloneVNode, VNode } from './vnode'
 import { RootHydrateFunction } from './hydration'
-// import { devtoolsInitApp, devtoolsUnmountApp } from './devtools'
 import { isFunction, NO, isObject } from '@vue/shared'
 import { version } from '.'
-// import { installAppCompatProperties } from './compat/global'
 import { NormalizedPropsOptions } from './componentProps'
 import { ObjectEmitsOptions } from './componentEmits'
 
@@ -289,9 +285,8 @@ export function createAppAPI<HostElement>(
               `It will be overwritten with the new value.`
           )
         }
-        // TypeScript doesn't allow symbols as index type
-        // https://github.com/Microsoft/TypeScript/issues/24587
-        context.provides[key as string] = value
+
+        context.provides[key as string | symbol] = value
 
         return app
       }

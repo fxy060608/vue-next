@@ -83,7 +83,7 @@ export function setTemplateRef(
   setupState: Data
 ) {
   if (isFunction(r)) {
-    r(refValue, {})
+    r(refValue as ComponentPublicInstance, {})
   } else {
     const _isString = isString(r)
     const _isRef = isRef(r)
