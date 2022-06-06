@@ -550,6 +550,8 @@ export function createComponentInstance(
   }
   instance.root = parent ? parent.root : instance
   instance.emit = emit.bind(null, instance)
+  // fixed by xxxxxx
+  ;(instance as any).$pageInstance = parent && (parent as any).$pageInstance
 
   // apply custom element special handling
   if (vnode.ce) {

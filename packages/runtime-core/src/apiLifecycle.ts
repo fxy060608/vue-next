@@ -27,13 +27,13 @@ export function injectHook(
 ): Function | undefined {
   if (target) {
     // fixed by xxxxxx
-    if (isRootHook(type)) {
+    if (isRootHook(type) && (target as any).$pageInstance) {
       // 系统保留组件，如 view,app 等
       if ((target.type as any).__reserved) {
         return
       }
-      if (target !== target.root) {
-        target = target.root
+      if (target !== (target as any).$pageInstance) {
+        target = (target as any).$pageInstance as ComponentInternalInstance
         if (isRootImmediateHook(type)) {
           // 作用域应该是组件还是页面？目前绑定的是页面
           const proxy = target.proxy!
