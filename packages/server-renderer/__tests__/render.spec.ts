@@ -675,9 +675,7 @@ function testRender(type: string, render: typeof renderToString) {
         const MyComp = {
           render: () => h('p', 'hello')
         }
-        expect(await render(h(KeepAlive, () => h(MyComp)))).toBe(
-          `<!--[--><p>hello</p><!--]-->`
-        )
+        expect(await render(h(KeepAlive, () => h(MyComp)))).toBe(`<p>hello</p>`)
       })
 
       test('Transition', async () => {
