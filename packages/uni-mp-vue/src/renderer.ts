@@ -3,7 +3,8 @@ import {
   invokeArrayFns,
   NOOP,
   isOn,
-  isModelListener
+  isModelListener,
+  isString
 } from '@vue/shared'
 
 import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
@@ -253,7 +254,7 @@ function componentUpdateScopedSlotsFn(
   const diffData = Object.create(null)
   scopedSlotsData.forEach(({ path, index, data }) => {
     const oldScopedSlotData = getValueByDataPath(oldData, path) as Data[]
-    const diffPath = `${path}[${index}]`
+    const diffPath = isString(index) ? `${path}.${index}` : `${path}[${index}]`
     if (
       typeof oldScopedSlotData === 'undefined' ||
       typeof oldScopedSlotData[index] === 'undefined'
