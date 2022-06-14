@@ -421,6 +421,7 @@ export function createVueApp(rootComponent: Component, rootProps = null) {
         props: null
       }
     )
+    app._instance = instance.$
     ;(instance as any).$app = app
     ;(instance as any).$createComponent = createComponent
     ;(instance as any).$destroyComponent = destroyComponent
