@@ -316,9 +316,9 @@ export function createAppAPI<HostElement>(
           app._container = rootContainer
           // for devtools and telemetry
           ;(rootContainer as any).__vue_app__ = app
-
+          // fixed by xxxxxx (始终暴露，因为 onError 要访问)
+          app._instance = vnode.component
           if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
-            app._instance = vnode.component
             devtoolsInitApp(app, version)
           }
 
