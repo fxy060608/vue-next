@@ -61,12 +61,13 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
       return false
     })
   }
+
   const doSet = () => {
     const refs = doSetByRefs($templateRefs)
-    if (refs.length) {
-      setTimeout(() => {
+    if (refs.length && instance.proxy && (instance.proxy as any).$scope) {
+      ;(instance.proxy as any).$scope.setData({ r1: 1 }, () => {
         doSetByRefs(refs)
-      }, 10)
+      })
     }
   }
 

@@ -112,13 +112,15 @@ function queueFlush() {
   }
 }
 
+export function hasQueueJob(job: SchedulerJob) {
+  return queue.indexOf(job) > -1
+}
+
 export function invalidateJob(job: SchedulerJob) {
   const i = queue.indexOf(job)
   if (i > flushIndex) {
     queue.splice(i, 1)
   }
-  // fixed by xxxxxx
-  return i
 }
 
 function queueCb(

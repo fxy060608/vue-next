@@ -9,7 +9,7 @@ export {
 } from 'packages/runtime-core/src/component'
 export { setCurrentRenderingInstance } from 'packages/runtime-core/src/componentRenderContext'
 export { updateProps } from 'packages/runtime-core/src/componentProps'
-export { invalidateJob } from 'packages/runtime-core/src/scheduler'
+export { invalidateJob, hasQueueJob } from 'packages/runtime-core/src/scheduler'
 export { EMPTY_OBJ } from '@vue/shared'
 export { setTemplateRef } from './rendererTemplateRef'
 // @vue/reactivity
