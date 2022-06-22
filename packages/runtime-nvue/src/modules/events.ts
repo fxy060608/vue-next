@@ -59,6 +59,12 @@ export function patchEvent(
 
 const optionsModifierRE = /(?:Once|Passive|Capture)$/
 
+function formatEventName(name: string) {
+  if (name === 'on-post-message') {
+    return 'onPostMessage'
+  }
+  return name
+}
 function parseName(name: string): [string, EventListenerOptions | undefined] {
   let options: EventListenerOptions | undefined
   if (optionsModifierRE.test(name)) {
@@ -70,7 +76,8 @@ function parseName(name: string): [string, EventListenerOptions | undefined] {
       options
     }
   }
-  return [hyphenate(name.slice(2)), options]
+  name = name.slice(2)
+  return [formatEventName(hyphenate(name)), options]
 }
 
 function createInvoker(
