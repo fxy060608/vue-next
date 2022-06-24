@@ -202,6 +202,9 @@ export interface VNode<
   // application root node only
   appContext: AppContext | null
 
+  // fixed by xxxxxx 存储当前节点所属 host，解决 slot 的样式问题
+  hostInstance: ComponentInternalInstance | null
+
   /**
    * @internal attached by v-memo
    */
@@ -436,7 +439,9 @@ function createBaseVNode(
     patchFlag,
     dynamicProps,
     dynamicChildren: null,
-    appContext: null
+    appContext: null,
+    // fixed by xxxxxx
+    hostInstance: currentRenderingInstance
   } as VNode
 
   if (needFullChildrenNormalization) {
@@ -646,6 +651,8 @@ export function cloneVNode<T, U>(
     dynamicProps: vnode.dynamicProps,
     dynamicChildren: vnode.dynamicChildren,
     appContext: vnode.appContext,
+    // fixed by xxxxxx
+    hostInstance: vnode.hostInstance,
     dirs: vnode.dirs,
     transition: vnode.transition,
 

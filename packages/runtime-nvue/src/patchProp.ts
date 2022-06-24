@@ -22,10 +22,11 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   prevChildren,
   parentComponent,
   parentSuspense,
-  unmountChildren
+  unmountChildren,
+  hostInstance
 ) => {
   if (key === 'class') {
-    patchClass(el, prevValue, nextValue, parentComponent)
+    patchClass(el, prevValue, nextValue, hostInstance || parentComponent)
   } else if (key === 'style') {
     patchStyle(el, prevValue, nextValue)
   } else if (isOn(key)) {

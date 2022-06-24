@@ -101,7 +101,9 @@ export interface RendererOptions<
     prevChildren?: VNode<HostNode, HostElement>[],
     parentComponent?: ComponentInternalInstance | null,
     parentSuspense?: SuspenseBoundary | null,
-    unmountChildren?: UnmountChildrenFn
+    unmountChildren?: UnmountChildrenFn,
+    // fixed by xxxxxx
+    hostInstance?: ComponentInternalInstance | null
   ): void
   forcePatchProp?(el: HostElement, key: string): boolean // fixed by xxxxxx
   insert(el: HostNode, parent: HostElement, anchor?: HostNode | null): void
@@ -673,7 +675,9 @@ function baseCreateRenderer(
               vnode.children as VNode[],
               parentComponent,
               parentSuspense,
-              unmountChildren
+              unmountChildren,
+              // fixed by xxxxxx
+              vnode.hostInstance
             )
           }
         }
@@ -695,7 +699,11 @@ function baseCreateRenderer(
             props.value,
             false,
             [],
-            parentComponent
+            parentComponent,
+            null,
+            undefined,
+            // fixed by xxxxxx
+            vnode.hostInstance
           )
         }
         if ((vnodeHook = props.onVnodeBeforeMount)) {
@@ -901,7 +909,11 @@ function baseCreateRenderer(
               newProps.class,
               isSVG,
               [],
-              parentComponent
+              parentComponent,
+              null,
+              undefined,
+              // fixed by xxxxxx
+              n2.hostInstance
             )
           }
         }
@@ -917,7 +929,11 @@ function baseCreateRenderer(
             newProps.style,
             isSVG,
             [],
-            parentComponent
+            parentComponent,
+            null,
+            undefined,
+            // fixed by xxxxxx
+            n2.hostInstance
           )
         }
 
@@ -949,7 +965,9 @@ function baseCreateRenderer(
                 n1.children as VNode[],
                 parentComponent,
                 parentSuspense,
-                unmountChildren
+                unmountChildren,
+                // fixed by xxxxxx
+                n2.hostInstance
               )
             }
           }
@@ -1057,7 +1075,9 @@ function baseCreateRenderer(
             vnode.children as VNode[],
             parentComponent,
             parentSuspense,
-            unmountChildren
+            unmountChildren,
+            // fixed by xxxxxx
+            vnode.hostInstance
           )
         }
       }
@@ -1073,7 +1093,9 @@ function baseCreateRenderer(
               vnode.children as VNode[],
               parentComponent,
               parentSuspense,
-              unmountChildren
+              unmountChildren,
+              // fixed by xxxxxx
+              vnode.hostInstance
             )
           }
         }
@@ -1087,7 +1109,11 @@ function baseCreateRenderer(
           newProps.value,
           false,
           [],
-          parentComponent
+          parentComponent,
+          null,
+          undefined,
+          // fixed by xxxxxx
+          vnode.hostInstance
         )
       }
     }
