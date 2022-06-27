@@ -15,32 +15,33 @@ type ModelDirective<T> = ObjectDirective<T & { _assign: AssignerFn }>
 
 // We are exporting the v-model runtime directly as vnode hooks so that it can
 // be tree-shaken in case v-model is never used.
-export const vModelText: ModelDirective<
-  UniInputElement | UniTextAreaElement
-> = {
-  created(el, { value, modifiers: { trim, number } }, vnode) {
-    el.value = value == null ? '' : value
-    el._assign = getModelAssigner(vnode)
-    addEventListener(el, 'input', e => {
-      let domValue: string | number = e.detail!.value as string
-      // 从 view 层接收到新值后，赋值给 service 层元素，注意，需要临时解除 pageNode，否则赋值 value 会触发向 view 层的再次同步数据
-      const pageNode = el.pageNode
-      el.pageNode = null
-      el.value = domValue
-      el.pageNode = pageNode
-      if (trim) {
-        domValue = domValue.trim()
-      } else if (number) {
-        domValue = toNumber(domValue)
+export const vModelText: ModelDirective<UniInputElement | UniTextAreaElement> =
+  {
+    created(el, { value, modifiers: { trim, number } }, vnode) {
+      el.value = value == null ? '' : value
+      el._assign = getModelAssigner(vnode)
+      addEventListener(el, 'input', e => {
+        let domValue: string | number = e.detail!.value as string
+        // 从 view 层接收到新值后，赋值给 service 层元素，注意，需要临时解除 pageNode，否则赋值 value 会触发向 view 层的再次同步数据
+        const pageNode = el.pageNode
+        el.pageNode = null
+        el.value = domValue
+        el.pageNode = pageNode
+        if (trim) {
+          domValue = domValue.trim()
+        } else if (number) {
+          domValue = toNumber(domValue)
+        }
+        el._assign(domValue)
+      })
+    },
+    beforeUpdate(el, { value }, vnode) {
+      el._assign = getModelAssigner(vnode)
+      const newValue = value == null ? '' : value
+      if (el.value !== newValue) {
+        el.value = newValue
       }
-      el._assign(domValue)
-    })
-  },
-  beforeUpdate(el, { value }, vnode) {
-    el._assign = getModelAssigner(vnode)
-    const newValue = value == null ? '' : value
-    if (el.value !== newValue) {
-      el.value = newValue
     }
   }
-}
+
+export const vModelDynamic = vModelText
