@@ -16,6 +16,7 @@ module.exports = {
     __FEATURE_SUSPENSE__: true,
     __FEATURE_PROD_DEVTOOLS__: false,
     __COMPAT__: true,
+    __VUE_CREATED_DEFERRED__: false,
     'ts-jest': {
       tsconfig: {
         target: 'esnext',
