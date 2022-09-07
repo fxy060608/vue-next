@@ -128,14 +128,14 @@ function testRender(type: string, render: typeof renderToString) {
           await render(
             createApp(
               defineComponent({
-                extends: {
+                extends: defineComponent({
                   data() {
                     return { msg: 'hello' }
                   },
-                  render(this: any) {
+                  render() {
                     return h('div', this.msg)
                   }
-                }
+                })
               })
             )
           )
@@ -148,14 +148,14 @@ function testRender(type: string, render: typeof renderToString) {
             createApp(
               defineComponent({
                 mixins: [
-                  {
+                  defineComponent({
                     data() {
                       return { msg: 'hello' }
                     },
-                    render(this: any) {
+                    render() {
                       return h('div', this.msg)
                     }
-                  }
+                  })
                 ]
               })
             )

@@ -52,20 +52,14 @@ import {
   NO,
   makeMap,
   isPromise,
-  ShapeFlags,
-  extend
+  ShapeFlags
 } from '@vue/shared'
 import { SuspenseBoundary } from './components/Suspense'
 import { CompilerOptions } from '@vue/compiler-core'
 import { markAttrsAccessed } from './componentRenderUtils'
 import { currentRenderingInstance } from './componentRenderContext'
-import { startMeasure, endMeasure } from './profiling'
 import { convertLegacyRenderFn } from './compat/renderFn'
-import {
-  CompatConfig,
-  globalCompatConfig,
-  validateCompatConfig
-} from './compat/compatConfig'
+import { CompatConfig, validateCompatConfig } from './compat/compatConfig'
 import { SchedulerJob } from './scheduler'
 
 export type Data = Record<string, unknown>
@@ -790,40 +784,6 @@ export function finishComponentSetup(
     // is done by server-renderer
     // fixed by xxxxxx
     if (false && !isSSR && compile && !Component.render) {
-      const template =
-        (__COMPAT__ &&
-          instance.vnode.props &&
-          instance.vnode.props!['inline-template']) || // fixed by xxxxxx
-        Component.template
-      if (template) {
-        if (__DEV__) {
-          startMeasure(instance, `compile`)
-        }
-        const { isCustomElement, compilerOptions } = instance.appContext.config
-        const { delimiters, compilerOptions: componentCompilerOptions } =
-          Component
-        const finalCompilerOptions: CompilerOptions = extend(
-          extend(
-            {
-              isCustomElement,
-              delimiters
-            },
-            compilerOptions
-          ),
-          componentCompilerOptions
-        )
-        if (__COMPAT__) {
-          // pass runtime compat config into the compiler
-          finalCompilerOptions.compatConfig = Object.create(globalCompatConfig)
-          if (Component.compatConfig) {
-            extend(finalCompilerOptions.compatConfig, Component.compatConfig)
-          }
-        }
-        Component.render = compile!(template, finalCompilerOptions)
-        if (__DEV__) {
-          endMeasure(instance, `compile`)
-        }
-      }
     }
 
     instance.render = (Component.render || NOOP) as InternalRenderFunction
