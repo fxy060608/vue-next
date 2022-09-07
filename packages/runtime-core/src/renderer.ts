@@ -1595,7 +1595,7 @@ function baseCreateRenderer(
     pauseTracking()
     // props update may have triggered pre-flush watchers.
     // flush them before the render update.
-    flushPreFlushCbs(undefined, instance.update)
+    flushPreFlushCbs()
     resetTracking()
   }
 
@@ -2338,7 +2338,8 @@ function baseCreateRenderer(
       const p = container.__vueParent
       patch(container._vnode || null, vnode, container, null, p, null, isSVG)
     }
-    // fixed by xxxxxx 调整到UniComponent里边触发flushPostFlushCbs
+    flushPreFlushCbs()
+    // fixed by xxxxxx 调整到 UniComponent 里边触发 flushPostFlushCbs
     // flushPostFlushCbs()
     container._vnode = vnode
   }
