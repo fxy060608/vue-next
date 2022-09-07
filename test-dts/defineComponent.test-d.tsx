@@ -1163,6 +1163,38 @@ describe('should allow to assign props', () => {
   expectType<JSX.Element>(<Parent {...child.$props} />)
 })
 
+// #6052
+describe('prop starting with `on*` is broken', () => {
+  defineComponent({
+    props: {
+      onX: {
+        type: Function as PropType<(a: 1) => void>,
+        required: true
+      }
+    },
+    setup(props) {
+      expectType<(a: 1) => void>(props.onX)
+      props.onX(1)
+    }
+  })
+
+  defineComponent({
+    props: {
+      onX: {
+        type: Function as PropType<(a: 1) => void>,
+        required: true
+      }
+    },
+    emits: {
+      test: (a: 1) => true
+    },
+    setup(props) {
+      expectType<(a: 1) => void>(props.onX)
+      expectType<undefined | ((a: 1) => any)>(props.onTest)
+    }
+  })
+})
+
 // check if defineComponent can be exported
 export default {
   // function components
