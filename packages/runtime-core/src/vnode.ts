@@ -611,7 +611,7 @@ export function cloneVNode<T, U>(
   // key enumeration cost.
   const { props, ref, patchFlag, children } = vnode
   const mergedProps = extraProps ? mergeProps(props || {}, extraProps) : props
-  const cloned: VNode = {
+  const cloned: VNode<T, U> = {
     __v_isVNode: true,
     __v_skip: true,
     type: vnode.type,
@@ -668,7 +668,7 @@ export function cloneVNode<T, U>(
     anchor: vnode.anchor
   }
   if (__COMPAT__) {
-    defineLegacyVNodeProperties(cloned)
+    defineLegacyVNodeProperties(cloned as VNode)
   }
   return cloned as any
 }
