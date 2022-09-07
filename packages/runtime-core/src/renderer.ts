@@ -1610,7 +1610,7 @@ function baseCreateRenderer(
     pauseTracking()
     // props update may have triggered pre-flush watchers.
     // flush them before the render update.
-    flushPreFlushCbs(undefined, instance.update)
+    flushPreFlushCbs()
     resetTracking()
   }
 
@@ -2351,6 +2351,7 @@ function baseCreateRenderer(
     } else {
       patch(container._vnode || null, vnode, container, null, null, null, isSVG)
     }
+    flushPreFlushCbs()
     flushPostFlushCbs()
     container._vnode = vnode
   }
