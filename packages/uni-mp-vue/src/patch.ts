@@ -80,7 +80,7 @@ export function patch(
         flushCallbacks(instance)
       })
       // props update may have triggered pre-flush watchers.
-      flushPreFlushCbs(undefined, instance.update)
+      flushPreFlushCbs()
     } else {
       flushCallbacks(instance)
     }
