@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
-    "@vue/shared": "^3.2.19"
+    "@vue/shared": "^3.2.39"
   }
 }
