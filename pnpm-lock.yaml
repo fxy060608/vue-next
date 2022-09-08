@@ -274,9 +274,9 @@ importers:
 
   packages/uni-h5-vue:
     specifiers:
-      '@vue/shared': 3.2.13
+      '@vue/shared': 3.2.39
     dependencies:
-      '@vue/shared': 3.2.13
+      '@vue/shared': link:../shared
 
   packages/uni-h5-vue-compat:
     specifiers: {}
@@ -1377,10 +1377,6 @@ packages:
       vue: ^3.2.13
     dependencies:
       vue: link:packages/vue
-    dev: false
-
-  /@vue/shared/3.2.13:
-    resolution: {integrity: sha512-F/gs3kHQ8Xeo24F6EImOvBiIoYQsBjF9qoLzvk+LHxYN6ZhIDEL1NWrBFYzdFQ7NphjEYd4EvPZ+Qee+WX8P6w==}
     dev: false
 
   /@zeit/schemas/2.6.0:
