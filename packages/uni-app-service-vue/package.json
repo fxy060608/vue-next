@@ -28,7 +28,8 @@
   },
   "homepage": "https://github.com/vuejs/vue-next/tree/master/packages/vue#readme",
   "dependencies": {
-    "@vue/reactivity": "3.2.30",
-    "@vue/shared": "3.2.30"
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
+    "@vue/reactivity": "3.2.39",
+    "@vue/shared": "3.2.39"
   }
 }
