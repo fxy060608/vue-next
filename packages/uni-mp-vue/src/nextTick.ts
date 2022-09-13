@@ -18,7 +18,7 @@ export function flushCallbacks(instance: ComponentInternalInstance) {
 
   const callbacks = ctx.__next_tick_callbacks as Function[]
   if (callbacks && callbacks.length) {
-    if (process.env.VUE_APP_DEBUG) {
+    if (process.env.UNI_DEBUG) {
       const mpInstance = ctx.$scope as MPInstance
       console.log(
         '[' +
@@ -46,7 +46,7 @@ export function nextTick(
 ): Promise<void> {
   const ctx = instance.ctx
   if (!ctx.__next_tick_pending && !hasComponentEffect(instance)) {
-    if (process.env.VUE_APP_DEBUG) {
+    if (process.env.UNI_DEBUG) {
       const mpInstance = ctx.$scope as MPInstance
       console.log(
         '[' +
@@ -60,7 +60,7 @@ export function nextTick(
     }
     return nextVueTick(fn && fn.bind(instance.proxy))
   }
-  if (process.env.VUE_APP_DEBUG) {
+  if (process.env.UNI_DEBUG) {
     const mpInstance = ctx.$scope as MPInstance
     console.log(
       '[' +
