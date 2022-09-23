@@ -9,6 +9,7 @@ import {
   onUnmounted
 } from '@vue/runtime-core'
 import { ShapeFlags } from '@vue/shared'
+import { normalizeRpx } from '../modules/style'
 
 /**
  * Runtime helper for SFC's CSS variable injection feature.
@@ -69,7 +70,7 @@ function setVarsOnNode(el: Node, vars: Record<string, string>) {
   if (el.nodeType === 1) {
     const style = (el as HTMLElement).style
     for (const key in vars) {
-      style.setProperty(`--${key}`, vars[key])
+      style.setProperty(`--${key}`, normalizeRpx(vars[key]))
     }
   }
 }
