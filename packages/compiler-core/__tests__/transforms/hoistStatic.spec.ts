@@ -13,7 +13,6 @@ import {
 import {
   FRAGMENT,
   RENDER_LIST,
-  CREATE_TEXT,
   NORMALIZE_CLASS
 } from '../../src/runtimeHelpers'
 import { transformElement } from '../../src/transforms/transformElement'
@@ -376,36 +375,6 @@ describe('compiler: hoistStatic transform', () => {
       children: { content: `_hoisted_3` }
     })
     expect(generate(root).code).toMatchSnapshot()
-  })
-
-  test('hoist static text node between elements', () => {
-    const root = transformWithHoist(`<div>static<div>static</div></div>`)
-    expect(root.hoists).toMatchObject([
-      {
-        callee: CREATE_TEXT,
-        arguments: [
-          {
-            type: NodeTypes.TEXT,
-            content: `static`
-          }
-        ]
-      },
-      {
-        type: NodeTypes.VNODE_CALL,
-        tag: `"div"`
-      },
-      {
-        type: NodeTypes.JS_ARRAY_EXPRESSION,
-        elements: [
-          {
-            type: NodeTypes.TEXT_CALL
-          },
-          {
-            type: NodeTypes.ELEMENT
-          }
-        ]
-      }
-    ])
   })
 
   describe('prefixIdentifiers', () => {
