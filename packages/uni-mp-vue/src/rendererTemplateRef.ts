@@ -5,8 +5,15 @@ import {
 } from '@vue/runtime-core'
 import type { VNodeNormalizedRefAtom } from 'packages/runtime-core/src/vnode'
 import { Data, getExposeProxy } from 'packages/runtime-core/src/component'
-import { hasOwn, isArray, isFunction, isString, remove } from '@vue/shared'
-import { isRef } from '@vue/reactivity'
+import {
+  hasOwn,
+  isArray,
+  isFunction,
+  isString,
+  remove,
+  isObject
+} from '@vue/shared'
+import { isRef, markRaw } from '@vue/reactivity'
 import { warn } from 'packages/runtime-core/src/warning'
 import { MPInstance } from './patch'
 import { nextTick } from './nextTick'
@@ -80,6 +87,13 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
   }
 }
 
+function toSkip<T extends unknown>(value: T) {
+  if (isObject(value)) {
+    markRaw(value)
+  }
+  return value
+}
+
 function findComponentPublicInstance(mpComponents: MPInstance[], id: string) {
   const mpInstance = mpComponents.find(
     com => com && (com.properties || com.props).uI === id
@@ -90,7 +104,7 @@ function findComponentPublicInstance(mpComponents: MPInstance[], id: string) {
       return getExposeProxy(vm.$) || vm
     }
     // 可能是原生组件
-    return mpInstance
+    return toSkip(mpInstance)
   }
   return null
 }
