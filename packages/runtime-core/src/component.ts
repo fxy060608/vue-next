@@ -17,7 +17,7 @@ import {
   exposePropsOnRenderContext,
   exposeSetupStateOnRenderContext,
   ComponentPublicInstanceConstructor,
-  // publicPropertiesMap,
+  publicPropertiesMap,
   RuntimeCompiledPublicInstanceProxyHandlers
 } from './componentPublicInstance'
 import {
@@ -36,6 +36,7 @@ import {
   ComponentOptions,
   ComputedOptions,
   MethodOptions
+  // resolveMergedOptions
 } from './componentOptions'
 import {
   EmitsOptions,
@@ -53,13 +54,19 @@ import {
   makeMap,
   isPromise,
   ShapeFlags
+  // extend
 } from '@vue/shared'
 import { SuspenseBoundary } from './components/Suspense'
 import { CompilerOptions } from '@vue/compiler-core'
 import { markAttrsAccessed } from './componentRenderUtils'
 import { currentRenderingInstance } from './componentRenderContext'
+// import { startMeasure, endMeasure } from './profiling'
 import { convertLegacyRenderFn } from './compat/renderFn'
-import { CompatConfig, validateCompatConfig } from './compat/compatConfig'
+import {
+  CompatConfig,
+  // globalCompatConfig,
+  validateCompatConfig
+} from './compat/compatConfig'
 import { SchedulerJob } from './scheduler'
 
 export type Data = Record<string, unknown>
@@ -296,10 +303,12 @@ export interface ComponentInternalInstance {
   inheritAttrs?: boolean
   /**
    * is custom element?
+   * @internal
    */
   isCE?: boolean
   /**
    * custom element specific HMR method
+   * @internal
    */
   ceReload?: (newStyles?: string[]) => void
 
@@ -441,12 +450,20 @@ export interface ComponentInternalInstance {
 
   /**
    * For caching bound $forceUpdate on public proxy access
+   * @internal
    */
   f?: () => void
   /**
    * For caching bound $nextTick on public proxy access
+   * @internal
    */
   n?: () => Promise<void>
+  /**
+   * `updateTeleportCssVars`
+   * For updating css vars on contained teleports
+   * @internal
+   */
+  ut?: (vars?: Record<string, string>) => void
 }
 
 const emptyAppContext = createAppContext()
@@ -907,6 +924,9 @@ export function getExposeProxy(instance: ComponentInternalInstance) {
           // else if (key in publicPropertiesMap) {
           //   return publicPropertiesMap[key](instance)
           // }
+        },
+        has(target, key: string) {
+          return key in target || key in publicPropertiesMap
         }
       }))
     )

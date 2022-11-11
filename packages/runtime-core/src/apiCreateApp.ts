@@ -10,7 +10,10 @@ import {
   MergedComponentOptions,
   RuntimeCompilerOptions
 } from './componentOptions'
-import { ComponentPublicInstance } from './componentPublicInstance'
+import {
+  ComponentCustomProperties,
+  ComponentPublicInstance
+} from './componentPublicInstance'
 import { Directive, validateDirectiveName } from './directives'
 import { RootRenderFunction } from './renderer'
 import { InjectionKey } from './apiInject'
@@ -66,7 +69,7 @@ export interface AppConfig {
 
   performance: boolean
   optionMergeStrategies: Record<string, OptionMergeFunction>
-  globalProperties: Record<string, any>
+  globalProperties: ComponentCustomProperties & Record<string, any>
   errorHandler?: (
     err: unknown,
     instance: ComponentPublicInstance | null,
