@@ -174,7 +174,8 @@ export {
   DebuggerEvent,
   DebuggerEventExtraInfo,
   TrackOpTypes,
-  TriggerOpTypes
+  TriggerOpTypes,
+  Raw
 } from '@vue/reactivity'
 export {
   WatchEffect,
@@ -223,7 +224,8 @@ export {
   RenderFunction,
   MethodOptions,
   ComputedOptions,
-  RuntimeCompilerOptions
+  RuntimeCompilerOptions,
+  ComponentInjectOptions
 } from './componentOptions'
 export { EmitsOptions, ObjectEmitsOptions } from './componentEmits'
 export {

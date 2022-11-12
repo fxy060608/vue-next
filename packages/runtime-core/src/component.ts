@@ -305,10 +305,12 @@ export interface ComponentInternalInstance {
   inheritAttrs?: boolean
   /**
    * is custom element?
+   * @internal
    */
   isCE?: boolean
   /**
    * custom element specific HMR method
+   * @internal
    */
   ceReload?: (newStyles?: string[]) => void
 
@@ -458,12 +460,20 @@ export interface ComponentInternalInstance {
 
   /**
    * For caching bound $forceUpdate on public proxy access
+   * @internal
    */
   f?: () => void
   /**
    * For caching bound $nextTick on public proxy access
+   * @internal
    */
   n?: () => Promise<void>
+  /**
+   * `updateTeleportCssVars`
+   * For updating css vars on contained teleports
+   * @internal
+   */
+  ut?: (vars?: Record<string, string>) => void
 }
 
 const emptyAppContext = createAppContext()
@@ -959,6 +969,9 @@ export function getExposeProxy(instance: ComponentInternalInstance) {
           } else if (key in publicPropertiesMap) {
             return publicPropertiesMap[key](instance)
           }
+        },
+        has(target, key: string) {
+          return key in target || key in publicPropertiesMap
         }
       }))
     )
