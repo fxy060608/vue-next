@@ -126,8 +126,15 @@ export {
 } from './components/BaseTransition'
 export { initCustomFormatter } from './customFormatter'
 
-// For devtools
-export { devtools, setDevtoolsHook } from './devtools'
+// For devtools fixed by xxxxxx
+export {
+  devtools,
+  setDevtoolsHook,
+  devtoolsInitApp,
+  devtoolsComponentAdded,
+  devtoolsComponentUpdated,
+  devtoolsComponentRemoved
+} from './devtools'
 
 // Types -------------------------------------------------------------------------
 
@@ -366,3 +373,6 @@ const _compatUtils = {
 export const compatUtils = (
   __COMPAT__ ? _compatUtils : null
 ) as typeof _compatUtils
+
+// fixed by xxxxxx
+export { startMeasure, endMeasure } from './profiling'

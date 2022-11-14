@@ -4,7 +4,8 @@ import {
   NOOP,
   isOn,
   isModelListener,
-  isString
+  isString,
+  getGlobalThis
 } from '@vue/shared'
 
 import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
@@ -15,7 +16,15 @@ import {
   ComponentOptions,
   ErrorCodes,
   handleError,
-  onBeforeUnmount
+  onBeforeUnmount,
+  version,
+  devtoolsInitApp,
+  setDevtoolsHook,
+  startMeasure,
+  endMeasure,
+  devtoolsComponentUpdated,
+  devtoolsComponentRemoved,
+  devtoolsComponentAdded
 } from '@vue/runtime-core'
 import { VNode } from '@vue/runtime-core'
 import { nextTick, queuePostFlushCb } from '@vue/runtime-core'
@@ -96,8 +105,15 @@ function mountComponent(
 
   if (__DEV__) {
     pushWarningContext(initialVNode)
+    startMeasure(instance, `mount`)
+  }
+  if (__DEV__) {
+    startMeasure(instance, `init`)
   }
   setupComponent(instance)
+  if (__DEV__) {
+    endMeasure(instance, `init`)
+  }
   if (__FEATURE_OPTIONS_API__) {
     // $children
     if (options.parentComponent && instance.proxy) {
@@ -112,6 +128,7 @@ function mountComponent(
   setupRenderEffect(instance)
   if (__DEV__) {
     popWarningContext()
+    endMeasure(instance, `mount`)
   }
   return instance.proxy as ComponentPublicInstance
 }
@@ -310,10 +327,22 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
       onBeforeUnmount(() => {
         setRef(instance, true)
       }, instance)
+      if (__DEV__) {
+        startMeasure(instance, `patch`)
+      }
       patch(instance, renderComponentRoot(instance))
+      if (__DEV__) {
+        endMeasure(instance, `patch`)
+      }
+      if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+        devtoolsComponentAdded(instance)
+      }
     } else {
       // updateComponent
-      const { bu, u } = instance
+      const { next, bu, u } = instance
+      if (__DEV__) {
+        pushWarningContext(next || instance.vnode)
+      }
       // Disallow component effect recursion during pre-lifecycle hooks.
       toggleRecurse(instance, false)
       updateComponentPreRender(instance)
@@ -322,10 +351,22 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
         invokeArrayFns(bu)
       }
       toggleRecurse(instance, true)
+      if (__DEV__) {
+        startMeasure(instance, `patch`)
+      }
       patch(instance, renderComponentRoot(instance))
+      if (__DEV__) {
+        endMeasure(instance, `patch`)
+      }
       // updated hook
       if (u) {
         queuePostRenderEffect(u)
+      }
+      if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+        devtoolsComponentUpdated(instance)
+      }
+      if (__DEV__) {
+        popWarningContext()
       }
     }
   }
@@ -377,11 +418,20 @@ function unmountComponent(instance: ComponentInternalInstance) {
   queuePostRenderEffect(() => {
     instance.isUnmounted = true
   })
+  if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+    devtoolsComponentRemoved(instance)
+  }
 }
 
 const oldCreateApp = createAppAPI()
 
 export function createVueApp(rootComponent: Component, rootProps = null) {
+  const target = getGlobalThis()
+  target.__VUE__ = true
+  if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+    setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__, target)
+  }
+
   const app = oldCreateApp(rootComponent, rootProps)
   const appContext = app._context
 
@@ -422,6 +472,9 @@ export function createVueApp(rootComponent: Component, rootProps = null) {
       }
     )
     app._instance = instance.$
+    if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+      devtoolsInitApp(app, version)
+    }
     ;(instance as any).$app = app
     ;(instance as any).$createComponent = createComponent
     ;(instance as any).$destroyComponent = destroyComponent

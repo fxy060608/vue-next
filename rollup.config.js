@@ -273,7 +273,7 @@ function createReplacePlugin(
     __FEATURE_SUSPENSE__: false, // fixed by xxxxxx true,
     __FEATURE_OPTIONS_API__: isBundlerESMBuild ? `__VUE_OPTIONS_API__` : true,
     __FEATURE_PROD_DEVTOOLS__: isBundlerESMBuild
-      ? false // `__VUE_PROD_DEVTOOLS__` // fixed by xxxxxx
+      ? `__VUE_PROD_DEVTOOLS__`
       : false,
     ...(isProduction && isBrowserBuild
       ? {
