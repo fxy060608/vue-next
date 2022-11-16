@@ -4,8 +4,7 @@ import {
   NOOP,
   isOn,
   isModelListener,
-  isString,
-  getGlobalThis
+  isString
 } from '@vue/shared'
 
 import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
@@ -425,8 +424,26 @@ function unmountComponent(instance: ComponentInternalInstance) {
 
 const oldCreateApp = createAppAPI()
 
+declare const window: any
+declare const my: any
+
+function getTarget() {
+  if (typeof window !== 'undefined') {
+    return window
+  }
+  if (typeof globalThis !== 'undefined') {
+    return globalThis
+  }
+  if (typeof global !== 'undefined') {
+    return global
+  }
+  if (typeof my !== 'undefined') {
+    return my
+  }
+}
+
 export function createVueApp(rootComponent: Component, rootProps = null) {
-  const target = getGlobalThis()
+  const target = getTarget()
   target.__VUE__ = true
   if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
     setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__, target)

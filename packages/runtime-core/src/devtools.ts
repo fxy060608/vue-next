@@ -131,7 +131,13 @@ function createDevtoolsComponentHook(hook: DevtoolsHooks) {
       hook,
       component.appContext.app,
       component.uid,
-      component.parent ? component.parent.uid : undefined,
+      // fixed by xxxxxx
+      // 为 0 是 App，无 parent 是 Page 指向 App
+      component.uid === 0
+        ? undefined
+        : component.parent
+        ? component.parent.uid
+        : 0,
       component
     )
   }
