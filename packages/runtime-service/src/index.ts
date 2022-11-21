@@ -5,13 +5,15 @@ import {
   RootRenderFunction,
   CreateAppFunction,
   Renderer,
-  App
+  App,
+  version
 } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
 import { patchProp, forcePatchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
 import { isHTMLTag, isSVGTag, extend, isString } from '@vue/shared'
 import { createComment } from '@vue/uni-app-service-vue'
+import { devtoolsInitApp } from 'packages/runtime-core/src/devtools'
 
 export * from './dom'
 
@@ -42,6 +44,11 @@ export const createApp = ((...args) => {
   const { mount } = app
   app.mount = (container: UniNode | string): any => {
     if (isString(container)) {
+      if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
+        if (container === '#app') {
+          devtoolsInitApp(app, version)
+        }
+      }
       container = createComment(container)
     }
     return container && mount(container, false, false)
