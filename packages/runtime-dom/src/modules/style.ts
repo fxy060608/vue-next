@@ -1,5 +1,6 @@
 import { isString, hyphenate, capitalize, isArray } from '@vue/shared'
 import { camelize, warn } from '@vue/runtime-core'
+import { defaultRpx2Unit, createRpx2Unit } from '@dcloudio/uni-shared'
 
 type Style = string | Record<string, string | string[]> | null
 
@@ -107,17 +108,12 @@ function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
 }
 // fixed by xxxxxx
 // upx,rpx
-const rpxRE = /\b([+-]?\d+(\.\d+)?)[r|u]px\b/g
+const { unit, unitRatio, unitPrecision } = defaultRpx2Unit
+const rpx2Unit = createRpx2Unit(unit, unitRatio, unitPrecision)
+
 export const normalizeRpx = (val: string) => {
-  // @ts-ignore
-  if (typeof rpx2px !== 'function') {
-    return val
-  }
   if (isString(val)) {
-    return val.replace(rpxRE, (a, b) => {
-      // @ts-ignore
-      return rpx2px(b) + 'px'
-    })
+    return rpx2Unit(val)
   }
   return val
 }
