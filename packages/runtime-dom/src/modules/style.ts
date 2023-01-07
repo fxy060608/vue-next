@@ -58,7 +58,7 @@ function setStyle(
   } else {
     if (val == null) val = ''
     // fixed by xxxxxx
-    val = normalizeRpx(val)
+    val = normalizeRpx(val) as string
     if (__DEV__) {
       if (semicolonRE.test(val)) {
         warn(

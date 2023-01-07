@@ -219,10 +219,12 @@ importers:
 
   packages/runtime-dom:
     specifiers:
+      '@dcloudio/uni-shared': /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
       '@vue/runtime-core': 3.2.45
       '@vue/shared': 3.2.45
       csstype: ^2.6.8
     dependencies:
+      '@dcloudio/uni-shared': link:../../../uni-app-next/packages/uni-shared
       '@vue/runtime-core': link:../runtime-core
       '@vue/shared': link:../shared
       csstype: 2.6.19

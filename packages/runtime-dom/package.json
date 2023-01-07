@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/vuejs/core/tree/main/packages/runtime-dom#readme",
   "dependencies": {
-    "@dcloudio/uni-shared": "/Users/yuanrenjie/Documents/dcloud/uni-app/packages/uni-shared",
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
     "@vue/shared": "3.2.45",
     "@vue/runtime-core": "3.2.45",
     "csstype": "^2.6.8"
