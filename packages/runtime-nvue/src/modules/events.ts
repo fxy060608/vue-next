@@ -76,8 +76,8 @@ function parseName(name: string): [string, EventListenerOptions | undefined] {
       options
     }
   }
-  name = name.slice(2)
-  return [formatEventName(hyphenate(name)), options]
+  const event = name[2] === ':' ? name.slice(3) : name.slice(2)
+  return [formatEventName(hyphenate(event)), options]
 }
 
 function createInvoker(
