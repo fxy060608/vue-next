@@ -1,16 +1,29 @@
 // @ts-check
+import { createRequire } from 'module'
+import { fileURLToPath } from 'url'
 import path from 'path'
 import ts from 'rollup-plugin-typescript2'
 import replace from '@rollup/plugin-replace'
 import json from '@rollup/plugin-json'
+import chalk from 'chalk'
+import commonJS from '@rollup/plugin-commonjs'
+import polyfillNode from 'rollup-plugin-polyfill-node'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import terser from '@rollup/plugin-terser'
 
 if (!process.env.TARGET) {
   throw new Error('TARGET package must be specified via --environment flag.')
 }
 
+const require = createRequire(import.meta.url)
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
 const masterVersion = require('./package.json').version
+const consolidatePkg = require('@vue/consolidate/package.json')
+
 const packagesDir = path.resolve(__dirname, 'packages')
 const packageDir = path.resolve(packagesDir, process.env.TARGET)
+
 const resolve = p => path.resolve(packageDir, p)
 const pkg = require(resolve(`package.json`))
 const packageOptions = pkg.buildOptions || {}
@@ -81,7 +94,7 @@ export default packageConfigs
 
 function createConfig(format, output, plugins = []) {
   if (!output) {
-    console.log(require('chalk').yellow(`invalid format: "${format}"`))
+    console.log(chalk.yellow(`invalid format: "${format}"`))
     process.exit(1)
   }
 
@@ -96,6 +109,7 @@ function createConfig(format, output, plugins = []) {
   const isCompatBuild = !!packageOptions.compat
 
   output.exports = isCompatPackage ? 'auto' : 'named'
+  output.esModule = true
   output.sourcemap = !!process.env.SOURCE_MAP
   output.externalLiveBindings = false
 
@@ -137,12 +151,13 @@ function createConfig(format, output, plugins = []) {
   }
 
   let external = []
+  const treeShakenDeps = ['source-map', '@babel/parser', 'estree-walker']
 
   if (isGlobalBuild || isBrowserESMBuild || isCompatPackage) {
     if (!packageOptions.enableNonBrowserBranches) {
       // normal browser builds - non-browser only imports are tree-shaken,
       // they are only listed here to suppress warnings.
-      external = ['source-map', '@babel/parser', 'estree-walker']
+      external = treeShakenDeps
     }
   } else {
     // Node / esm-bundler builds.
@@ -150,7 +165,10 @@ function createConfig(format, output, plugins = []) {
     external = [
       ...Object.keys(pkg.dependencies || {}),
       ...Object.keys(pkg.peerDependencies || {}),
-      ...['path', 'url', 'stream'] // for @vue/compiler-sfc / server-renderer
+      // for @vue/compiler-sfc / server-renderer
+      ...['path', 'url', 'stream'],
+      // somehow these throw warnings for runtime-* package builds
+      ...treeShakenDeps
     ]
   }
 
@@ -158,11 +176,8 @@ function createConfig(format, output, plugins = []) {
   // requires a ton of template engines which should be ignored.
   let cjsIgnores = []
   if (pkg.name === '@vue/compiler-sfc') {
-    const consolidatePath = require.resolve('@vue/consolidate/package.json', {
-      paths: [packageDir]
-    })
     cjsIgnores = [
-      ...Object.keys(require(consolidatePath).devDependencies),
+      ...Object.keys(consolidatePkg.devDependencies),
       'vm',
       'crypto',
       'react-dom/server',
@@ -177,18 +192,18 @@ function createConfig(format, output, plugins = []) {
     (format === 'cjs' && Object.keys(pkg.devDependencies || {}).length) ||
     packageOptions.enableNonBrowserBranches
       ? [
-          // @ts-ignore
-          require('@rollup/plugin-commonjs')({
+          commonJS({
             sourceMap: false,
             ignore: cjsIgnores
           }),
-          ...(format === 'cjs'
-            ? []
-            : // @ts-ignore
-              [require('rollup-plugin-polyfill-node')()]),
-          require('@rollup/plugin-node-resolve').nodeResolve()
+          ...(format === 'cjs' ? [] : [polyfillNode()]),
+          nodeResolve()
         ]
       : []
+
+  if (format === 'cjs') {
+    nodePlugins.push(cjsReExportsPatchPlugin())
+  }
 
   return {
     input: resolve(entryFile),
@@ -306,7 +321,6 @@ function createProductionConfig(format) {
 }
 
 function createMinifiedConfig(format) {
-  const { terser } = require('rollup-plugin-terser')
   return createConfig(
     format,
     {
@@ -324,4 +338,47 @@ function createMinifiedConfig(format) {
       })
     ]
   )
+}
+
+// temporary patch for https://github.com/nodejs/cjs-module-lexer/issues/79
+//
+// When importing a cjs module from esm, Node.js uses cjs-module-lexer to
+// detect * re-exports from other packages. However, the detection logic is
+// fragile and breaks when Rollup generates different code for the re-exports.
+// We were locked on an old version of Rollup because of this.
+//
+// The latest versions of Node ships an updated version of cjs-module-lexer that
+// has fixed https://github.com/nodejs/cjs-module-lexer/issues/38, however we
+// still need to support older versions of Node that does not have the latest
+// version of cjs-module-lexer (Node < 14.18)
+//
+// At the same time, we want to upgrade to Rollup 3 so we are not forever locked
+// on an old version of Rollup.
+//
+// What this patch does:
+// 1. Rewrite the for...in loop to Object.keys() so cjs-module-lexer can find it
+//    The for...in loop is only used when output.externalLiveBindings is set to
+//    false, and we do want to set it to false to avoid perf costs during SSR.
+// 2. Also remove exports.hasOwnProperty check, which breaks the detection in
+//    Node.js versions that
+//
+// TODO in the future, we should no longer rely on this if we inline all deps
+// in the main `vue` package.
+function cjsReExportsPatchPlugin() {
+  const matcher =
+    /for \(var k in (\w+)\) {(\s+if \(k !== 'default') && !exports.hasOwnProperty\(k\)(\) exports\[k\] = (?:\w+)\[k\];\s+)}/
+  return {
+    name: 'patch-cjs-re-exports',
+    renderChunk(code, _, options) {
+      if (matcher.test(code)) {
+        return code.replace(matcher, (_, r1, r2, r3) => {
+          return `Object.keys(${r1}).forEach(function(k) {${r2}${r3}});`
+        })
+      } else if (options.file.endsWith('packages/vue/dist/vue.cjs.js')) {
+        // make sure we don't accidentally miss the rewrite in case Rollup
+        // changes the output again.
+        throw new Error('cjs build re-exports rewrite failed.')
+      }
+    }
+  }
 }
