@@ -2,13 +2,13 @@ import {
   ComponentInternalInstance,
   currentInstance,
   isInSSRComponentSetup,
-  LifecycleHooks,
   setCurrentInstance,
   unsetCurrentInstance
 } from './component'
 import { ComponentPublicInstance } from './componentPublicInstance'
 import { callWithAsyncErrorHandling, ErrorTypeStrings } from './errorHandling'
 import { warn } from './warning'
+import { LifecycleHooks } from './enums'
 import { toHandlerKey } from '@vue/shared'
 import { DebuggerEvent, pauseTracking, resetTracking } from '@vue/reactivity'
 import { isRootHook, isRootImmediateHook, ON_LOAD } from '@dcloudio/uni-shared'

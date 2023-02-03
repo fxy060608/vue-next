@@ -1,4 +1,4 @@
-import { RendererOptions } from '@vue/runtime-core'
+import { RendererElement, RendererOptions } from '@vue/runtime-core'
 
 export const svgNS = 'http://www.w3.org/2000/svg'
 
@@ -17,19 +17,19 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
       parent.removeChild(child)
     }
   },
-
-  createElement: (tag, isSVG, is, props): Element => {
-    const el = isSVG
-      ? doc.createElementNS(svgNS, tag)
-      : doc.createElement(tag, is ? { is } : undefined)
-
-    if (tag === 'select' && props && props.multiple != null) {
-      ;(el as HTMLSelectElement).setAttribute('multiple', props.multiple)
-    }
-
-    return el
+  // fixed by xxxxxx
+  createElement: function (type: string, container: RendererElement): Element {
+    throw new Error('Function not implemented.')
   },
-
+  // createElement: (tag, isSVG, is, props): Element => {
+  //   const el = isSVG
+  //     ? doc.createElementNS(svgNS, tag)
+  //     : doc.createElement(tag, is ? { is } : undefined)
+  //   if (tag === 'select' && props && props.multiple != null) {
+  //     ;(el as HTMLSelectElement).setAttribute('multiple', props.multiple)
+  //   }
+  //   return el
+  // },
   createText: text => doc.createTextNode(text),
 
   createComment: text => doc.createComment(text),

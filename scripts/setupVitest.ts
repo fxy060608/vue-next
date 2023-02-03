@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 ;(global as any).UniServiceJSBridge = {
   publishHandler(...args: any[]) {
     console.log('publishHandler', JSON.stringify(args))
@@ -69,12 +70,12 @@ expect.extend({
   }
 })
 
-let warn: jest.SpyInstance
+let warn
 const asserted: Set<string> = new Set()
 
 beforeEach(() => {
   asserted.clear()
-  warn = jest.spyOn(console, 'warn')
+  warn = vi.spyOn(console, 'warn')
   warn.mockImplementation(() => {})
 })
 
