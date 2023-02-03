@@ -93,7 +93,8 @@ export { Suspense, SuspenseProps } from './components/Suspense'
 export { KeepAlive, KeepAliveProps } from './components/KeepAlive'
 export {
   BaseTransition,
-  BaseTransitionProps
+  BaseTransitionPropsValidators,
+  type BaseTransitionProps
 } from './components/BaseTransition'
 // For using custom directives
 export { withDirectives } from './directives'
@@ -104,7 +105,7 @@ export { useSSRContext, ssrContextKey } from './helpers/useSsrContext'
 
 export { createRenderer, createHydrationRenderer } from './renderer'
 export { queuePostFlushCb, flushPostFlushCbs } from './scheduler' // fixed by xxxxxx export flushPostFlushCbs
-export { warn } from './warning'
+export { warn, assertNumber } from './warning'
 export {
   handleError,
   callWithErrorHandling,

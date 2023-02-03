@@ -1,5 +1,5 @@
 import path from 'path'
-import { setupPuppeteer, E2E_TIMEOUT } from '../../__tests__/e2eUtils'
+import { setupPuppeteer, E2E_TIMEOUT } from './e2eUtils'
 
 declare const globalStats: {
   label: string
@@ -22,7 +22,7 @@ describe('e2e: svg', () => {
   async function assertPolygon(total: number) {
     expect(
       await page().evaluate(
-        total => {
+        ([total]) => {
           const points = globalStats
             .map((stat, i) => {
               const point = valueToPoint(stat.value, i, total)
@@ -41,7 +41,7 @@ describe('e2e: svg', () => {
   // assert the position of each label is correct
   async function assertLabels(total: number) {
     const positions = await page().evaluate(
-      total => {
+      ([total]) => {
         return globalStats.map((stat, i) => {
           const point = valueToPoint(+stat.value + 10, i, total)
           return [point.x, point.y]
@@ -73,7 +73,7 @@ describe('e2e: svg', () => {
   async function testSvg(apiType: 'classic' | 'composition') {
     const baseUrl = `file://${path.resolve(
       __dirname,
-      `../${apiType}/svg.html`
+      `../../examples/${apiType}/svg.html`
     )}`
 
     await page().goto(baseUrl)

@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { E2E_TIMEOUT, setupPuppeteer } from './e2eUtils'
 import path from 'path'
 import { h, createApp, Transition, ref, nextTick } from 'vue'
@@ -29,6 +30,8 @@ describe('e2e: Transition', () => {
     test(
       'basic transition',
       async () => {
+        await page().goto(baseUrl)
+        await page().waitForSelector('#app')
         await page().evaluate(() => {
           const { createApp, ref } = (window as any).Vue
           createApp({
@@ -264,12 +267,12 @@ describe('e2e: Transition', () => {
     test(
       'transition events without appear',
       async () => {
-        const beforeLeaveSpy = jest.fn()
-        const onLeaveSpy = jest.fn()
-        const afterLeaveSpy = jest.fn()
-        const beforeEnterSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const afterEnterSpy = jest.fn()
+        const beforeLeaveSpy = vi.fn()
+        const onLeaveSpy = vi.fn()
+        const afterLeaveSpy = vi.fn()
+        const beforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
 
         await page().exposeFunction('onLeaveSpy', onLeaveSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -328,7 +331,6 @@ describe('e2e: Transition', () => {
           'test-leave-from',
           'test-leave-active'
         ])
-        // todo test event with arguments. Note: not get dom, get object. '{}'
         expect(beforeLeaveSpy).toBeCalled()
         expect(onLeaveSpy).toBeCalled()
         expect(afterLeaveSpy).not.toBeCalled()
@@ -366,8 +368,124 @@ describe('e2e: Transition', () => {
       E2E_TIMEOUT
     )
 
+    test(
+      'events with arguments',
+      async () => {
+        const beforeLeaveSpy = vi.fn()
+        const onLeaveSpy = vi.fn()
+        const afterLeaveSpy = vi.fn()
+        const beforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
+
+        await page().exposeFunction('onLeaveSpy', onLeaveSpy)
+        await page().exposeFunction('onEnterSpy', onEnterSpy)
+        await page().exposeFunction('beforeLeaveSpy', beforeLeaveSpy)
+        await page().exposeFunction('beforeEnterSpy', beforeEnterSpy)
+        await page().exposeFunction('afterLeaveSpy', afterLeaveSpy)
+        await page().exposeFunction('afterEnterSpy', afterEnterSpy)
+
+        await page().evaluate(() => {
+          const {
+            beforeEnterSpy,
+            onEnterSpy,
+            afterEnterSpy,
+            beforeLeaveSpy,
+            onLeaveSpy,
+            afterLeaveSpy
+          } = window as any
+          const { createApp, ref } = (window as any).Vue
+          createApp({
+            template: `
+            <div id="container">
+              <transition
+                :css="false"
+                name="test"
+                @before-enter="beforeEnterSpy"
+                @enter="onEnterSpy"
+                @after-enter="afterEnterSpy"
+                @before-leave="beforeLeaveSpy"
+                @leave="onLeaveSpy"
+                @after-leave="afterLeaveSpy">
+                <div v-if="toggle" class="test">content</div>
+              </transition>
+            </div>
+            <button id="toggleBtn" @click="click">button</button>
+          `,
+            setup: () => {
+              const toggle = ref(true)
+              const click = () => (toggle.value = !toggle.value)
+              return {
+                toggle,
+                click,
+                beforeEnterSpy(el: Element) {
+                  beforeEnterSpy()
+                  el.classList.add('before-enter')
+                },
+                onEnterSpy(el: Element, done: () => void) {
+                  onEnterSpy()
+                  el.classList.add('enter')
+                  setTimeout(done, 200)
+                },
+                afterEnterSpy(el: Element) {
+                  afterEnterSpy()
+                  el.classList.add('after-enter')
+                },
+                beforeLeaveSpy(el: HTMLDivElement) {
+                  beforeLeaveSpy()
+                  el.classList.add('before-leave')
+                },
+                onLeaveSpy(el: HTMLDivElement, done: () => void) {
+                  onLeaveSpy()
+                  el.classList.add('leave')
+                  setTimeout(done, 200)
+                },
+                afterLeaveSpy: (el: Element) => {
+                  afterLeaveSpy()
+                }
+              }
+            }
+          }).mount('#app')
+        })
+        expect(await html('#container')).toBe('<div class="test">content</div>')
+
+        // leave
+        await click('#toggleBtn')
+        expect(beforeLeaveSpy).toBeCalled()
+        expect(onLeaveSpy).toBeCalled()
+        expect(afterLeaveSpy).not.toBeCalled()
+        expect(await classList('.test')).toStrictEqual([
+          'test',
+          'before-leave',
+          'leave'
+        ])
+
+        await timeout(200 + buffer)
+        expect(afterLeaveSpy).toBeCalled()
+        expect(await html('#container')).toBe('<!--v-if-->')
+
+        // enter
+        await click('#toggleBtn')
+        expect(beforeEnterSpy).toBeCalled()
+        expect(onEnterSpy).toBeCalled()
+        expect(afterEnterSpy).not.toBeCalled()
+        expect(await classList('.test')).toStrictEqual([
+          'test',
+          'before-enter',
+          'enter'
+        ])
+
+        await timeout(200 + buffer)
+        expect(afterEnterSpy).toBeCalled()
+        expect(await html('#container')).toBe(
+          '<div class="test before-enter enter after-enter">content</div>'
+        )
+      },
+      E2E_TIMEOUT
+    )
+
     test('onEnterCancelled', async () => {
-      const enterCancelledSpy = jest.fn()
+      const enterCancelledSpy = vi.fn()
 
       await page().exposeFunction('enterCancelledSpy', enterCancelledSpy)
 
@@ -507,15 +625,15 @@ describe('e2e: Transition', () => {
     test(
       'transition events with appear',
       async () => {
-        const onLeaveSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const onAppearSpy = jest.fn()
-        const beforeLeaveSpy = jest.fn()
-        const beforeEnterSpy = jest.fn()
-        const beforeAppearSpy = jest.fn()
-        const afterLeaveSpy = jest.fn()
-        const afterEnterSpy = jest.fn()
-        const afterAppearSpy = jest.fn()
+        const onLeaveSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const onAppearSpy = vi.fn()
+        const beforeLeaveSpy = vi.fn()
+        const beforeEnterSpy = vi.fn()
+        const beforeAppearSpy = vi.fn()
+        const afterLeaveSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
+        const afterAppearSpy = vi.fn()
 
         await page().exposeFunction('onLeaveSpy', onLeaveSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -655,12 +773,12 @@ describe('e2e: Transition', () => {
     test(
       'css: false',
       async () => {
-        const onBeforeEnterSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const onAfterEnterSpy = jest.fn()
-        const onBeforeLeaveSpy = jest.fn()
-        const onLeaveSpy = jest.fn()
-        const onAfterLeaveSpy = jest.fn()
+        const onBeforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const onAfterEnterSpy = vi.fn()
+        const onBeforeLeaveSpy = vi.fn()
+        const onLeaveSpy = vi.fn()
+        const onAfterLeaveSpy = vi.fn()
 
         await page().exposeFunction('onBeforeEnterSpy', onBeforeEnterSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -1104,8 +1222,8 @@ describe('e2e: Transition', () => {
     test(
       'async component transition inside Suspense',
       async () => {
-        const onLeaveSpy = jest.fn()
-        const onEnterSpy = jest.fn()
+        const onLeaveSpy = vi.fn()
+        const onEnterSpy = vi.fn()
 
         await page().exposeFunction('onLeaveSpy', onLeaveSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -1256,8 +1374,8 @@ describe('e2e: Transition', () => {
     test(
       'out-in mode with Suspense',
       async () => {
-        const onLeaveSpy = jest.fn()
-        const onEnterSpy = jest.fn()
+        const onLeaveSpy = vi.fn()
+        const onEnterSpy = vi.fn()
 
         await page().exposeFunction('onLeaveSpy', onLeaveSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -1446,12 +1564,12 @@ describe('e2e: Transition', () => {
     test(
       'transition events with v-show',
       async () => {
-        const beforeLeaveSpy = jest.fn()
-        const onLeaveSpy = jest.fn()
-        const afterLeaveSpy = jest.fn()
-        const beforeEnterSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const afterEnterSpy = jest.fn()
+        const beforeLeaveSpy = vi.fn()
+        const onLeaveSpy = vi.fn()
+        const afterLeaveSpy = vi.fn()
+        const beforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
 
         await page().exposeFunction('onLeaveSpy', onLeaveSpy)
         await page().exposeFunction('onEnterSpy', onEnterSpy)
@@ -1552,7 +1670,7 @@ describe('e2e: Transition', () => {
     test(
       'onLeaveCancelled (v-show only)',
       async () => {
-        const onLeaveCancelledSpy = jest.fn()
+        const onLeaveCancelledSpy = vi.fn()
 
         await page().exposeFunction('onLeaveCancelledSpy', onLeaveCancelledSpy)
         await page().evaluate(() => {
@@ -1614,9 +1732,9 @@ describe('e2e: Transition', () => {
     test(
       'transition on appear with v-show',
       async () => {
-        const beforeEnterSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const afterEnterSpy = jest.fn()
+        const beforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
 
         await page().exposeFunction('onEnterSpy', onEnterSpy)
         await page().exposeFunction('beforeEnterSpy', beforeEnterSpy)
@@ -1720,9 +1838,9 @@ describe('e2e: Transition', () => {
     test(
       'transition events should not call onEnter with v-show false',
       async () => {
-        const beforeEnterSpy = jest.fn()
-        const onEnterSpy = jest.fn()
-        const afterEnterSpy = jest.fn()
+        const beforeEnterSpy = vi.fn()
+        const onEnterSpy = vi.fn()
+        const afterEnterSpy = vi.fn()
 
         await page().exposeFunction('onEnterSpy', onEnterSpy)
         await page().exposeFunction('beforeEnterSpy', beforeEnterSpy)
@@ -2084,8 +2202,8 @@ describe('e2e: Transition', () => {
 
   // #3227
   test(`HOC w/ merged hooks`, async () => {
-    const innerSpy = jest.fn()
-    const outerSpy = jest.fn()
+    const innerSpy = vi.fn()
+    const outerSpy = vi.fn()
 
     const MyTransition = {
       render(this: any) {

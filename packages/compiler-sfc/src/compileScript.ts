@@ -41,7 +41,8 @@ import {
   Program,
   ObjectMethod,
   LVal,
-  Expression
+  Expression,
+  VariableDeclaration
 } from '@babel/types'
 import { walk } from 'estree-walker'
 import { RawSourceMap } from 'source-map'
@@ -134,6 +135,12 @@ export interface ImportBinding {
   isFromSetup: boolean
   isUsedInTemplate: boolean
 }
+
+type FromNormalScript<T> = T & { __fromNormalScript?: boolean | null }
+type PropsDeclType = FromNormalScript<TSTypeLiteral | TSInterfaceBody>
+type EmitsDeclType = FromNormalScript<
+  TSFunctionType | TSTypeLiteral | TSInterfaceBody
+>
 
 /**
  * Compile `<script setup>`
@@ -286,15 +293,11 @@ export function compileScript(
   let propsRuntimeDefaults: ObjectExpression | undefined
   let propsDestructureDecl: Node | undefined
   let propsDestructureRestId: string | undefined
-  let propsTypeDecl: TSTypeLiteral | TSInterfaceBody | undefined
+  let propsTypeDecl: PropsDeclType | undefined
   let propsTypeDeclRaw: Node | undefined
   let propsIdentifier: string | undefined
   let emitsRuntimeDecl: Node | undefined
-  let emitsTypeDecl:
-    | TSFunctionType
-    | TSTypeLiteral
-    | TSInterfaceBody
-    | undefined
+  let emitsTypeDecl: EmitsDeclType | undefined
   let emitsTypeDeclRaw: Node | undefined
   let emitIdentifier: string | undefined
   let hasAwait = false
@@ -310,6 +313,7 @@ export function compileScript(
     {
       local: string // local identifier, may be different
       default?: Expression
+      isConst: boolean
     }
   > = Object.create(null)
 
@@ -404,7 +408,11 @@ export function compileScript(
     }
   }
 
-  function processDefineProps(node: Node, declId?: LVal): boolean {
+  function processDefineProps(
+    node: Node,
+    declId?: LVal,
+    declKind?: VariableDeclaration['kind']
+  ): boolean {
     if (!isCallOf(node, DEFINE_PROPS)) {
       return false
     }
@@ -430,7 +438,7 @@ export function compileScript(
       propsTypeDecl = resolveQualifiedType(
         propsTypeDeclRaw,
         node => node.type === 'TSTypeLiteral'
-      ) as TSTypeLiteral | TSInterfaceBody | undefined
+      ) as PropsDeclType | undefined
 
       if (!propsTypeDecl) {
         error(
@@ -442,6 +450,7 @@ export function compileScript(
     }
 
     if (declId) {
+      const isConst = declKind === 'const'
       if (enablePropsTransform && declId.type === 'ObjectPattern') {
         propsDestructureDecl = declId
         // props destructure - handle compilation sugar
@@ -468,12 +477,14 @@ export function compileScript(
               // store default value
               propsDestructuredBindings[propKey] = {
                 local: left.name,
-                default: right
+                default: right,
+                isConst
               }
             } else if (prop.value.type === 'Identifier') {
               // simple destructure
               propsDestructuredBindings[propKey] = {
-                local: prop.value.name
+                local: prop.value.name,
+                isConst
               }
             } else {
               error(
@@ -494,11 +505,15 @@ export function compileScript(
     return true
   }
 
-  function processWithDefaults(node: Node, declId?: LVal): boolean {
+  function processWithDefaults(
+    node: Node,
+    declId?: LVal,
+    declKind?: VariableDeclaration['kind']
+  ): boolean {
     if (!isCallOf(node, WITH_DEFAULTS)) {
       return false
     }
-    if (processDefineProps(node.arguments[0], declId)) {
+    if (processDefineProps(node.arguments[0], declId, declKind)) {
       if (propsRuntimeDecl) {
         error(
           `${WITH_DEFAULTS} can only be used with type-based ` +
@@ -554,7 +569,7 @@ export function compileScript(
       emitsTypeDecl = resolveQualifiedType(
         emitsTypeDeclRaw,
         node => node.type === 'TSFunctionType' || node.type === 'TSTypeLiteral'
-      ) as TSFunctionType | TSTypeLiteral | TSInterfaceBody | undefined
+      ) as EmitsDeclType | undefined
 
       if (!emitsTypeDecl) {
         error(
@@ -654,7 +669,7 @@ export function compileScript(
   function resolveQualifiedType(
     node: Node,
     qualifier: (node: Node) => boolean
-  ) {
+  ): Node | undefined {
     if (qualifier(node)) {
       return node
     }
@@ -664,7 +679,8 @@ export function compileScript(
     ) {
       const refName = node.typeName.name
       const body = getAstBody()
-      for (const node of body) {
+      for (let i = 0; i < body.length; i++) {
+        const node = body[i]
         let qualified = isQualifiedType(
           node,
           qualifier,
@@ -677,6 +693,8 @@ export function compileScript(
             filterExtendsType(extendsTypes, bodies)
             qualified.body = bodies
           }
+          ;(qualified as FromNormalScript<Node>).__fromNormalScript =
+            scriptAst && i >= scriptSetupAst.body.length
           return qualified
         }
       }
@@ -824,10 +842,14 @@ export function compileScript(
           } }`
         } else if (
           type.some(
-            el => el === 'Boolean' || (defaultString && el === 'Function')
+            el =>
+              el === 'Boolean' ||
+              ((!hasStaticDefaults || defaultString) && el === 'Function')
           )
         ) {
-          // #4783 production: if boolean or defaultString and function exists, should keep the type.
+          // #4783 for boolean, should keep the type
+          // #7111 for function, if default value exists or it's not static, should keep it
+          // in production
           return `${key}: { type: ${toRuntimeTypeString(type)}${
             defaultString ? `, ${defaultString}` : ``
           } }`
@@ -860,8 +882,10 @@ export function compileScript(
     }
   }
 
-  function genSetupPropsType(node: TSTypeLiteral | TSInterfaceBody) {
-    const scriptSetupSource = scriptSetup!.content
+  function genSetupPropsType(node: PropsDeclType) {
+    const scriptSource = node.__fromNormalScript
+      ? script!.content
+      : scriptSetup!.content
     if (hasStaticWithDefaults()) {
       // if withDefaults() is used, we need to remove the optional flags
       // on props that have default values
@@ -886,20 +910,19 @@ export function compileScript(
             res +=
               m.key.name +
               (m.type === 'TSMethodSignature' ? '()' : '') +
-              scriptSetupSource.slice(
+              scriptSource.slice(
                 m.typeAnnotation.start!,
                 m.typeAnnotation.end!
               ) +
               ', '
           } else {
-            res +=
-              scriptSetupSource.slice(m.start!, m.typeAnnotation.end!) + `, `
+            res += scriptSource.slice(m.start!, m.typeAnnotation.end!) + `, `
           }
         }
       }
       return (res.length ? res.slice(0, -2) : res) + ` }`
     } else {
-      return scriptSetupSource.slice(node.start!, node.end!)
+      return scriptSource.slice(node.start!, node.end!)
     }
   }
 
@@ -1193,8 +1216,8 @@ export function compileScript(
         if (decl.init) {
           // defineProps / defineEmits
           const isDefineProps =
-            processDefineProps(decl.init, decl.id) ||
-            processWithDefaults(decl.init, decl.id)
+            processDefineProps(decl.init, decl.id, node.kind) ||
+            processWithDefaults(decl.init, decl.id, node.kind)
           const isDefineEmits = processDefineEmits(decl.init, decl.id)
           if (isDefineProps || isDefineEmits) {
             if (left === 1) {
@@ -1463,7 +1486,10 @@ export function compileScript(
   if (destructureElements.length) {
     args += `, { ${destructureElements.join(', ')} }`
     if (emitsTypeDecl) {
-      args += `: { emit: (${scriptSetup.content.slice(
+      const content = emitsTypeDecl.__fromNormalScript
+        ? script!.content
+        : scriptSetup.content
+      args += `: { emit: (${content.slice(
         emitsTypeDecl.start!,
         emitsTypeDecl.end!
       )}), expose: any, slots: any, attrs: any }`
@@ -1557,7 +1583,7 @@ export function compileScript(
       // avoid duplicated unref import
       // as this may get injected by the render function preamble OR the
       // css vars codegen
-      if (ast && ast.helpers.includes(UNREF)) {
+      if (ast && ast.helpers.has(UNREF)) {
         helperImports.delete('unref')
       }
       returned = code
@@ -1741,8 +1767,7 @@ function walkDeclaration(
         registerBinding(bindings, id, bindingType)
       } else {
         if (isCallOf(init, DEFINE_PROPS)) {
-          // skip walking props destructure
-          return
+          continue
         }
         if (id.type === 'ObjectPattern') {
           walkObjectPattern(id, bindings, isConst, isDefineCall)
