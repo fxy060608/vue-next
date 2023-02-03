@@ -1,7 +1,8 @@
 import { VNode } from './vnode'
-import { ComponentInternalInstance, LifecycleHooks } from './component'
+import { ComponentInternalInstance } from './component'
 import { warn, pushWarningContext, popWarningContext } from './warning'
 import { isPromise, isFunction } from '@vue/shared'
+import { LifecycleHooks } from './enums'
 
 // contexts where user provided function may be executed, in addition to
 // lifecycle hooks.
@@ -23,7 +24,7 @@ export const enum ErrorCodes {
   SCHEDULER
 }
 
-export const ErrorTypeStrings: Record<number | string, string> = {
+export const ErrorTypeStrings: Record<LifecycleHooks | ErrorCodes, string> = {
   [LifecycleHooks.SERVER_PREFETCH]: 'serverPrefetch hook',
   [LifecycleHooks.BEFORE_CREATE]: 'beforeCreate hook',
   [LifecycleHooks.CREATED]: 'created hook',
@@ -33,7 +34,9 @@ export const ErrorTypeStrings: Record<number | string, string> = {
   [LifecycleHooks.UPDATED]: 'updated',
   [LifecycleHooks.BEFORE_UNMOUNT]: 'beforeUnmount hook',
   [LifecycleHooks.UNMOUNTED]: 'unmounted hook',
+  [LifecycleHooks.BEFORE_ACTIVATE]: 'beforeActivate hook',
   [LifecycleHooks.ACTIVATED]: 'activated hook',
+  [LifecycleHooks.BEFORE_DEACTIVATE]: 'beforeDeactivate hook',
   [LifecycleHooks.DEACTIVATED]: 'deactivated hook',
   [LifecycleHooks.ERROR_CAPTURED]: 'errorCaptured hook',
   [LifecycleHooks.RENDER_TRACKED]: 'renderTracked hook',

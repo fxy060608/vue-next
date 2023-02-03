@@ -138,7 +138,10 @@ export function isInDestructureAssignment(
   return false
 }
 
-function walkFunctionParams(node: Function, onIdent: (id: Identifier) => void) {
+export function walkFunctionParams(
+  node: Function,
+  onIdent: (id: Identifier) => void
+) {
   for (const p of node.params) {
     for (const id of extractIdentifiers(p)) {
       onIdent(id)
@@ -146,7 +149,7 @@ function walkFunctionParams(node: Function, onIdent: (id: Identifier) => void) {
   }
 }
 
-function walkBlockDeclarations(
+export function walkBlockDeclarations(
   block: BlockStatement | Program,
   onIdent: (node: Identifier) => void
 ) {

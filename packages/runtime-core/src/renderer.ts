@@ -277,7 +277,11 @@ export const enum MoveType {
 }
 
 export const queuePostRenderEffect = __FEATURE_SUSPENSE__
-  ? queueEffectWithSuspense
+  ? __TEST__
+    ? // vitest can't seem to handle eager circular dependency
+      (fn: Function | Function[], suspense: SuspenseBoundary | null) =>
+        queueEffectWithSuspense(fn, suspense)
+    : queueEffectWithSuspense
   : queuePostFlushCb
 
 /**
@@ -653,6 +657,8 @@ function baseCreateRenderer(
     if (dirs) {
       invokeDirectiveHook(vnode, null, parentComponent, 'created')
     }
+    // scopeId
+    setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent)
     // props
     if (props) {
       for (const key in props) {
@@ -686,8 +692,6 @@ function baseCreateRenderer(
         invokeVNodeHook(vnodeHook, parentComponent, vnode)
       }
     }
-    // scopeId
-    setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent)
 
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       Object.defineProperty(el, '__vnode', {
