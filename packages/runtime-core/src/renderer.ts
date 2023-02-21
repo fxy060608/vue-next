@@ -1267,11 +1267,13 @@ function baseCreateRenderer(
 
     // fixed by xxxxxx 对根节点设置ownerid
     if ((instance as any).$wxsModules) {
-      const el = resolveOwnerEl(instance)
-      if (el) {
-        el.setAttribute(ATTR_V_OWNER_ID, instance.uid)
-        const { $renderjsModules } = instance.type as any
-        $renderjsModules && el.setAttribute(ATTR_V_RENDERJS, $renderjsModules)
+      const els = resolveOwnerEl(instance, true)
+      if (els.length) {
+        els.forEach(el => {
+          el.setAttribute(ATTR_V_OWNER_ID, instance.uid)
+          const { $renderjsModules } = instance.type as any
+          $renderjsModules && el.setAttribute(ATTR_V_RENDERJS, $renderjsModules)
+        })
       }
     }
 
