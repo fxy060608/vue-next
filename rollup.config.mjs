@@ -260,6 +260,7 @@ function createReplacePlugin(
   isServerRenderer
 ) {
   const replacements = {
+    __X__: process.env.TARGET?.includes('uni-x-'),
     __COMMIT__: `"${process.env.COMMIT}"`,
     __VERSION__: `"${masterVersion}"`,
     __DEV__: isBundlerESMBuild
