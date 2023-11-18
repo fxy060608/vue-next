@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@dcloudio/runtime-nvue",
+  "name": "@dcloudio/runtime-x",
   "version": "3.2.30",
   "sideEffects": false,
   "dependencies": {

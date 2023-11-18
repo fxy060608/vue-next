@@ -1,2 +1,2 @@
-export * from '@vue/runtime-nvue'
+export * from '@vue/runtime-x'
 export { hyphenate } from '@vue/shared'

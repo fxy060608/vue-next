@@ -64,7 +64,7 @@ const outputConfigs = {
   },
   'esm-bundler-vue': {
     // fixed by xxxxxx
-    file: resolve(`dist/nvue.runtime.esm.js`),
+    file: resolve(`dist/uvue.runtime.esm.js`),
     format: `es`
   }
 }
@@ -272,7 +272,9 @@ function createReplacePlugin(
     // is targeting Node (SSR)?
     __NODE_JS__: isNodeBuild,
     // need SSR-specific branches?
-    __SSR__: isNodeBuild || isBundlerESMBuild || isServerRenderer,
+    __SSR__:
+      !process.env.TARGET?.includes('uni-app') &&
+      (isNodeBuild || isBundlerESMBuild || isServerRenderer),
 
     // for compiler-sfc browser build inlined deps
     ...(isBrowserESMBuild
