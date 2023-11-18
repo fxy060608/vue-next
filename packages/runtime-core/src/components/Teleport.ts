@@ -96,14 +96,19 @@ export const TeleportImpl = {
     if (n1 == null) {
       // insert anchors in the main view
       const placeholder = (n2.el = __DEV__
-        ? createComment('teleport start')
-        : createText(''))
+        ? // @ts-expect-error  fixed by xxxxxx
+          createComment('teleport start')
+        : // @ts-expect-error  fixed by xxxxxx
+          createText(''))
       const mainAnchor = (n2.anchor = __DEV__
-        ? createComment('teleport end')
-        : createText(''))
+        ? // @ts-expect-error  fixed by xxxxxx
+          createComment('teleport end')
+        : // @ts-expect-error  fixed by xxxxxx
+          createText(''))
       insert(placeholder, container, anchor)
       insert(mainAnchor, container, anchor)
       const target = (n2.target = resolveTarget(n2.props, querySelector))
+      // @ts-expect-error  fixed by xxxxxx
       const targetAnchor = (n2.targetAnchor = createText(''))
       if (target) {
         insert(targetAnchor, target)

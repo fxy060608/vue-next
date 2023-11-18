@@ -19,6 +19,7 @@ let renderer: Renderer<NVueElement>
 function ensureRenderer() {
   return (
     renderer ||
+    // @ts-expect-error
     (renderer = createRenderer<NVueElement, NVueElement>(rendererOptions))
   )
 }

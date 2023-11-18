@@ -17,7 +17,7 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
       parent.removeChild(child)
     }
   },
-
+  // @ts-expect-error  fixed by xxxxxx
   createElement: (tag, isSVG, is, props): Element => {
     const el = isSVG
       ? doc.createElementNS(svgNS, tag)

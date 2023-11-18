@@ -109,30 +109,7 @@ function createInvoker(
         modifiers.add(m)
       })
     }
-    initWxsEvent(invoker, instance)
   }
   ;(invoker as any).modifiers = [...modifiers]
   return invoker
-}
-
-function initWxsEvent(
-  invoker: Invoker,
-  instance: ComponentInternalInstance | null
-) {
-  if (!instance) {
-    return
-  }
-  const { $wxsModules } = instance as unknown as { $wxsModules: string[] }
-  if (!$wxsModules) {
-    return
-  }
-  const invokerSourceCode = invoker.value.toString()
-  if (
-    !$wxsModules.find(
-      module => invokerSourceCode.indexOf('.' + module + '.') > -1
-    )
-  ) {
-    return
-  }
-  ;(invoker as any).wxsEvent = (invoker.value as Function)()
 }

@@ -123,6 +123,7 @@ const KeepAliveImpl: ComponentOptions = {
         o: { createElement }
       }
     } = sharedContext
+    // @ts-expect-error  fixed by xxxxxx
     const storageContainer = createElement('div')
 
     sharedContext.activate = (vnode, container, anchor, isSVG, optimized) => {

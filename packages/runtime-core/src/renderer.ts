@@ -10,7 +10,7 @@ import {
   isSameVNodeType,
   Static,
   VNodeHook,
-  VNodeProps,
+  // VNodeProps,
   invokeVNodeHook
 } from './vnode'
 import {
@@ -109,13 +109,11 @@ export interface RendererOptions<
   insert(el: HostNode, parent: HostElement, anchor?: HostNode | null): void
   remove(el: HostNode): void
   createElement(
-    type: string,
-    isSVG?: boolean,
-    isCustomizedBuiltIn?: string,
-    vnodeProps?: (VNodeProps & { [key: string]: any }) | null
+    type: string, // fixed by xxxxxx
+    container: RendererElement
   ): HostElement
-  createText(text: string): HostNode
-  createComment(text: string): HostNode
+  createText(text: string, container: RendererElement): HostNode // fixed by xxxxxx
+  createComment(text: string, container: RendererElement): HostNode // fixed by xxxxxx
   setText(node: HostNode, text: string): void
   setElementText(node: HostElement, text: string): void
   parentNode(node: HostNode): HostElement | null
@@ -478,7 +476,7 @@ function baseCreateRenderer(
   const processText: ProcessTextOrCommentFn = (n1, n2, container, anchor) => {
     if (n1 == null) {
       hostInsert(
-        (n2.el = hostCreateText(n2.children as string)),
+        (n2.el = hostCreateText(n2.children as string, container)), // fixed by xxxxxx
         container,
         anchor
       )
@@ -498,7 +496,7 @@ function baseCreateRenderer(
   ) => {
     if (n1 == null) {
       hostInsert(
-        (n2.el = hostCreateComment((n2.children as string) || '')),
+        (n2.el = hostCreateComment((n2.children as string) || '', container)), // fixed by xxxxxx
         container,
         anchor
       )
@@ -629,9 +627,8 @@ function baseCreateRenderer(
 
     el = vnode.el = hostCreateElement(
       vnode.type as string,
-      isSVG,
-      props && props.is,
-      props
+      // fixed by xxxxxx
+      container
     )
 
     // mount children first, since some props may rely on child content
@@ -1122,8 +1119,12 @@ function baseCreateRenderer(
     slotScopeIds: string[] | null,
     optimized: boolean
   ) => {
-    const fragmentStartAnchor = (n2.el = n1 ? n1.el : hostCreateText(''))!
-    const fragmentEndAnchor = (n2.anchor = n1 ? n1.anchor : hostCreateText(''))!
+    const fragmentStartAnchor = (n2.el = n1
+      ? n1.el
+      : hostCreateText('', container))! // fixed by xxxxxx
+    const fragmentEndAnchor = (n2.anchor = n1
+      ? n1.anchor
+      : hostCreateText('', container))! // fixed by xxxxxx
 
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
 

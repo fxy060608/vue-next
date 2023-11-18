@@ -123,6 +123,7 @@ export function createHydrationFunctions(
           // #5728 empty text node inside a slot can cause hydration failure
           // because the server rendered HTML won't contain a text node
           if (vnode.children === '') {
+            // @ts-expect-error  fixed by xxxxxx
             insert((vnode.el = createText('')), parentNode(node)!, node)
             nextNode = node
           } else {
@@ -501,6 +502,7 @@ export function createHydrationFunctions(
       // back. This should have led to node/children mismatch warnings.
       hasMismatch = true
       // since the anchor is missing, we need to create one and insert it
+      // @ts-expect-error  fixed by xxxxxx
       insert((vnode.anchor = createComment(`]`)), container, next)
       return next
     }

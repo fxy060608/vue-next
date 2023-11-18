@@ -1,11 +1,9 @@
-import type { NVueDocument, NVueElement } from '@dcloudio/uni-shared'
+import type { UniNode, UniElement } from '@dcloudio/uni-shared'
 
 import { RendererOptions } from '@vue/runtime-core'
 
-declare var document: NVueDocument
-
 export const nodeOps: Omit<
-  RendererOptions<NVueElement, NVueElement>,
+  RendererOptions<UniNode, UniElement>,
   'patchProp'
 > = {
   insert: (child, parent, anchor) => {
@@ -20,17 +18,24 @@ export const nodeOps: Omit<
       parent.removeChild(child)
     }
   },
-  createElement: (tag): NVueElement => {
-    return document.createElement(tag)
+  // @ts-expect-error
+  createElement: (tag, container): UniElement => {
+    // TODO
   },
-  createText: text => document.createText(text) as unknown as NVueElement,
-  createComment: text => document.createComment(text) as unknown as NVueElement,
+  // @ts-expect-error
+  createText: (text, container) => {
+    // TODO
+  },
+  // @ts-expect-error
+  createComment: (text, container) => {
+    // TODO
+  },
   setText: (node, text) => {
-    node.setAttr('value', text)
+    // TODO
   },
   setElementText: (el, text) => {
-    el.setAttr('value', text)
+    // TODO
   },
-  parentNode: node => node.parentNode,
+  parentNode: node => node.parentNode as UniElement | null,
   nextSibling: node => node.nextSibling
 }
