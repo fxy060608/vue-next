@@ -272,7 +272,9 @@ function createReplacePlugin(
     // is targeting Node (SSR)?
     __NODE_JS__: isNodeBuild,
     // need SSR-specific branches?
-    __SSR__: isNodeBuild || isBundlerESMBuild || isServerRenderer,
+    __SSR__:
+      !process.env.TARGET?.includes('uni-app') &&
+      (isNodeBuild || isBundlerESMBuild || isServerRenderer),
 
     // for compiler-sfc browser build inlined deps
     ...(isBrowserESMBuild
