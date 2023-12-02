@@ -1,4 +1,4 @@
-import { NVueElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 
 import { RendererOptions } from '@vue/runtime-core'
 import { isModelListener, isOn } from '@vue/shared'
@@ -7,8 +7,9 @@ import { patchClass } from './modules/class'
 import { patchEvent } from './modules/events'
 import { patchStyle } from './modules/style'
 
-type DOMRendererOptions = RendererOptions<NVueElement, NVueElement>
+type DOMRendererOptions = RendererOptions<UniXElement, UniXElement>
 
+// TODO remove
 export { forcePatchProp } from '@dcloudio/uni-shared'
 
 const vModelTags = ['u-input', 'u-textarea']
@@ -34,9 +35,13 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     if (!isModelListener(key)) {
       patchEvent(el, key, prevValue, nextValue, parentComponent)
     }
-  } else if (key === 'modelValue' && vModelTags.includes(el.type)) {
+  } else if (
+    key === 'modelValue' &&
+    vModelTags.includes(el.tagName.toLocaleLowerCase())
+  ) {
     // v-model 时，原生 input 和 textarea 接收的是 value
-    el.setAttrs({ modelValue: nextValue, value: nextValue })
+    el.setAnyAttribute('modelValue', nextValue)
+    el.setAnyAttribute('value', nextValue)
   } else {
     patchAttr(el, key, nextValue, parentComponent)
   }

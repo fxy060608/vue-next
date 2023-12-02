@@ -1,4 +1,4 @@
-import type { NVueElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 
 import {
   camelize,
@@ -6,9 +6,10 @@ import {
   NormalizedStyle,
   parseStringStyle
 } from '@vue/shared'
+import { toMap } from '../helpers'
 
 export function patchStyle(
-  el: NVueElement,
+  el: UniXElement,
   prev: NormalizedStyle | string,
   next: NormalizedStyle | string
 ) {
@@ -39,5 +40,5 @@ export function patchStyle(
       batchedStyles[camelize(key)] = next[key]
     }
   }
-  el.setStyles(batchedStyles)
+  el.updateStyle(toMap(batchedStyles))
 }

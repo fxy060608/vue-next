@@ -1,6 +1,7 @@
-import type { NVueElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { parseStyleSheet } from '../helpers/useCssStyles'
+import { setExtraStyles } from '../helpers/node'
 
 /**
  * 当前仅 patch 到 el 中，真正更新则是在 el 中
@@ -11,7 +12,7 @@ import { parseStyleSheet } from '../helpers/useCssStyles'
  * @returns
  */
 export function patchClass(
-  el: NVueElement,
+  el: UniXElement,
   pre: string | null,
   next: string | null,
   instance: ComponentInternalInstance | null = null
@@ -20,6 +21,6 @@ export function patchClass(
     return
   }
   const classList = next ? next.split(' ') : []
-  el.setClassList(classList)
-  el.setStyleSheet(parseStyleSheet(instance))
+  el.classList = classList
+  setExtraStyles(el, parseStyleSheet(instance))
 }

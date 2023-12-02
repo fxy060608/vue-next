@@ -1,6 +1,7 @@
-import type { NVueElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
+import { getExtraStyles } from './node'
 
 type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
@@ -47,7 +48,7 @@ export function useCssStyles(componentStyles: NVueStyle[]) {
   return normalized
 }
 
-function hasClass(calssName: string, el: NVueElement | null) {
+function hasClass(calssName: string, el: UniXElement | null) {
   const classList = el && el.classList
   return classList && classList.includes(calssName)
 }
@@ -55,7 +56,7 @@ function hasClass(calssName: string, el: NVueElement | null) {
 const TYPE_RE = /[+~> ]$/
 const PROPERTY_PARENT_NODE = 'parentNode'
 const PROPERTY_PREVIOUS_SIBLING = 'previousSibling'
-function isMatchParentSelector(parentSelector: string, el: NVueElement | null) {
+function isMatchParentSelector(parentSelector: string, el: UniXElement | null) {
   const classArray = parentSelector.split('.')
   for (let i = classArray.length - 1; i > 0; i--) {
     const item = classArray[i]
@@ -92,7 +93,7 @@ const WEIGHT_IMPORTANT = 1000
 function parseClassName(
   { styles, weights }: ParseStyleContext,
   parentStyles: Record<string, Record<string, unknown>>,
-  el: NVueElement | null
+  el: UniXElement | null
 ) {
   each(parentStyles).forEach(parentSelector => {
     if (parentSelector && el) {
@@ -125,15 +126,15 @@ interface ParseStyleContext {
 
 function parseClassListWithStyleSheet(
   classList: string[],
-  stylesheet: NVueStyle,
-  el: NVueElement | null = null
+  stylesheet: NVueStyle | null,
+  el: UniXElement | null = null
 ) {
   const context: ParseStyleContext = {
     styles: {},
     weights: {}
   }
   classList.forEach(className => {
-    const parentStyles = stylesheet[className]
+    const parentStyles = stylesheet && stylesheet[className]
     if (parentStyles) {
       parseClassName(context, parentStyles, el)
     }
@@ -141,14 +142,15 @@ function parseClassListWithStyleSheet(
   return context.styles
 }
 
-export function parseClassStyles(el: NVueElement) {
-  return parseClassListWithStyleSheet(el.classList, el.styleSheet, el)
+export function parseClassStyles(el: UniXElement) {
+  const styles = getExtraStyles(el)
+  return parseClassListWithStyleSheet(el.classList, styles, el)
 }
 
 export function parseClassList(
   classList: string[],
   instance: ComponentInternalInstance,
-  el: NVueElement | null = null
+  el: UniXElement | null = null
 ) {
   return parseClassListWithStyleSheet(classList, parseStyleSheet(instance), el)
 }
@@ -159,20 +161,19 @@ export function parseStyleSheet({
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
   if (!component.__styles) {
+    const __globalStyles = appContext.provides.__globalStyles
     // nvue 和 vue 混合开发时，__globalStyles注入的是未处理过的
-    if (appContext && isArray(appContext.provides.__globalStyles)) {
-      appContext.provides.__globalStyles = useCssStyles(
-        appContext.provides.__globalStyles
-      )
+    if (appContext && isArray(__globalStyles)) {
+      appContext.provides.__globalStyles = useCssStyles(__globalStyles)
     }
     if (component.mpType === 'page' && appContext) {
       // 如果是页面组件，则直接使用全局样式
-      component.__styles = appContext.provides.__globalStyles
+      component.__styles = __globalStyles
     } else {
       const styles: NVueStyle[] = []
-      if (appContext) {
+      if (appContext && __globalStyles) {
         // 全局样式，包括 app.css 以及 page.css
-        styles.push(appContext.provides.__globalStyles)
+        styles.push(__globalStyles)
       }
       if (isArray(component.styles)) {
         component.styles.forEach(style => styles.push(style))

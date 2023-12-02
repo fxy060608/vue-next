@@ -1,7 +1,7 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import { ObjectDirective } from '@vue/runtime-core'
 
-export const vShow: ObjectDirective<UniElement> = {
+export const vShow: ObjectDirective<UniXElement> = {
   beforeMount(el, { value }) {
     setDisplay(el, value)
   },
@@ -14,6 +14,6 @@ export const vShow: ObjectDirective<UniElement> = {
   }
 }
 
-function setDisplay(el: UniElement, value: unknown): void {
-  el.setAttribute('.vShow', !!value)
+function setDisplay(el: UniXElement, value: unknown): void {
+  el.setAnyAttribute('.vShow', !!value)
 }

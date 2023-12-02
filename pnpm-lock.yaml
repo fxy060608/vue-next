@@ -11,6 +11,9 @@ importers:
       '@babel/types':
         specifier: ^7.12.0
         version: 7.16.0
+      '@dcloudio/uni-app-x':
+        specifier: ^0.6.0
+        version: 0.6.0
       '@esbuild-plugins/node-modules-polyfill':
         specifier: ^0.1.4
         version: 0.1.4(esbuild@0.17.4)
@@ -294,8 +297,8 @@ importers:
   packages/runtime-core:
     dependencies:
       '@dcloudio/uni-shared':
-        specifier: /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
-        version: link:../../../uni-app-next/packages/uni-shared
+        specifier: 3.0.0-alpha-3090920231127001
+        version: 3.0.0-alpha-3090920231127001
       '@vue/reactivity':
         specifier: 3.2.47
         version: link:../reactivity
@@ -315,12 +318,6 @@ importers:
         specifier: ^2.6.8
         version: 2.6.19
 
-  packages/runtime-nvue:
-    dependencies:
-      '@dcloudio/uni-shared':
-        specifier: /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
-        version: link:../../../uni-app-next/packages/uni-shared
-
   packages/runtime-test:
     dependencies:
       '@vue/runtime-core':
@@ -329,6 +326,12 @@ importers:
       '@vue/shared':
         specifier: 3.2.47
         version: link:../shared
+
+  packages/runtime-x:
+    dependencies:
+      '@dcloudio/uni-shared':
+        specifier: 3.0.0-alpha-3090920231127001
+        version: 3.0.0-alpha-3090920231127001
 
   packages/server-renderer:
     dependencies:
@@ -377,7 +380,7 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1
 
-  packages/uni-app-nvue:
+  packages/uni-app-x:
     dependencies:
       '@vue/reactivity':
         specifier: 3.2.39
@@ -662,6 +665,16 @@ packages:
     dependencies:
       '@babel/helper-validator-identifier': 7.15.7
       to-fast-properties: 2.0.0
+
+  /@dcloudio/uni-app-x@0.6.0:
+    resolution: {integrity: sha512-rSWPPEmu2pPTWzh4OtJk/lSKADO20pNCKklcczEubIksH5nkEpu8tszqcPyQS+yhtCS8Z6qcQmcLksFn8BMoqA==}
+    dev: true
+
+  /@dcloudio/uni-shared@3.0.0-alpha-3090920231127001:
+    resolution: {integrity: sha512-Fm8QraxCiSkbqVy7W3l+UbR5s1IMecuBKWnrQPGDl7lajgk223EHiYVbkl/HKlKctkaRfnXtpTCW/Z4DA1Sarw==}
+    dependencies:
+      '@vue/shared': 3.2.47
+    dev: false
 
   /@esbuild-plugins/node-modules-polyfill@0.1.4(esbuild@0.17.4):
     resolution: {integrity: sha512-uZbcXi0zbmKC/050p3gJnne5Qdzw8vkXIv+c2BW0Lsc1ji1SkrxbKPUy5Efr0blbTu1SL8w4eyfpnSdPg3G0Qg==}
@@ -1716,6 +1729,10 @@ packages:
 
   /@vue/shared@3.2.39:
     resolution: {integrity: sha512-D3dl2ZB9qE6mTuWPk9RlhDeP1dgNRUKC3NJxji74A4yL8M2MwlhLKUC/49WHjrNzSPug58fWx/yFbaTzGAQSBw==}
+    dev: false
+
+  /@vue/shared@3.2.47:
+    resolution: {integrity: sha512-BHGyyGN3Q97EZx0taMQ+OLNuZcW3d37ZEVmEAyeoA9ERdGvm9Irc/0Fua8SNyOtV1w6BS4q25wbMzJujO9HIfQ==}
     dev: false
 
   /@zeit/schemas@2.6.0:

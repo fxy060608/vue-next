@@ -1,9 +1,25 @@
-import type { UniNode, UniElement } from '@dcloudio/uni-shared'
+import {
+  Element as UniXElement,
+  IPage,
+  IDocument
+} from '@dcloudio/uni-app-x/types/native'
 
 import { RendererOptions } from '@vue/runtime-core'
 
+let rootPage: IPage | null = null
+let rootDocument: IDocument | null = null
+export function getDocument() {
+  if (!rootPage) {
+    rootPage = __pageManager.createPage('', '', new Map())
+  }
+  if (!rootDocument) {
+    rootDocument = rootPage.document
+  }
+  return rootDocument
+}
+
 export const nodeOps: Omit<
-  RendererOptions<UniNode, UniElement>,
+  RendererOptions<UniXElement, UniXElement>,
   'patchProp'
 > = {
   insert: (child, parent, anchor) => {
@@ -18,24 +34,23 @@ export const nodeOps: Omit<
       parent.removeChild(child)
     }
   },
-  // @ts-expect-error
-  createElement: (tag, container): UniElement => {
-    // TODO
+  createElement: (tag, container): UniXElement => {
+    return getDocument().createElement(tag)
   },
-  // @ts-expect-error
   createText: (text, container) => {
-    // TODO
+    const textNode = getDocument().createElement(text)
+    textNode.setAttribute('value', text)
+    return textNode
   },
-  // @ts-expect-error
   createComment: (text, container) => {
-    // TODO
+    return getDocument().createComment(text)
   },
   setText: (node, text) => {
-    // TODO
+    node.setAttribute('value', text)
   },
   setElementText: (el, text) => {
-    // TODO
+    el.setAttribute('value', text)
   },
-  parentNode: node => node.parentNode as UniElement | null,
+  parentNode: node => node.parentNode as UniXElement | null,
   nextSibling: node => node.nextSibling
 }

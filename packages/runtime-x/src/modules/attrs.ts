@@ -1,4 +1,4 @@
-import type { NVueElement } from '@dcloudio/uni-shared'
+import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
   normalizeStyle,
@@ -9,7 +9,7 @@ import {
 import { parseClassList } from '../helpers'
 
 export function patchAttr(
-  el: NVueElement,
+  el: UniXElement,
   key: string,
   value: unknown,
   instance: ComponentInternalInstance | null = null
@@ -17,7 +17,7 @@ export function patchAttr(
   if (instance) {
     ;[key, value] = transformAttr(el, key, value, instance)
   }
-  el.setAttr(key, value)
+  el.setAnyAttribute(key, value)
 }
 
 const ATTR_HOVER_CLASS = 'hoverClass'
@@ -56,7 +56,7 @@ const CLASS_AND_STYLES: Record<string, { class: string[]; style: string[] }> = {
 }
 
 function transformAttr(
-  el: NVueElement,
+  el: UniXElement,
   key: string,
   value: unknown,
   instance: ComponentInternalInstance
@@ -64,7 +64,7 @@ function transformAttr(
   if (!value) {
     return [key, value]
   }
-  const opts = CLASS_AND_STYLES[el.type]
+  const opts = CLASS_AND_STYLES[el.tagName.toLowerCase()]
   if (opts) {
     const camelized = camelize(key)
     if (opts['class'].indexOf(camelized) > -1) {

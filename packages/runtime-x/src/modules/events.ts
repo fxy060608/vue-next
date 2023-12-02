@@ -1,8 +1,7 @@
-import type {
-  NVueElement,
-  UniEvent,
-  UniEventListener
-} from '@dcloudio/uni-shared'
+import {
+  Element as UniXElement,
+  Event as UniXEvent
+} from '@dcloudio/uni-app-x/types/native'
 
 import { hyphenate, isArray } from '@vue/shared'
 import {
@@ -11,27 +10,29 @@ import {
 } from '@vue/runtime-core'
 import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
 
-interface Invoker extends UniEventListener {
+type UniXEventListener = (e: UniXEvent) => any
+
+interface Invoker extends UniXEventListener {
   value: EventValue
 }
 
 type EventValue = Function | Function[]
 
 export function addEventListener(
-  el: NVueElement,
+  el: UniXElement,
   event: string,
-  handler: UniEventListener,
+  handler: UniXEventListener,
   options?: EventListenerOptions
 ) {
-  el.addEvent(event, handler)
+  el.addEventListener(event, handler)
 }
 
-export function removeEventListener(el: NVueElement, event: string) {
-  el.removeEvent(event)
+export function removeEventListener(el: UniXElement, event: string) {
+  el.removeEventListener(event)
 }
 
 export function patchEvent(
-  el: NVueElement & { _vei?: Record<string, Invoker | undefined> },
+  el: UniXElement & { _vei?: Record<string, Invoker | undefined> },
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
@@ -84,7 +85,7 @@ function createInvoker(
   initialValue: EventValue,
   instance: ComponentInternalInstance | null
 ) {
-  const invoker: Invoker = (e: UniEvent) => {
+  const invoker: Invoker = (e: UniXEvent) => {
     callWithAsyncErrorHandling(
       invoker.value,
       instance,
