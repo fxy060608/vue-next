@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import {
   createApp,
   h,
@@ -21,7 +17,10 @@ import {
   renderSlot,
   onErrorCaptured,
   onServerPrefetch,
-  getCurrentInstance
+  getCurrentInstance,
+  reactive,
+  computed,
+  createSSRApp
 } from 'vue'
 import { escapeHtml } from '@vue/shared'
 import { renderToString } from '../src/renderToString'
@@ -797,6 +796,50 @@ function testRender(type: string, render: typeof renderToString) {
         } catch {}
         expect(getCurrentInstance()).toBe(prev)
       })
+
+      // #7733
+      test('reset current instance after error in data', async () => {
+        const prev = getCurrentInstance()
+        expect(prev).toBe(null)
+        try {
+          await render(
+            createApp({
+              data() {
+                throw new Error()
+              },
+              template: `<div>hello</div>`
+            })
+          )
+        } catch {}
+        expect(getCurrentInstance()).toBe(null)
+      })
+    })
+
+    // #7733
+    test('reset current instance after error in errorCaptured', async () => {
+      const prev = getCurrentInstance()
+
+      expect(prev).toBe(null)
+
+      const Child = {
+        created() {
+          throw new Error()
+        }
+      }
+      try {
+        await render(
+          createApp({
+            errorCaptured() {
+              throw new Error()
+            },
+            render: () => h(Child)
+          })
+        )
+      } catch {}
+      expect(
+        'Unhandled error during execution of errorCaptured hook'
+      ).toHaveBeenWarned()
+      expect(getCurrentInstance()).toBe(null)
     })
 
     test('serverPrefetch', async () => {
@@ -820,8 +863,8 @@ function testRender(type: string, render: typeof renderToString) {
 
     // #2763
     test('error handling w/ async setup', async () => {
-      const fn = jest.fn()
-      const fn2 = jest.fn()
+      const fn = vi.fn()
+      const fn2 = vi.fn()
 
       const asyncChildren = defineComponent({
         async setup() {
@@ -948,8 +991,8 @@ function testRender(type: string, render: typeof renderToString) {
     })
 
     test('onServerPrefetch are run in parallel', async () => {
-      const first = jest.fn(() => Promise.resolve())
-      const second = jest.fn(() => Promise.resolve())
+      const first = vi.fn(() => Promise.resolve())
+      const second = vi.fn(() => Promise.resolve())
       let checkOther = [false, false]
       let done = [false, false]
       const app = createApp({
@@ -1099,6 +1142,48 @@ function testRender(type: string, render: typeof renderToString) {
       }
       expect(renderError).toBe(null)
       expect((capturedError as unknown as Error).message).toBe('An error')
+    })
+
+    test('computed reactivity during SSR with onServerPrefetch', async () => {
+      const store = {
+        // initial state could be hydrated
+        state: reactive({ items: null as null | string[] }),
+
+        // pretend to fetch some data from an api
+        async fetchData() {
+          this.state.items = ['hello', 'world']
+        }
+      }
+
+      const getterSpy = vi.fn()
+
+      const App = defineComponent(() => {
+        const msg = computed(() => {
+          getterSpy()
+          return store.state.items?.join(' ')
+        })
+
+        // If msg value is falsy then we are either in ssr context or on the client
+        // and the initial state was not modified/hydrated.
+        // In both cases we need to fetch data.
+        onServerPrefetch(() => store.fetchData())
+
+        // simulate the read from a composable (e.g. filtering a list of results)
+        msg.value
+
+        return () => h('div', null, msg.value)
+      })
+
+      const app = createSSRApp(App)
+
+      // in real world serve this html and append store state for hydration on client
+      const html = await renderToString(app)
+
+      expect(html).toMatch('hello world')
+
+      // should only be called twice since access should be cached
+      // during the render phase
+      expect(getterSpy).toHaveBeenCalledTimes(2)
     })
   })
 }

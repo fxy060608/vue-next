@@ -153,8 +153,8 @@ const isStringifiableAttr = (name: string, ns: DOMNamespaces) => {
     (ns === DOMNamespaces.HTML
       ? isKnownHtmlAttr(name)
       : ns === DOMNamespaces.SVG
-      ? isKnownSvgAttr(name)
-      : false) || dataAriaRE.test(name)
+        ? isKnownSvgAttr(name)
+        : false) || dataAriaRE.test(name)
   )
 }
 
@@ -356,7 +356,7 @@ function stringifyElement(
 // (see compiler-core/src/transforms/transformExpression)
 function evaluateConstant(exp: ExpressionNode): string {
   if (exp.type === NodeTypes.SIMPLE_EXPRESSION) {
-    return new Function(`return ${exp.content}`)()
+    return new Function(`return (${exp.content})`)()
   } else {
     // compound
     let res = ``

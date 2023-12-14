@@ -20,10 +20,7 @@ describe('stringify static html', () => {
   }
 
   function repeat(code: string, n: number): string {
-    return new Array(n)
-      .fill(0)
-      .map(() => code)
-      .join('')
+    return code.repeat(n)
   }
 
   test('should bail on non-eligible static trees', () => {
@@ -475,6 +472,17 @@ describe('stringify static html', () => {
         <span class>1</span><span class>2</span>
       </div>`)
     expect(code).toMatch(`<code>&lt;span&gt;show-it &lt;/span&gt;</code>`)
+    expect(code).toMatchSnapshot()
+  })
+
+  test('stringify v-text with escape', () => {
+    const { code } = compileWithStringify(`
+      <pre  data-type="js"><code v-text="
+                \`text1\`"></code></pre>
+      <div class>
+        <span class>1</span><span class>2</span>
+      </div>`)
+    expect(code).toMatch(`<code>text1</code>`)
     expect(code).toMatchSnapshot()
   })
 })

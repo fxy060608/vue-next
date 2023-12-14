@@ -20,7 +20,7 @@ test('computed reactivity during SSR', async () => {
     }
   }
 
-  const getterSpy = jest.fn()
+  const getterSpy = vi.fn()
 
   const App = defineComponent(async () => {
     const msg = computed(() => {
@@ -33,7 +33,6 @@ test('computed reactivity during SSR', async () => {
     // In both cases we need to fetch data.
     if (!msg.value) await store.fetchData()
 
-    expect(msg.value).toBe('hello world')
     return () => h('div', null, msg.value + msg.value + msg.value)
   })
 

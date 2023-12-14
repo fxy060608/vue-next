@@ -92,7 +92,7 @@ describe('compiler: transform v-model', () => {
 
   describe('errors', () => {
     test('plain elements with argument', () => {
-      const onError = jest.fn()
+      const onError = vi.fn()
       transformWithModel('<input v-model:value="model" />', { onError })
 
       expect(onError).toHaveBeenCalledTimes(1)
@@ -104,7 +104,7 @@ describe('compiler: transform v-model', () => {
     })
 
     test('invalid element', () => {
-      const onError = jest.fn()
+      const onError = vi.fn()
       transformWithModel('<span v-model="model" />', { onError })
 
       expect(onError).toHaveBeenCalledTimes(1)
@@ -116,7 +116,7 @@ describe('compiler: transform v-model', () => {
     })
 
     test('should allow usage on custom element', () => {
-      const onError = jest.fn()
+      const onError = vi.fn()
       const root = transformWithModel('<my-input v-model="model" />', {
         onError,
         isCustomElement: tag => tag.startsWith('my-')
@@ -127,7 +127,7 @@ describe('compiler: transform v-model', () => {
     })
 
     test('should raise error if used file input element', () => {
-      const onError = jest.fn()
+      const onError = vi.fn()
       transformWithModel(`<input type="file" v-model="test"/>`, {
         onError
       })
@@ -136,6 +136,27 @@ describe('compiler: transform v-model', () => {
           code: DOMErrorCodes.X_V_MODEL_ON_FILE_INPUT_ELEMENT
         })
       )
+    })
+
+    test('should error on dynamic value binding alongside v-model', () => {
+      const onError = vi.fn()
+      transformWithModel(`<input v-model="test" :value="test" />`, {
+        onError
+      })
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: DOMErrorCodes.X_V_MODEL_UNNECESSARY_VALUE
+        })
+      )
+    })
+
+    // #3596
+    test('should NOT error on static value binding alongside v-model', () => {
+      const onError = vi.fn()
+      transformWithModel(`<input v-model="test" value="test" />`, {
+        onError
+      })
+      expect(onError).not.toHaveBeenCalled()
     })
   })
 

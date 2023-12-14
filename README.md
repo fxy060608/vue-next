@@ -6,7 +6,7 @@ Please follow the documentation at [vuejs.org](https://vuejs.org/)!
 
 ## Sponsors
 
-Vue.js is an MIT-licensed open source project with its ongoing development made possible entirely by the support of these awesome [backers](https://github.com/vuejs/core/blob/main/BACKERS.md). If you'd like to join them, please consider [ sponsor Vue's development](https://vuejs.org/sponsor/).
+Vue.js is an MIT-licensed open source project with its ongoing development made possible entirely by the support of these awesome [backers](https://github.com/vuejs/core/blob/main/BACKERS.md). If you'd like to join them, please consider [ sponsoring Vue's development](https://vuejs.org/sponsor/).
 
 <p align="center">
   <h3 align="center">Special Sponsor</h3>
@@ -20,7 +20,7 @@ Vue.js is an MIT-licensed open source project with its ongoing development made 
 
 <p align="center">
   <a target="_blank" href="https://vuejs.org/sponsor/#current-sponsors">
-    <img alt="sponsors" src="https://sponsors.vuejs.org/sponsors.svg?v2">
+    <img alt="sponsors" src="https://sponsors.vuejs.org/sponsors.svg?v3">
   </a>
 </p>
 

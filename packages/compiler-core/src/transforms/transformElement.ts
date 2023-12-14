@@ -19,7 +19,8 @@ import {
   TemplateTextChildNode,
   DirectiveArguments,
   createVNodeCall,
-  ConstantTypes
+  ConstantTypes,
+  JSChildNode
 } from '../ast'
 import {
   PatchFlags,
@@ -210,13 +211,14 @@ export const transformElement: NodeTransform = (node, context) => {
       if (__DEV__) {
         if (patchFlag < 0) {
           // special flags (negative and mutually exclusive)
-          vnodePatchFlag = patchFlag + ` /* ${PatchFlagNames[patchFlag]} */`
+          vnodePatchFlag =
+            patchFlag + ` /* ${PatchFlagNames[patchFlag as PatchFlags]} */`
         } else {
           // bitwise flags
           const flagNames = Object.keys(PatchFlagNames)
             .map(Number)
             .filter(n => n > 0 && patchFlag & n)
-            .map(n => PatchFlagNames[n])
+            .map(n => PatchFlagNames[n as PatchFlags])
             .join(`, `)
           vnodePatchFlag = patchFlag + ` /* ${flagNames} */`
         }
@@ -284,9 +286,14 @@ export function resolveComponentType(
     }
   }
 
-  // 1.5 v-is (TODO: Deprecate)
+  // 1.5 v-is (TODO: remove in 3.4)
   const isDir = !isExplicitDynamic && findDir(node, 'is')
   if (isDir && isDir.exp) {
+    if (__DEV__) {
+      context.onWarn(
+        createCompilerError(ErrorCodes.DEPRECATION_V_IS, isDir.loc)
+      )
+    }
     return createCallExpression(context.helper(RESOLVE_DYNAMIC_COMPONENT), [
       isDir.exp
     ])
@@ -360,7 +367,8 @@ function resolveSetupReference(name: string, context: TransformContext) {
 
   const fromConst =
     checkType(BindingTypes.SETUP_CONST) ||
-    checkType(BindingTypes.SETUP_REACTIVE_CONST)
+    checkType(BindingTypes.SETUP_REACTIVE_CONST) ||
+    checkType(BindingTypes.LITERAL_CONST)
   if (fromConst) {
     return context.inline
       ? // in inline mode, const setup bindings (e.g. imports) can be used as-is
@@ -377,6 +385,13 @@ function resolveSetupReference(name: string, context: TransformContext) {
       ? // setup scope bindings that may be refs need to be unrefed
         `${context.helperString(UNREF)}(${fromMaybeRef})`
       : `$setup[${JSON.stringify(fromMaybeRef)}]`
+  }
+
+  const fromProps = checkType(BindingTypes.PROPS)
+  if (fromProps) {
+    return `${context.helperString(UNREF)}(${
+      context.inline ? '__props' : '$props'
+    }[${JSON.stringify(fromProps)}])`
   }
 }
 
@@ -443,6 +458,12 @@ export function buildProps(
 
       if (isEventHandler && isReservedProp(name)) {
         hasVnodeHook = true
+      }
+
+      if (isEventHandler && value.type === NodeTypes.JS_CALL_EXPRESSION) {
+        // handler wrapped with internal helper e.g. withModifiers(fn)
+        // extract the actual expression
+        value = value.arguments[0] as JSChildNode
       }
 
       if (
@@ -543,7 +564,7 @@ export function buildProps(
       )
     } else {
       // directives
-      const { name, arg, exp, loc } = prop
+      const { name, arg, exp, loc, modifiers } = prop
       const isVBind = name === 'bind'
       const isVOn = name === 'on'
 
@@ -671,6 +692,11 @@ export function buildProps(
         continue
       }
 
+      // force hydration for v-bind with .prop modifier
+      if (isVBind && modifiers.includes('prop')) {
+        patchFlag |= PatchFlags.NEED_HYDRATION
+      }
+
       const directiveTransform = context.directiveTransforms[name]
       if (directiveTransform) {
         // has built-in directive transform.
@@ -736,12 +762,12 @@ export function buildProps(
       patchFlag |= PatchFlags.PROPS
     }
     if (hasHydrationEventBinding) {
-      patchFlag |= PatchFlags.HYDRATE_EVENTS
+      patchFlag |= PatchFlags.NEED_HYDRATION
     }
   }
   if (
     !shouldUseBlock &&
-    (patchFlag === 0 || patchFlag === PatchFlags.HYDRATE_EVENTS) &&
+    (patchFlag === 0 || patchFlag === PatchFlags.NEED_HYDRATION) &&
     (hasRef || hasVnodeHook || runtimeDirectives.length > 0)
   ) {
     patchFlag |= PatchFlags.NEED_PATCH

@@ -7,11 +7,12 @@ import {
   BindingMetadata
 } from '@vue/compiler-core'
 import * as CompilerDOM from '@vue/compiler-dom'
-import { RawSourceMap, SourceMapGenerator } from 'source-map'
+import { RawSourceMap, SourceMapGenerator } from 'source-map-js'
 import { TemplateCompiler } from './compileTemplate'
-import { parseCssVars } from './cssVars'
+import { parseCssVars } from './style/cssVars'
 import { createCache } from './cache'
-import { hmrShouldReload, ImportBinding } from './compileScript'
+import { ImportBinding } from './compileScript'
+import { isImportUsed } from './script/importUsageCheck'
 
 export const DEFAULT_FILENAME = 'anonymous.vue'
 
@@ -46,6 +47,13 @@ export interface SFCScriptBlock extends SFCBlock {
   imports?: Record<string, ImportBinding>
   scriptAst?: import('@babel/types').Statement[]
   scriptSetupAst?: import('@babel/types').Statement[]
+  warnings?: string[]
+  /**
+   * Fully resolved dependency file paths (unix slashes) with imported types
+   * used in macros, used for HMR cache busting in @vitejs/plugin-vue and
+   * vue-loader.
+   */
+  deps?: string[]
 }
 
 export interface SFCStyleBlock extends SFCBlock {
@@ -85,7 +93,7 @@ export interface SFCParseResult {
   errors: (CompilerError | SyntaxError)[]
 }
 
-const sourceToSFC = createCache<SFCParseResult>()
+export const parseCache = createCache<SFCParseResult>()
 
 export function parse(
   source: string,
@@ -100,7 +108,7 @@ export function parse(
 ): SFCParseResult {
   const sourceKey =
     source + sourceMap + filename + sourceRoot + pad + compiler.parse
-  const cache = sourceToSFC.get(sourceKey)
+  const cache = parseCache.get(sourceKey)
   if (cache) {
     return cache
   }
@@ -245,22 +253,34 @@ export function parse(
     }
   }
 
+  // dedent pug/jade templates
+  let templateColumnOffset = 0
+  if (
+    descriptor.template &&
+    (descriptor.template.lang === 'pug' || descriptor.template.lang === 'jade')
+  ) {
+    ;[descriptor.template.content, templateColumnOffset] = dedent(
+      descriptor.template.content
+    )
+  }
+
   if (sourceMap) {
-    const genMap = (block: SFCBlock | null) => {
+    const genMap = (block: SFCBlock | null, columnOffset = 0) => {
       if (block && !block.src) {
         block.map = generateSourceMap(
           filename,
           source,
           block.content,
           sourceRoot,
-          !pad || block.type === 'template' ? block.loc.start.line - 1 : 0
+          !pad || block.type === 'template' ? block.loc.start.line - 1 : 0,
+          columnOffset
         )
       }
     }
-    genMap(descriptor.template)
+    genMap(descriptor.template, templateColumnOffset)
     genMap(descriptor.script)
-    descriptor.styles.forEach(genMap)
-    descriptor.customBlocks.forEach(genMap)
+    descriptor.styles.forEach(s => genMap(s))
+    descriptor.customBlocks.forEach(s => genMap(s))
   }
 
   // parse CSS vars
@@ -276,7 +296,7 @@ export function parse(
     descriptor,
     errors
   }
-  sourceToSFC.set(sourceKey, result)
+  parseCache.set(sourceKey, result)
   return result
 }
 
@@ -361,7 +381,8 @@ function generateSourceMap(
   source: string,
   generated: string,
   sourceRoot: string,
-  lineOffset: number
+  lineOffset: number,
+  columnOffset: number
 ): RawSourceMap {
   const map = new SourceMapGenerator({
     file: filename.replace(/\\/g, '/'),
@@ -378,7 +399,7 @@ function generateSourceMap(
             source: filename,
             original: {
               line: originalLine,
-              column: i
+              column: i + columnOffset
             },
             generated: {
               line: generatedLine,
@@ -428,4 +449,61 @@ function isEmpty(node: ElementNode) {
     }
   }
   return true
+}
+
+/**
+ * Note: this comparison assumes the prev/next script are already identical,
+ * and only checks the special case where <script setup lang="ts"> unused import
+ * pruning result changes due to template changes.
+ */
+export function hmrShouldReload(
+  prevImports: Record<string, ImportBinding>,
+  next: SFCDescriptor
+): boolean {
+  if (
+    !next.scriptSetup ||
+    (next.scriptSetup.lang !== 'ts' && next.scriptSetup.lang !== 'tsx')
+  ) {
+    return false
+  }
+
+  // for each previous import, check if its used status remain the same based on
+  // the next descriptor's template
+  for (const key in prevImports) {
+    // if an import was previous unused, but now is used, we need to force
+    // reload so that the script now includes that import.
+    if (!prevImports[key].isUsedInTemplate && isImportUsed(key, next)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Dedent a string.
+ *
+ * This removes any whitespace that is common to all lines in the string from
+ * each line in the string.
+ */
+function dedent(s: string): [string, number] {
+  const lines = s.split('\n')
+  const minIndent = lines.reduce(function (minIndent, line) {
+    if (line.trim() === '') {
+      return minIndent
+    }
+    const indent = line.match(/^\s*/)?.[0]?.length || 0
+    return Math.min(indent, minIndent)
+  }, Infinity)
+  if (minIndent === 0) {
+    return [s, minIndent]
+  }
+  return [
+    lines
+      .map(function (line) {
+        return line.slice(minIndent)
+      })
+      .join('\n'),
+    minIndent
+  ]
 }
