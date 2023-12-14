@@ -687,7 +687,7 @@ function isComponent(
       }
     } else {
       // directive
-      // v-is (TODO Deprecate)
+      // v-is (TODO: remove in 3.4)
       if (p.name === 'is') {
         return true
       } else if (
@@ -811,13 +811,16 @@ function parseAttribute(
       (isPropShorthand || startsWith(name, ':')
         ? 'bind'
         : startsWith(name, '@')
-        ? 'on'
-        : 'slot')
+          ? 'on'
+          : 'slot')
     let arg: ExpressionNode | undefined
 
     if (match[2]) {
       const isSlot = dirName === 'slot'
-      const startOffset = name.lastIndexOf(match[2])
+      const startOffset = name.lastIndexOf(
+        match[2],
+        name.length - (match[3]?.length || 0)
+      )
       const loc = getSelection(
         context,
         getNewPosition(context, start, startOffset),
@@ -1060,7 +1063,7 @@ function parseTextData(
   ) {
     return rawText
   } else {
-    // DATA or RCDATA containing "&"". Entity decoding required.
+    // DATA or RCDATA containing "&". Entity decoding is required.
     return context.options.decodeEntities(
       rawText,
       mode === TextModes.ATTRIBUTE_VALUE

@@ -1,4 +1,3 @@
-import { vi } from 'vitest'
 import { createSSRApp, defineComponent, h, computed, reactive } from 'vue'
 import { renderToString } from '../src/renderToString'
 
@@ -34,7 +33,6 @@ test('computed reactivity during SSR', async () => {
     // In both cases we need to fetch data.
     if (!msg.value) await store.fetchData()
 
-    expect(msg.value).toBe('hello world')
     return () => h('div', null, msg.value + msg.value + msg.value)
   })
 

@@ -58,6 +58,14 @@ export interface PropOptions<T = any, D = T> {
   required?: boolean
   default?: D | DefaultFactory<D> | null | undefined | object
   validator?(value: unknown): boolean
+  /**
+   * @internal
+   */
+  skipCheck?: boolean
+  /**
+   * @internal
+   */
+  skipFactory?: boolean
 }
 
 export type PropType<T> = PropConstructor<T> | PropConstructor<T>[]
@@ -103,29 +111,57 @@ type DefaultKeys<T> = {
 type InferPropType<T> = [T] extends [null]
   ? any // null & true would fail to infer
   : [T] extends [{ type: null | true }]
-  ? any // As TS issue https://github.com/Microsoft/TypeScript/issues/14829 // somehow `ObjectConstructor` when inferred from { (): T } becomes `any` // `BooleanConstructor` when inferred from PropConstructor(with PropMethod) becomes `Boolean`
-  : [T] extends [ObjectConstructor | { type: ObjectConstructor }]
-  ? Record<string, any>
-  : [T] extends [BooleanConstructor | { type: BooleanConstructor }]
-  ? boolean
-  : [T] extends [DateConstructor | { type: DateConstructor }]
-  ? Date
-  : [T] extends [(infer U)[] | { type: (infer U)[] }]
-  ? U extends DateConstructor
-    ? Date | InferPropType<U>
-    : InferPropType<U>
-  : [T] extends [Prop<infer V, infer D>]
-  ? unknown extends V
-    ? IfAny<V, V, D>
-    : V
-  : T
+    ? any // As TS issue https://github.com/Microsoft/TypeScript/issues/14829 // somehow `ObjectConstructor` when inferred from { (): T } becomes `any` // `BooleanConstructor` when inferred from PropConstructor(with PropMethod) becomes `Boolean`
+    : [T] extends [ObjectConstructor | { type: ObjectConstructor }]
+      ? Record<string, any>
+      : [T] extends [BooleanConstructor | { type: BooleanConstructor }]
+        ? boolean
+        : [T] extends [DateConstructor | { type: DateConstructor }]
+          ? Date
+          : [T] extends [(infer U)[] | { type: (infer U)[] }]
+            ? U extends DateConstructor
+              ? Date | InferPropType<U>
+              : InferPropType<U>
+            : [T] extends [Prop<infer V, infer D>]
+              ? unknown extends V
+                ? IfAny<V, V, D>
+                : V
+              : T
 
+/**
+ * Extract prop types from a runtime props options object.
+ * The extracted types are **internal** - i.e. the resolved props received by
+ * the component.
+ * - Boolean props are always present
+ * - Props with default values are always present
+ *
+ * To extract accepted props from the parent, use {@link ExtractPublicPropTypes}.
+ */
 export type ExtractPropTypes<O> = {
-  // use `keyof Pick<O, RequiredKeys<O>>` instead of `RequiredKeys<O>` to support IDE features
+  // use `keyof Pick<O, RequiredKeys<O>>` instead of `RequiredKeys<O>` to
+  // support IDE features
   [K in keyof Pick<O, RequiredKeys<O>>]: InferPropType<O[K]>
 } & {
-  // use `keyof Pick<O, OptionalKeys<O>>` instead of `OptionalKeys<O>` to support IDE features
+  // use `keyof Pick<O, OptionalKeys<O>>` instead of `OptionalKeys<O>` to
+  // support IDE features
   [K in keyof Pick<O, OptionalKeys<O>>]?: InferPropType<O[K]>
+}
+
+type PublicRequiredKeys<T> = {
+  [K in keyof T]: T[K] extends { required: true } ? K : never
+}[keyof T]
+
+type PublicOptionalKeys<T> = Exclude<keyof T, PublicRequiredKeys<T>>
+
+/**
+ * Extract prop types from a runtime props options object.
+ * The extracted types are **public** - i.e. the expected props that can be
+ * passed to component.
+ */
+export type ExtractPublicPropTypes<O> = {
+  [K in keyof Pick<O, PublicRequiredKeys<O>>]: InferPropType<O[K]>
+} & {
+  [K in keyof Pick<O, PublicOptionalKeys<O>>]?: InferPropType<O[K]>
 }
 
 const enum BooleanFlags {
@@ -424,7 +460,11 @@ function resolvePropValue(
     // default values
     if (hasDefault && value === undefined) {
       const defaultValue = opt.default
-      if (opt.type !== Function && isFunction(defaultValue)) {
+      if (
+        opt.type !== Function &&
+        !opt.skipFactory &&
+        isFunction(defaultValue)
+      ) {
         const { propsDefaults } = instance
         if (key in propsDefaults) {
           value = propsDefaults[key]
@@ -522,7 +562,7 @@ export function normalizePropsOptions(
       if (validatePropName(normalizedKey)) {
         const opt = raw[key]
         const prop: NormalizedProp = (normalized[normalizedKey] =
-          isArray(opt) || isFunction(opt) ? { type: opt } : { ...opt })
+          isArray(opt) || isFunction(opt) ? { type: opt } : extend({}, opt))
         if (prop) {
           const booleanIndex = getTypeIndex(Boolean, prop.type)
           const stringIndex = getTypeIndex(String, prop.type)
@@ -608,18 +648,18 @@ function validateProp(
   prop: PropOptions,
   isAbsent: boolean
 ) {
-  const { type, required, validator } = prop
+  const { type, required, validator, skipCheck } = prop
   // required!
   if (required && isAbsent) {
     warn('Missing required prop: "' + name + '"')
     return
   }
   // missing but optional
-  if (value == null && !prop.required) {
+  if (value == null && !required) {
     return
   }
   // type check
-  if (type != null && type !== true) {
+  if (type != null && type !== true && !skipCheck) {
     let isValid = false
     const types = isArray(type) ? type : [type]
     const expectedTypes = []
@@ -685,6 +725,12 @@ function getInvalidTypeMessage(
   value: unknown,
   expectedTypes: string[]
 ): string {
+  if (expectedTypes.length === 0) {
+    return (
+      `Prop type [] for prop "${name}" won't match anything.` +
+      ` Did you mean to use type Array instead?`
+    )
+  }
   let message =
     `Invalid prop: type check failed for prop "${name}".` +
     ` Expected ${expectedTypes.map(capitalize).join(' | ')}`

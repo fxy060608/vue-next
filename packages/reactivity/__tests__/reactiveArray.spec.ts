@@ -1,4 +1,3 @@
-import { vi } from 'vitest'
 import { reactive, isReactive, toRaw } from '../src/reactive'
 import { ref, isRef } from '../src/ref'
 import { effect } from '../src/effect'
@@ -141,6 +140,15 @@ describe('reactivity/reactive/Array', () => {
     expect(length).toBe('0')
     array.push(1)
     expect(length).toBe('01')
+  })
+
+  // #9742
+  test('mutation on user proxy of reactive Array', () => {
+    const array = reactive<number[]>([])
+    const proxy = new Proxy(array, {})
+    proxy.push(1)
+    expect(array).toHaveLength(1)
+    expect(proxy).toHaveLength(1)
   })
 
   describe('Array methods w/ refs', () => {

@@ -1,10 +1,16 @@
-import puppeteer from 'puppeteer'
+import puppeteer, {
+  Browser,
+  Page,
+  ClickOptions,
+  PuppeteerLaunchOptions
+} from 'puppeteer'
 
 export const E2E_TIMEOUT = 30 * 1000
 
-const puppeteerOptions = process.env.CI
-  ? { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
-  : {}
+const puppeteerOptions: PuppeteerLaunchOptions = {
+  args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+  headless: 'new'
+}
 
 const maxTries = 30
 export const timeout = (n: number) => new Promise(r => setTimeout(r, n))
@@ -25,8 +31,8 @@ export async function expectByPolling(
 }
 
 export function setupPuppeteer() {
-  let browser: puppeteer.Browser
-  let page: puppeteer.Page
+  let browser: Browser
+  let page: Page
 
   beforeAll(async () => {
     browser = await puppeteer.launch(puppeteerOptions)
@@ -58,7 +64,7 @@ export function setupPuppeteer() {
     await browser.close()
   })
 
-  async function click(selector: string, options?: puppeteer.ClickOptions) {
+  async function click(selector: string, options?: ClickOptions) {
     await page.click(selector, options)
   }
 

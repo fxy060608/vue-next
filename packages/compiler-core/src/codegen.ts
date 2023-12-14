@@ -24,14 +24,14 @@ import {
   AssignmentExpression,
   ReturnStatement,
   VNodeCall,
-  SequenceExpression
+  SequenceExpression,
+  getVNodeBlockHelper,
+  getVNodeHelper
 } from './ast'
-import { SourceMapGenerator, RawSourceMap } from 'source-map'
+import { SourceMapGenerator, RawSourceMap } from 'source-map-js'
 import {
   advancePositionWithMutation,
   assert,
-  getVNodeBlockHelper,
-  getVNodeHelper,
   isSimpleIdentifier,
   toValidAssetId
 } from './utils'
@@ -448,8 +448,8 @@ function genAssets(
     __COMPAT__ && type === 'filter'
       ? RESOLVE_FILTER
       : type === 'component'
-      ? RESOLVE_COMPONENT
-      : RESOLVE_DIRECTIVE
+        ? RESOLVE_COMPONENT
+        : RESOLVE_DIRECTIVE
   )
   for (let i = 0; i < assets.length; i++) {
     let id = assets[i]

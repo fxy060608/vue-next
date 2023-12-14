@@ -1,6 +1,6 @@
 import { parse } from '../src'
 import { baseParse, baseCompile } from '@vue/compiler-core'
-import { SourceMapConsumer } from 'source-map'
+import { SourceMapConsumer } from 'source-map-js'
 
 describe('compiler:sfc', () => {
   describe('source map', () => {
@@ -31,6 +31,26 @@ describe('compiler:sfc', () => {
       const consumer = new SourceMapConsumer(script!.map!)
       consumer.eachMapping(mapping => {
         expect(mapping.originalLine - mapping.generatedLine).toBe(padding)
+      })
+    })
+
+    test('template block with lang + indent', () => {
+      // Padding determines how many blank lines will there be before the style block
+      const padding = Math.round(Math.random() * 10)
+      const template = parse(
+        `${'\n'.repeat(padding)}<template lang="pug">
+  h1 foo
+    div bar
+    span baz
+</template>\n`
+      ).descriptor.template!
+
+      expect(template.map).not.toBeUndefined()
+
+      const consumer = new SourceMapConsumer(template.map!)
+      consumer.eachMapping(mapping => {
+        expect(mapping.originalLine - mapping.generatedLine).toBe(padding)
+        expect(mapping.originalColumn - mapping.generatedColumn).toBe(2)
       })
     })
 

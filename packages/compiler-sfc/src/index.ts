@@ -1,9 +1,18 @@
+export const version = __VERSION__
+
 // API
 export { parse } from './parse'
 export { compileTemplate } from './compileTemplate'
 export { compileStyle, compileStyleAsync } from './compileStyle'
 export { compileScript } from './compileScript'
-export { rewriteDefault } from './rewriteDefault'
+export { rewriteDefault, rewriteDefaultAST } from './rewriteDefault'
+export { resolveTypeElements, inferRuntimeType } from './script/resolveType'
+
+import { SFCParseResult, parseCache as _parseCache } from './parse'
+// #9521 export parseCache as a simple map to avoid exposing LRU types
+export const parseCache = _parseCache as Map<string, SFCParseResult>
+
+// TODO remove in 3.4
 export {
   shouldTransform as shouldTransformRef,
   transform as transformRef,
@@ -26,8 +35,11 @@ export {
   isStaticProperty
 } from '@vue/compiler-core'
 
+// Internals for type resolution
+export { invalidateTypeCache, registerTS } from './script/resolveType'
+
 // Types
-export {
+export type {
   SFCParseOptions,
   SFCParseResult,
   SFCDescriptor,
@@ -36,19 +48,27 @@ export {
   SFCScriptBlock,
   SFCStyleBlock
 } from './parse'
-export {
+export type {
   TemplateCompiler,
   SFCTemplateCompileOptions,
   SFCTemplateCompileResults
 } from './compileTemplate'
-export {
+export type {
   SFCStyleCompileOptions,
   SFCAsyncStyleCompileOptions,
   SFCStyleCompileResults
 } from './compileStyle'
-export { SFCScriptCompileOptions } from './compileScript'
-export { AssetURLOptions, AssetURLTagConfig } from './templateTransformAssetUrl'
-export {
+export type { SFCScriptCompileOptions } from './compileScript'
+export type { ScriptCompileContext } from './script/context'
+export type {
+  TypeResolveContext,
+  SimpleTypeResolveContext
+} from './script/resolveType'
+export type {
+  AssetURLOptions,
+  AssetURLTagConfig
+} from './template/transformAssetUrl'
+export type {
   CompilerOptions,
   CompilerError,
   BindingMetadata

@@ -2,12 +2,23 @@ import fs from 'fs'
 import path from 'path'
 import { defineConfig, Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import execa from 'execa'
+import { execaSync } from 'execa'
 
-const commit = execa.sync('git', ['rev-parse', 'HEAD']).stdout.slice(0, 7)
+const commit = execaSync('git', ['rev-parse', '--short=7', 'HEAD']).stdout
 
 export default defineConfig({
-  plugins: [vue(), copyVuePlugin()],
+  plugins: [
+    vue({
+      script: {
+        defineModel: true,
+        fs: {
+          fileExists: fs.existsSync,
+          readFile: file => fs.readFileSync(file, 'utf-8')
+        }
+      }
+    }),
+    copyVuePlugin()
+  ],
   define: {
     __COMMIT__: JSON.stringify(commit),
     __VUE_PROD_DEVTOOLS__: JSON.stringify(true)
@@ -37,7 +48,10 @@ function copyVuePlugin(): Plugin {
         })
       }
 
+      copyFile(`../vue/dist/vue.esm-browser.js`)
+      copyFile(`../vue/dist/vue.esm-browser.prod.js`)
       copyFile(`../vue/dist/vue.runtime.esm-browser.js`)
+      copyFile(`../vue/dist/vue.runtime.esm-browser.prod.js`)
       copyFile(`../server-renderer/dist/server-renderer.esm-browser.js`)
     }
   }

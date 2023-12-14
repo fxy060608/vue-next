@@ -1,4 +1,3 @@
-import { vi } from 'vitest'
 import { patchProp } from '../src/patchProp'
 import { render, h } from '../src'
 
@@ -24,6 +23,14 @@ describe('runtime-dom: props patching', () => {
     patchProp(el, 'value', null, obj)
     expect(el.value).toBe(obj.toString())
     expect((el as any)._value).toBe(obj)
+
+    const option = document.createElement('option')
+    patchProp(option, 'textContent', null, 'foo')
+    expect(option.value).toBe('foo')
+    expect(option.getAttribute('value')).toBe(null)
+    patchProp(option, 'value', null, 'foo')
+    expect(option.value).toBe('foo')
+    expect(option.getAttribute('value')).toBe('foo')
   })
 
   test('value for custom elements', () => {
@@ -282,6 +289,22 @@ describe('runtime-dom: props patching', () => {
       root
     )
     expect(el.value).toBe('baz')
+  })
+
+  // #8780
+  test('embedded tag with width and height', () => {
+    // Width and height of some embedded element such as img、video、source、canvas
+    // must be set as attribute
+    const el = document.createElement('img')
+    patchProp(el, 'width', null, '24px')
+    expect(el.getAttribute('width')).toBe('24px')
+  })
+
+  // # 9762 should fallthrough to `key in el` logic for non embedded tags
+  test('width and height on custom elements', () => {
+    const el = document.createElement('foobar')
+    patchProp(el, 'width', null, '24px')
+    expect(el.getAttribute('width')).toBe('24px')
   })
 
   test('translate attribute', () => {

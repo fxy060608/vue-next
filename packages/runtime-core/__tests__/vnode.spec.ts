@@ -1,4 +1,3 @@
-import { vi } from 'vitest'
 import {
   createBlock,
   createVNode,
@@ -220,7 +219,6 @@ describe('vnode', () => {
     const node2 = createVNode({}, null, [node1])
     const cloned2 = cloneVNode(node2)
     expect(cloned2).toEqual(node2)
-    expect(cloneVNode(node2)).toEqual(node2)
     expect(cloneVNode(node2)).toEqual(cloned2)
   })
 
@@ -479,13 +477,13 @@ describe('vnode', () => {
       expect(vnode.dynamicChildren).toStrictEqual([vnode1])
     })
 
-    test('should not track vnodes with only HYDRATE_EVENTS flag', () => {
+    test('should not track vnodes with only NEED_HYDRATION flag', () => {
       const hoist = createVNode('div')
       const vnode =
         (openBlock(),
         createBlock('div', null, [
           hoist,
-          createVNode('div', null, 'text', PatchFlags.HYDRATE_EVENTS)
+          createVNode('div', null, 'text', PatchFlags.NEED_HYDRATION)
         ]))
       expect(vnode.dynamicChildren).toStrictEqual([])
     })

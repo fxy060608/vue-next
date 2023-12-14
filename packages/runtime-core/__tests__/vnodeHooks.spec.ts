@@ -1,11 +1,10 @@
-import { vi } from 'vitest'
 import {
   h,
   render,
   nodeOps,
   VNodeProps,
   TestElement,
-  NodeTypes,
+  TestNodeTypes,
   VNode
 } from '@vue/runtime-test'
 
@@ -45,13 +44,13 @@ describe('renderer: vnode hooks', () => {
       onVnodeMounted: vi.fn(),
       onVnodeBeforeUpdate: vi.fn(vnode => {
         expect((vnode.el as TestElement).children[0]).toMatchObject({
-          type: NodeTypes.TEXT,
+          type: TestNodeTypes.TEXT,
           text: 'foo'
         })
       }),
       onVnodeUpdated: vi.fn(vnode => {
         expect((vnode.el as TestElement).children[0]).toMatchObject({
-          type: NodeTypes.TEXT,
+          type: TestNodeTypes.TEXT,
           text: 'bar'
         })
       }),
@@ -70,13 +69,13 @@ describe('renderer: vnode hooks', () => {
       onVnodeMounted: vi.fn(),
       onVnodeBeforeUpdate: vi.fn(vnode => {
         expect(vnode.el as TestElement).toMatchObject({
-          type: NodeTypes.TEXT,
+          type: TestNodeTypes.TEXT,
           text: 'foo'
         })
       }),
       onVnodeUpdated: vi.fn(vnode => {
         expect(vnode.el as TestElement).toMatchObject({
-          type: NodeTypes.TEXT,
+          type: TestNodeTypes.TEXT,
           text: 'bar'
         })
       }),

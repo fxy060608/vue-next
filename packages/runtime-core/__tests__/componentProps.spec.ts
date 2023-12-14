@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { vi } from 'vitest'
+
 import {
   ComponentInternalInstance,
   getCurrentInstance,
@@ -335,7 +335,9 @@ describe('component props', () => {
         arr: { type: Array },
         obj: { type: Object },
         cls: { type: MyClass },
-        fn: { type: Function }
+        fn: { type: Function },
+        skipCheck: { type: [Boolean, Function], skipCheck: true },
+        empty: { type: [] }
       },
       setup() {
         return () => null
@@ -349,7 +351,9 @@ describe('component props', () => {
         arr: {},
         obj: 'false',
         cls: {},
-        fn: true
+        fn: true,
+        skipCheck: 'foo',
+        empty: [1, 2, 3]
       }),
       nodeOps.createElement('div')
     )
@@ -373,6 +377,12 @@ describe('component props', () => {
     ).toHaveBeenWarned()
     expect(
       `Invalid prop: type check failed for prop "cls". Expected MyClass, got Object`
+    ).toHaveBeenWarned()
+    expect(
+      `Invalid prop: type check failed for prop "skipCheck". Expected Boolean | Function, got String with value "foo".`
+    ).not.toHaveBeenWarned()
+    expect(
+      `Prop type [] for prop "empty" won't match anything. Did you mean to use type Array instead?`
     ).toHaveBeenWarned()
   })
 
