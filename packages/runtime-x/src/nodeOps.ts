@@ -5,6 +5,7 @@ import {
 } from '@dcloudio/uni-app-x/types/native'
 
 import { RendererOptions } from '@vue/runtime-core'
+import { updateClassStyles } from './modules/class'
 
 let rootPage: IPage | null = null
 let rootDocument: IDocument | null = null
@@ -18,15 +19,31 @@ export function getDocument() {
   return rootDocument
 }
 
+/**
+ * 判断是否在document中
+ * @param el
+ * @returns
+ */
+export function isInDocument(parent: UniXElement): boolean {
+  return !!parent.pageId
+}
+
 export const nodeOps: Omit<
   RendererOptions<UniXElement, UniXElement>,
   'patchProp'
 > = {
-  insert: (child, parent, anchor) => {
+  insert: (el, parent, anchor) => {
     if (!anchor) {
-      return parent.appendChild(child)
+      parent.appendChild(el)
+    } else {
+      parent.insertBefore(el, anchor)
     }
-    return parent.insertBefore(child, anchor)
+    // 判断是不是首次被完整插入DOM树中
+    // vue 插入节点的顺序是，先子后父，所以等待父真正被完整插入document时，再遍历一遍子节点校正父子选择器样式
+    if (isInDocument(parent)) {
+      updateClassStyles(el)
+      updateChildrenClassStyle(el)
+    }
   },
   remove: child => {
     const parent = child.parentNode
@@ -53,4 +70,14 @@ export const nodeOps: Omit<
   },
   parentNode: node => node.parentNode as UniXElement | null,
   nextSibling: node => node.nextSibling
+}
+
+// patchClass 先子后父，所以插入父的时候 updateChildrenClassStyle
+function updateChildrenClassStyle(el: UniXElement | null) {
+  if (el !== null) {
+    el.childNodes.forEach(child => {
+      updateClassStyles(child)
+      updateChildrenClassStyle(child)
+    })
+  }
 }

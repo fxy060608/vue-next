@@ -1,7 +1,7 @@
 import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
-import { getExtraStyles } from './node'
+import { getExtraStyle, getExtraStyles } from './node'
 
 type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
@@ -113,14 +113,14 @@ function parseClassName(
       const weight = classWeight + (isImportant ? WEIGHT_IMPORTANT : 0)
       if (weight >= oldWeight) {
         weights[name] = weight
-        styles[name] = value
+        styles.set(name, value)
       }
     })
   })
 }
 
 interface ParseStyleContext {
-  styles: Record<string, unknown>
+  styles: Map<string, unknown>
   weights: Record<string, number>
 }
 
@@ -130,7 +130,7 @@ function parseClassListWithStyleSheet(
   el: UniXElement | null = null
 ) {
   const context: ParseStyleContext = {
-    styles: {},
+    styles: new Map(),
     weights: {}
   }
   classList.forEach(className => {
@@ -139,7 +139,7 @@ function parseClassListWithStyleSheet(
       parseClassName(context, parentStyles, el)
     }
   })
-  return context.styles
+  return context
 }
 
 export function parseClassStyles(el: UniXElement) {
@@ -182,4 +182,34 @@ export function parseStyleSheet({
     }
   }
   return component.__styles
+}
+
+export function extend<T>(
+  a: Map<string, T>,
+  b: Map<string, T>
+): Map<string, T> {
+  b.forEach((value, key) => {
+    a.set(key, value)
+  })
+  return a
+}
+
+export function toStyle(
+  el: UniXElement,
+  classStyle: Map<string, any>,
+  classStyleWeights: Record<string, number>
+): Map<string, any> {
+  const res = extend<any>(new Map<string, any>(), classStyle)
+  const style = getExtraStyle(el)
+  if (style != null) {
+    style.forEach((value: any, key: string) => {
+      const weight = classStyleWeights[key]
+      // TODO: 目前只计算了 class 中 important 的权重，会存在 style class 同时设置 important 时，class 优先级更高的问题
+      if (weight == null || weight < 1000) {
+        res.set(key, value)
+      }
+    })
+  }
+
+  return res
 }
