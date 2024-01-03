@@ -6,7 +6,7 @@ import {
   NormalizedStyle,
   parseStringStyle
 } from '@vue/shared'
-import { toMap } from '../helpers'
+import { setExtraStyle } from '../helpers/node'
 
 export function patchStyle(
   el: UniXElement,
@@ -21,24 +21,29 @@ export function patchStyle(
   if (isString(next)) {
     next = parseStringStyle(next)
   }
-  const batchedStyles: NormalizedStyle = {}
+  const batchedStyles = new Map<
+    keyof NormalizedStyle,
+    NormalizedStyle[keyof NormalizedStyle]
+  >()
   const isPrevObj = prev && !isString(prev)
   if (isPrevObj) {
     for (const key in prev) {
       if (next[key] == null) {
-        batchedStyles[camelize(key)] = ''
+        batchedStyles.set(camelize(key), '')
       }
     }
     for (const key in next) {
       const value = next[key]
       if (value !== prev[key]) {
-        batchedStyles[camelize(key)] = value
+        batchedStyles.set(camelize(key), value)
       }
     }
   } else {
     for (const key in next) {
-      batchedStyles[camelize(key)] = next[key]
+      batchedStyles.set(camelize(key), next[key])
     }
+    setExtraStyle(el, batchedStyles)
   }
-  el.updateStyle(toMap(batchedStyles))
+  // TODO validateStyles(el, batchedStyles)
+  el.updateStyle(batchedStyles)
 }

@@ -44,6 +44,10 @@ export function getExtraStyle(el: UniXElement): Map<string, any> | null {
   return getNodeExtraData(el, NODE_EXT_STYLE) as Map<string, any> | null
 }
 
+export function setExtraStyle(el: UniXElement, style: Map<string, any>) {
+  setNodeExtraData(el, NODE_EXT_STYLE, style)
+}
+
 export function isCommentNode(node: UniXElement): boolean {
   return node.nodeName == '#comment'
 }

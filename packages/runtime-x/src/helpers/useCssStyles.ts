@@ -205,7 +205,7 @@ export function toStyle(
     style.forEach((value: any, key: string) => {
       const weight = classStyleWeights[key]
       // TODO: 目前只计算了 class 中 important 的权重，会存在 style class 同时设置 important 时，class 优先级更高的问题
-      if (weight == null || weight < 1000) {
+      if (weight == null || weight < WEIGHT_IMPORTANT) {
         res.set(key, value)
       }
     })
