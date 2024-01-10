@@ -45,10 +45,9 @@ export function setRef(
     // because the template ref is forwarded to inner component
     return
   }
-
   const refValue =
     vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT &&
-    (!__X__ || !(vnode.component!.type as any).__reserved) // fixed by xxxxxx 非 x 项目或者非内置组件
+    !(__X__ && (vnode.component!.type as any).rootElement) // fixed by xxxxxx 非 x 项目或者非内置组件
       ? getExposeProxy(vnode.component!) || vnode.component!.proxy
       : vnode.el
   const value = isUnmount ? null : refValue
