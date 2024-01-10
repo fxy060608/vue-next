@@ -1,6 +1,10 @@
 import { ErrorCodes, callWithErrorHandling } from './errorHandling'
 import { isArray, NOOP } from '@vue/shared'
-import { ComponentInternalInstance, getComponentName } from './component'
+import {
+  ComponentInternalInstance,
+  getComponentName,
+  getCurrentInstance
+} from './component'
 import { warn } from './warning'
 
 export interface SchedulerJob extends Function {
@@ -52,10 +56,25 @@ type CountMap = Map<SchedulerJob, number>
 
 export function nextTick<T = void>(
   this: T,
-  fn?: (this: T) => void
+  fn?: (this: T) => void,
+  instance: ComponentInternalInstance | null = getCurrentInstance()
 ): Promise<void> {
-  const p = currentFlushPromise || resolvedPromise
-  return fn ? p.then(this ? fn.bind(this) : fn) : p
+  const promise = currentFlushPromise || resolvedPromise
+  const current =
+    currentFlushPromise === null || instance === null
+      ? promise
+      : promise.then(() => {
+          return new Promise<void>(resolve => {
+            if (instance === null) {
+              resolve()
+            } else {
+              instance.$waitNativeRender(() => {
+                resolve()
+              })
+            }
+          })
+        })
+  return fn ? current.then(this ? fn.bind(this) : fn) : current
 }
 
 // #2768

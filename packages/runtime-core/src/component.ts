@@ -453,6 +453,10 @@ export interface ComponentInternalInstance {
    * @internal
    */
   ut?: (vars?: Record<string, string>) => void
+  /**
+   * @internal
+   */
+  $waitNativeRender: (fn: () => void) => void
 }
 
 const emptyAppContext = createAppContext()
@@ -542,7 +546,11 @@ export function createComponentInstance(
     rtg: null,
     rtc: null,
     ec: null,
-    sp: null
+    sp: null,
+    $waitNativeRender(fn: () => void) {
+      // TODO use native
+      setTimeout(fn, 150)
+    }
   }
   if (__DEV__) {
     instance.ctx = createDevRenderContext(instance)
