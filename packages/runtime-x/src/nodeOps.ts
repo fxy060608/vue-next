@@ -55,7 +55,7 @@ export const nodeOps: Omit<
     return getDocument().createElement(tag)
   },
   createText: (text, container) => {
-    const textNode = getDocument().createElement(text)
+    const textNode = getDocument().createElement('text')
     textNode.setAttribute('value', text)
     return textNode
   },
