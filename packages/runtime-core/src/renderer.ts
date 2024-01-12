@@ -1121,10 +1121,10 @@ function baseCreateRenderer(
   ) => {
     const fragmentStartAnchor = (n2.el = n1
       ? n1.el
-      : hostCreateText('', container))! // fixed by xxxxxx
+      : hostCreateComment('', container))! // fixed by xxxxxx
     const fragmentEndAnchor = (n2.anchor = n1
       ? n1.anchor
-      : hostCreateText('', container))! // fixed by xxxxxx
+      : hostCreateComment('', container))! // fixed by xxxxxx
 
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
 
