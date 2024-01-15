@@ -158,9 +158,10 @@ function logError(
       popWarningContext()
     }
     // crash in dev by default so it's more noticeable
-    if (throwInDev) {
+    // 不要 crash，经常会导致整个App运行失败，比如路由跳转失败，不能返回了
+    /* if (throwInDev) {
       throw err
-    } else if (!__TEST__) {
+    } else */ if (!__TEST__) {
       console.error(err)
     }
   } else {
