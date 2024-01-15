@@ -19,9 +19,16 @@ export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
   },
 
   createElement: (tag, isSVG, is, props): Element => {
+    /**
+     * fix chrome version 64
+     * document.createElement('uni-text', undefined) instanceof customElements.get('uni-text') // false
+     * document.createElement('uni-text') instanceof customElements.get('uni-text') // true
+     */
     const el = isSVG
       ? doc.createElementNS(svgNS, tag)
-      : doc.createElement(tag, is ? { is } : undefined)
+      : is
+        ? doc.createElement(tag, { is })
+        : doc.createElement(tag)
 
     if (tag === 'select' && props && props.multiple != null) {
       ;(el as HTMLSelectElement).setAttribute('multiple', props.multiple)
