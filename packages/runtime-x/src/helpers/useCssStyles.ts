@@ -157,7 +157,8 @@ export function parseClassList(
 
 export function parseStyleSheet({
   type,
-  appContext
+  appContext,
+  root
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
   if (!component.__styles) {
@@ -175,8 +176,14 @@ export function parseStyleSheet({
         // 全局样式，包括 app.css 以及 page.css
         styles.push(__globalStyles)
       }
+      // 合并页面样式
+      // TODO 添加额外缓存
+      const page = root.type as NVueComponent
+      if (isArray(page.styles)) {
+        styles.push(...page.styles)
+      }
       if (isArray(component.styles)) {
-        component.styles.forEach(style => styles.push(style))
+        styles.push(...component.styles)
       }
       component.__styles = useCssStyles(styles)
     }
