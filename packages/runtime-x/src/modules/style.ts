@@ -34,9 +34,7 @@ export function patchStyle(
     }
     for (const key in next) {
       const value = next[key]
-      if (value !== prev[key]) {
-        batchedStyles.set(camelize(key), value)
-      }
+      batchedStyles.set(camelize(key), value)
     }
   } else {
     for (const key in next) {
