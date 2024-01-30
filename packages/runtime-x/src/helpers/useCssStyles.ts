@@ -153,6 +153,7 @@ export function parseClassList(
   el: UniXElement | null = null
 ) {
   return parseClassListWithStyleSheet(classList, parseStyleSheet(instance), el)
+    .styles
 }
 
 export function parseStyleSheet({
