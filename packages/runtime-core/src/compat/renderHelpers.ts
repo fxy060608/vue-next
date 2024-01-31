@@ -4,9 +4,9 @@ import {
   hyphenate,
   isArray,
   isObject,
-  isReservedProp,
-  normalizeClass
+  isReservedProp
 } from '@vue/shared'
+import { normalizeClass } from '@dcloudio/uni-shared'
 import { ComponentInternalInstance } from '../component'
 import { Slot } from '../componentSlots'
 import { createSlots } from '../helpers/createSlots'

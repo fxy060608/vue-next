@@ -1,7 +1,5 @@
 import { escapeHtml, isSVGTag, stringifyStyle } from '@vue/shared'
 import {
-  normalizeClass,
-  normalizeStyle,
   propsToAttrMap,
   isString,
   isOn,
@@ -10,6 +8,7 @@ import {
   includeBooleanAttr,
   makeMap
 } from '@vue/shared'
+import { normalizeClass, normalizeStyle } from '@dcloudio/uni-shared'
 
 // leading comma for empty string ""
 const shouldIgnoreProp = makeMap(

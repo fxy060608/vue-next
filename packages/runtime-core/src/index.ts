@@ -299,11 +299,13 @@ export {
   toDisplayString,
   camelize,
   capitalize,
-  toHandlerKey,
+  toHandlerKey
+} from '@vue/shared'
+export {
   normalizeProps,
   normalizeClass,
   normalizeStyle
-} from '@vue/shared'
+} from '@dcloudio/uni-shared'
 
 // For test-utils
 export { transformVNodeArgs } from './vnode'

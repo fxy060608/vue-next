@@ -5,13 +5,12 @@ import {
   isObject,
   EMPTY_ARR,
   extend,
-  normalizeClass,
-  normalizeStyle,
   PatchFlags,
   ShapeFlags,
   SlotFlags,
   isOn
 } from '@vue/shared'
+import { normalizeClass, normalizeStyle } from '@dcloudio/uni-shared'
 import {
   ComponentInternalInstance,
   Data,
