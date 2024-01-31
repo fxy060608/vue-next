@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/vuejs/core/tree/main/packages/compiler-dom#readme",
   "dependencies": {
+    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
     "@vue/shared": "3.2.47",
     "@vue/compiler-core": "3.2.47"
   }

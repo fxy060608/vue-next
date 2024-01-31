@@ -24,13 +24,12 @@ import {
   isKnownHtmlAttr,
   escapeHtml,
   toDisplayString,
-  normalizeClass,
-  normalizeStyle,
   stringifyStyle,
   makeMap,
   isKnownSvgAttr,
   isBooleanAttr
 } from '@vue/shared'
+import { normalizeClass, normalizeStyle } from '@dcloudio/uni-shared'
 import { DOMNamespaces } from '../parserOptions'
 
 export const enum StringifyThresholds {

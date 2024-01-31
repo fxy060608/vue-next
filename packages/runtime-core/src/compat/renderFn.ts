@@ -5,11 +5,10 @@ import {
   isObject,
   isString,
   makeMap,
-  normalizeClass,
-  normalizeStyle,
   ShapeFlags,
   toHandlerKey
 } from '@vue/shared'
+import { normalizeClass, normalizeStyle } from '@dcloudio/uni-shared'
 import {
   Component,
   ComponentInternalInstance,
