@@ -1,4 +1,4 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
 import { getExtraStyle, getExtraStyles } from './node'

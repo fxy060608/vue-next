@@ -1,4 +1,5 @@
 import {
+  IUniNativeElement,
   Element as UniXElement,
   Event as UniXEvent
 } from '@dcloudio/uni-app-x/types/native'
@@ -28,7 +29,7 @@ export function addEventListener(
 }
 
 export function removeEventListener(el: UniXElement, event: string) {
-  el.removeEventListener(event)
+  ;(el as IUniNativeElement).removeEventListener(event)
 }
 
 export function patchEvent(
