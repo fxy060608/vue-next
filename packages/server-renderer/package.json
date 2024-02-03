@@ -35,7 +35,7 @@
     "vue": "3.2.47"
   },
   "dependencies": {
-    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
+    "@dcloudio/uni-shared": "3.0.0-alpha-4000120240201002",
     "@vue/shared": "3.2.47",
     "@vue/compiler-ssr": "3.2.47"
   }
