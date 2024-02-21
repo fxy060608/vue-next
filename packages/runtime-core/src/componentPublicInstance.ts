@@ -227,7 +227,18 @@ const getPublicInstance = (
   i: ComponentInternalInstance | null
 ): ComponentPublicInstance | ComponentInternalInstance['exposed'] | null => {
   if (!i) return null
-  if (isStatefulComponent(i)) return getExposeProxy(i) || i.proxy
+  if (isStatefulComponent(i)) {
+    const p = getExposeProxy(i) || i.proxy
+    if (
+      __X__ &&
+      p &&
+      p.$options &&
+      (p.$options.__reserved || p.$options.rootElement)
+    ) {
+      return getPublicInstance(i.parent)
+    }
+    return p
+  }
   return getPublicInstance(i.parent)
 }
 
