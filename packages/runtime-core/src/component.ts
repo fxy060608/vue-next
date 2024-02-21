@@ -550,9 +550,8 @@ export function createComponentInstance(
     sp: null,
     $waitNativeRender(fn: () => void) {
       // TODO find document by ComponentInternalInstance props
-      const document = __pageManager.findPageById(
-        (this.root.proxy?.$el as UniXElement).pageId
-      )?.document
+      const pageId = (this.root.proxy?.$el as UniXElement)?.pageId
+      const document = pageId && __pageManager.findPageById(pageId)?.document
       if (document) {
         document.waitNativeRender(fn)
       } else {
