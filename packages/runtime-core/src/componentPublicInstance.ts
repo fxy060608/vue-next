@@ -6,7 +6,9 @@ import {
 } from './component'
 import { nextTick, queueJob } from './scheduler'
 import { instanceWatch, WatchOptions, WatchStopHandle } from './apiWatch'
+import { VNode } from './vnode'
 import {
+  ShapeFlags,
   EMPTY_OBJ,
   hasOwn,
   isGloballyWhitelisted,
@@ -218,6 +220,12 @@ export type PublicPropertiesMap = Record<
   (i: ComponentInternalInstance) => any
 >
 
+function isUniBuiltInComponentInstance(
+  p: Record<string, any> | ComponentPublicInstance | null
+): p is ComponentPublicInstance {
+  return p && p.$options && (p.$options.__reserved || p.$options.rootElement)
+}
+
 /**
  * #2437 In Vue 3, functional components do not have a public instance proxy but
  * they exist in the internal parent chain. For code that relies on traversing
@@ -229,12 +237,7 @@ const getPublicInstance = (
   if (!i) return null
   if (isStatefulComponent(i)) {
     const p = getExposeProxy(i) || i.proxy
-    if (
-      __X__ &&
-      p &&
-      p.$options &&
-      (p.$options.__reserved || p.$options.rootElement)
-    ) {
+    if (__X__ && isUniBuiltInComponentInstance(p)) {
       return getPublicInstance(i.parent)
     }
     return p
@@ -257,7 +260,32 @@ export const publicPropertiesMap: PublicPropertiesMap =
     $root: i => getPublicInstance(i.root),
     $emit: i => i.emit,
     $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
-    $forceUpdate: i => i.f || (i.f = () => queueJob(i.update)),
+    $forceUpdate: i =>
+      i.f ||
+      (i.f = () => {
+        queueJob(i.update)
+        if (!__X__) {
+          return
+        }
+        const subTree = i.subTree
+        if (subTree.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          const vnodes = subTree.children as VNode[]
+          vnodes.forEach(vnode => {
+            if (!vnode.component) {
+              return
+            }
+            const p = getExposeProxy(vnode.component) || vnode.component.proxy
+            if (isUniBuiltInComponentInstance(p)) {
+              p.$forceUpdate()
+            }
+          })
+        } else if (subTree.component) {
+          const p = getExposeProxy(subTree.component) || subTree.component.proxy
+          if (isUniBuiltInComponentInstance(p)) {
+            p.$forceUpdate()
+          }
+        }
+      }),
     $nextTick: i => i.n || (i.n = nextTick.bind(i.proxy!)),
     $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP)
   } as PublicPropertiesMap)
