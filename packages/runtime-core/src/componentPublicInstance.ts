@@ -44,6 +44,7 @@ import { markAttrsAccessed } from './componentRenderUtils'
 import { currentRenderingInstance } from './componentRenderContext'
 import { warn } from './warning'
 import { installCompatInstanceProperties } from './compat/instance'
+import { getCompatChildren } from './compat/instanceChildren'
 
 /**
  * Custom properties added to component instances in any way and can be accessed through `this`
@@ -264,6 +265,10 @@ export const publicPropertiesMap: PublicPropertiesMap =
 
 if (__COMPAT__) {
   installCompatInstanceProperties(publicPropertiesMap)
+}
+
+if (__X__ && !publicPropertiesMap.$children) {
+  publicPropertiesMap.$children = getCompatChildren
 }
 
 const enum AccessTypes {
