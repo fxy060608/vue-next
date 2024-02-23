@@ -41,11 +41,11 @@ const CLASS_AND_STYLES: Record<string, { class: string[]; style: string[] }> = {
     class: [ATTR_HOVER_CLASS],
     style: []
   },
-  'u-input': {
+  input: {
     class: [ATTR_PLACEHOLDER_CLASS],
     style: [ATTR_PLACEHOLDER_STYLE]
   },
-  'u-textarea': {
+  textarea: {
     class: [ATTR_PLACEHOLDER_CLASS],
     style: [ATTR_PLACEHOLDER_STYLE]
   },
@@ -55,6 +55,9 @@ const CLASS_AND_STYLES: Record<string, { class: string[]; style: string[] }> = {
   }
 }
 
+/**
+ * 类比 vuejs-core 仓库的 runtime-core
+ */
 function transformAttr(
   el: UniXElement,
   key: string,
@@ -70,7 +73,7 @@ function transformAttr(
     if (opts['class'].indexOf(camelized) > -1) {
       return [camelized, parseClassList([value as string], instance, el)]
     }
-    if (opts['style'].indexOf(key) > -1) {
+    if (opts['style'].indexOf(camelized) > -1) {
       if (isString(value)) {
         return [camelized, parseStringStyle(value)]
       }

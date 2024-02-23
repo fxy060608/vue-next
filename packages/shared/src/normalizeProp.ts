@@ -30,6 +30,10 @@ const listDelimiterRE = /;(?![^(]*\))/g
 const propertyDelimiterRE = /:([^]+)/
 const styleCommentRE = /\/\*.*?\*\//gs
 
+/**
+ * 给定 css 字符串，返回一个规范化的 style 对象
+ * eg: 'color: red; background: green;' => { color: 'red', background: 'green' }
+ */
 export function parseStringStyle(cssText: string): NormalizedStyle {
   const ret: NormalizedStyle = {}
   cssText
