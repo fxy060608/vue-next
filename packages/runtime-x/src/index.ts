@@ -53,7 +53,7 @@ export {
 // **Internal** DOM-only runtime directive helpers
 // export { vModelText } from './directives/vModel'
 export { withModifiers, withKeys } from './directives/vOn'
-// export { vShow } from './directives/vShow'
+export { vShow } from './directives/vShow'
 
 // re-export everything from core
 // h, Component, reactivity API, nextTick, flags & types
