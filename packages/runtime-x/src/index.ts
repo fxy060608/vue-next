@@ -51,7 +51,7 @@ export {
   parseClassList
 } from './helpers/useCssStyles'
 // **Internal** DOM-only runtime directive helpers
-// export { vModelText } from './directives/vModel'
+export { vModelText } from './directives/vModel'
 export { withModifiers, withKeys } from './directives/vOn'
 export { vShow } from './directives/vShow'
 
