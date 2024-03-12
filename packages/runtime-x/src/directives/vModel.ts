@@ -1,5 +1,9 @@
 import { ObjectDirective, VNode } from '@vue/runtime-core'
 import { isArray, invokeArrayFns } from '@vue/shared'
+import {
+  Element as UniXElement,
+  InputEvent as UniXInputEvent
+} from '@dcloudio/uni-app-x/types/native'
 
 type AssignerFn = (value: any) => void
 
@@ -9,10 +13,10 @@ const getModelAssigner = (vnode: VNode): AssignerFn => {
 }
 
 export const vModelText: ObjectDirective = {
-  created(el, _binding, _vnode, _prevVNode) {
+  created(el: UniXElement, _binding, _vnode, _prevVNode) {
     const trigger = getModelAssigner(_vnode)
-    el.addEventListener('input', (_: any) => {
-      trigger(el.getAnyAttribute('value')!)
+    el.addEventListener('input', (event: UniXInputEvent) => {
+      trigger(event.detail.value)
     })
   },
   mounted(el, _binding, _vnode, _prevVNode) {
