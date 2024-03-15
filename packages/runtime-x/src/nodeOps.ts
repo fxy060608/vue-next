@@ -1,22 +1,18 @@
 import {
   Element as UniXElement,
-  IPage,
-  IDocument
+  IDocument as UniXDocument
 } from '@dcloudio/uni-app-x/types/native'
 
 import { RendererOptions } from '@vue/runtime-core'
 import { updateClassStyles } from './modules/class'
 
-let rootPage: IPage | null = null
-let rootDocument: IDocument | null = null
+let rootDocument: UniXDocument
 export function getDocument() {
-  if (!rootPage) {
-    rootPage = __pageManager.createPage('', '', new Map())
-  }
-  if (!rootDocument) {
-    rootDocument = rootPage.document
-  }
   return rootDocument
+}
+
+export function setDocument(document: UniXDocument) {
+  rootDocument = document
 }
 
 /**

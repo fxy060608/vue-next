@@ -1,5 +1,3 @@
-import { IPageManager } from '@dcloudio/uni-app-x/types/native'
-
 declare module '@dcloudio/uni-app-x/types/native' {
   interface UniElement {
     pageId: string
@@ -11,6 +9,4 @@ declare module '@dcloudio/uni-app-x/types/native' {
   }
 }
 
-declare global {
-  const __pageManager: IPageManager
-}
+export {}

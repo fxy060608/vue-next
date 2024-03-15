@@ -4,11 +4,14 @@ import {
   CreateAppFunction,
   Renderer
 } from '@vue/runtime-core'
-import { getDocument, nodeOps } from './nodeOps'
+import { setDocument, nodeOps } from './nodeOps'
 import { patchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
 import { extend } from '@vue/shared'
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import {
+  Element as UniXElement,
+  IDocument as UniXDocument
+} from '@dcloudio/uni-app-x/types/native'
 
 const rendererOptions = extend({ patchProp }, nodeOps)
 
@@ -32,11 +35,9 @@ export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 
   const { mount } = app
-  app.mount = (container: string | UniXElement): any => {
-    if (container === '#app') {
-      container = getDocument().body
-    }
-    return mount(container)
+  app.mount = (container: UniXDocument): any => {
+    setDocument(container)
+    return mount(container.body)
   }
 
   return app

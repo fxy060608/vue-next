@@ -71,7 +71,7 @@ import {
 } from './compat/compatConfig'
 import { SchedulerJob } from './scheduler'
 import { LifecycleHooks } from './enums'
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import { IPage as UniXPage } from '@dcloudio/uni-app-x/types/native'
 
 export type Data = Record<string, unknown>
 
@@ -549,9 +549,13 @@ export function createComponentInstance(
     ec: null,
     sp: null,
     $waitNativeRender(fn: () => void) {
-      // TODO find document by ComponentInternalInstance props
-      const pageId = (this.root.proxy?.$el as UniXElement)?.pageId
-      const document = pageId && __pageManager.findPageById(pageId)?.document
+      const document = (
+        this.proxy as
+          | (ComponentPublicInstance & {
+              $nativePage: UniXPage
+            })
+          | null
+      )?.$nativePage?.document
       if (document) {
         document.waitNativeRender(fn)
       } else {
