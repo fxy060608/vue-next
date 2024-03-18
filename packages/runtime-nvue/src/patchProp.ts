@@ -1,6 +1,6 @@
-import { NVueElement } from '@dcloudio/uni-shared'
+import type { NVueElement } from '@dcloudio/uni-shared'
 
-import { RendererOptions } from '@vue/runtime-core'
+import type { RendererOptions } from '@vue/runtime-core'
 import { isModelListener, isOn } from '@vue/shared'
 import { patchAttr } from './modules/attrs'
 import { patchClass } from './modules/class'
@@ -18,12 +18,12 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   key,
   prevValue,
   nextValue,
-  isSVG = false,
+  namespace,
   prevChildren,
   parentComponent,
   parentSuspense,
   unmountChildren,
-  hostInstance
+  hostInstance,
 ) => {
   if (key === 'class') {
     patchClass(el, prevValue, nextValue, hostInstance || parentComponent)
