@@ -1,13 +1,13 @@
 import {
-  nextTick as nextVueTick,
+  type ComponentInternalInstance,
+  ErrorCodes,
   callWithErrorHandling,
-  ComponentInternalInstance,
-  ErrorCodes
+  nextTick as nextVueTick,
 } from '@vue/runtime-core'
 
 import { queue } from '../../runtime-core/src/scheduler'
 
-import { MPInstance } from './patch'
+import type { MPInstance } from './patch'
 
 function hasComponentEffect(instance: ComponentInternalInstance) {
   return queue.includes(instance.update)
@@ -20,6 +20,7 @@ export function flushCallbacks(instance: ComponentInternalInstance) {
   if (callbacks && callbacks.length) {
     if (process.env.UNI_DEBUG) {
       const mpInstance = ctx.$scope as MPInstance
+      /* eslint-disable-next-line no-console */
       console.log(
         '[' +
           +new Date() +
@@ -29,7 +30,7 @@ export function flushCallbacks(instance: ComponentInternalInstance) {
           instance.uid +
           ']:flushCallbacks[' +
           callbacks.length +
-          ']'
+          ']',
       )
     }
     const copies = callbacks.slice(0)
@@ -42,12 +43,13 @@ export function flushCallbacks(instance: ComponentInternalInstance) {
 
 export function nextTick(
   instance: ComponentInternalInstance,
-  fn?: () => void
+  fn?: () => void,
 ): Promise<void> {
   const ctx = instance.ctx
   if (!ctx.__next_tick_pending && !hasComponentEffect(instance)) {
     if (process.env.UNI_DEBUG) {
       const mpInstance = ctx.$scope as MPInstance
+      /* eslint-disable-next-line no-console */
       console.log(
         '[' +
           +new Date() +
@@ -55,13 +57,14 @@ export function nextTick(
           (mpInstance.is || mpInstance.route) +
           '][' +
           instance.uid +
-          ']:nextVueTick'
+          ']:nextVueTick',
       )
     }
     return nextVueTick(fn && fn.bind(instance.proxy))
   }
   if (process.env.UNI_DEBUG) {
     const mpInstance = ctx.$scope as MPInstance
+    /* eslint-disable-next-line no-console */
     console.log(
       '[' +
         +new Date() +
@@ -69,7 +72,7 @@ export function nextTick(
         (mpInstance.is || mpInstance.route) +
         '][' +
         instance.uid +
-        ']:nextMPTick'
+        ']:nextMPTick',
     )
   }
   let _resolve: any
@@ -81,7 +84,7 @@ export function nextTick(
       callWithErrorHandling(
         fn.bind(instance.proxy),
         instance,
-        ErrorCodes.SCHEDULER
+        ErrorCodes.SCHEDULER,
       )
     } else if (_resolve) {
       _resolve(instance.proxy)

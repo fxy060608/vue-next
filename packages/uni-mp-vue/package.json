@@ -24,6 +24,10 @@
   },
   "dependencies": {
     "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared",
-    "@vue/shared": "^3.2.39"
+    "@vue/shared": "workspace:*",
+    "@vue/compiler-dom": "workspace:*",
+    "@vue/runtime-dom": "workspace:*",
+    "@vue/compiler-sfc": "workspace:*",
+    "@vue/server-renderer": "workspace:*"
   }
 }

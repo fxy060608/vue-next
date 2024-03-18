@@ -3,7 +3,7 @@ import { unwrapper } from './utils'
 
 function clone(
   src: object,
-  seen: WeakMap<object, unknown> | Map<object, unknown>
+  seen: WeakMap<object, unknown> | Map<object, unknown>,
 ) {
   src = unwrapper(src)
   const type = typeof src

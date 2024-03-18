@@ -1,71 +1,71 @@
 import {
+  NOOP,
   ShapeFlags,
   invokeArrayFns,
-  NOOP,
-  isOn,
   isModelListener,
-  isString
+  isOn,
+  isString,
 } from '@vue/shared'
 
-import { pauseTracking, ReactiveEffect, resetTracking } from '@vue/reactivity'
+import { ReactiveEffect, pauseTracking, resetTracking } from '@vue/reactivity'
 
 import {
-  warn,
-  VNodeProps,
-  ComponentOptions,
+  type ComponentOptions,
   ErrorCodes,
+  type VNodeProps,
+  devtoolsComponentAdded,
+  devtoolsComponentRemoved,
+  devtoolsComponentUpdated,
+  devtoolsInitApp,
+  endMeasure,
   handleError,
   onBeforeUnmount,
-  version,
-  devtoolsInitApp,
   setDevtoolsHook,
   startMeasure,
-  endMeasure,
-  devtoolsComponentUpdated,
-  devtoolsComponentRemoved,
-  devtoolsComponentAdded
+  version,
+  warn,
 } from '@vue/runtime-core'
-import { VNode } from '@vue/runtime-core'
+import type { VNode } from '@vue/runtime-core'
 import { nextTick, queuePostFlushCb } from '@vue/runtime-core'
-import { ComponentInternalInstance } from '@vue/runtime-core'
-import { ComponentPublicInstance } from '@vue/runtime-core'
+import type { ComponentInternalInstance } from '@vue/runtime-core'
+import type { ComponentPublicInstance } from '@vue/runtime-core'
 import { getValueByDataPath } from '@dcloudio/uni-shared'
 import { createAppAPI } from '../../runtime-core/src/apiCreateApp'
 import {
+  popWarningContext,
   pushWarningContext,
-  popWarningContext
 } from '../../runtime-core/src/warning'
 import {
+  type Component,
+  type Data,
+  type FunctionalComponent,
   createComponentInstance,
+  getExposeProxy,
   setupComponent,
-  Component,
-  Data,
-  FunctionalComponent,
-  getExposeProxy
 } from '../../runtime-core/src/component'
 
 import {
+  type SchedulerJob,
   flushPreFlushCbs,
   queueJob,
-  SchedulerJob
 } from '../../runtime-core/src/scheduler'
 import { setCurrentRenderingInstance } from '../../runtime-core/src/componentRenderContext'
 
-import { MPInstance, patch } from './patch'
+import { type MPInstance, patch } from './patch'
 import { initAppConfig } from './appConfig'
 import { onApplyOptions } from './componentOptions'
 import { diff } from '.'
-import { setRef, TemplateRef } from './rendererTemplateRef'
-import { NormalizedProps } from 'packages/runtime-core/src/componentProps'
+import { type TemplateRef, setRef } from './rendererTemplateRef'
+import type { NormalizedProps } from 'packages/runtime-core/src/componentProps'
 
 export enum MPType {
   APP = 'app',
   PAGE = 'page',
-  COMPONENT = 'component'
+  COMPONENT = 'component',
 }
 
 declare function createMiniProgramApp(
-  instance: ComponentPublicInstance
+  instance: ComponentPublicInstance,
 ): ComponentPublicInstance
 
 export interface CreateComponentOptions {
@@ -76,7 +76,7 @@ export interface CreateComponentOptions {
   parentComponent: ComponentInternalInstance | null
   onBeforeSetup?: (
     instance: ComponentInternalInstance,
-    options: CreateComponentOptions
+    options: CreateComponentOptions,
   ) => void
 }
 
@@ -84,7 +84,7 @@ export const queuePostRenderEffect = queuePostFlushCb
 
 function mountComponent(
   initialVNode: VNode,
-  options: CreateComponentOptions
+  options: CreateComponentOptions,
 ): ComponentPublicInstance {
   const instance: ComponentInternalInstance = (initialVNode.component =
     createComponentInstance(initialVNode, options.parentComponent, null))
@@ -162,11 +162,11 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     appContext: {
       app: {
         config: {
-          globalProperties: { pruneComponentPropsCache }
-        }
-      }
+          globalProperties: { pruneComponentPropsCache },
+        },
+      },
     },
-    inheritAttrs
+    inheritAttrs,
   } = instance
   // template refs
   ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
@@ -192,14 +192,14 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
         props,
         setupState,
         data,
-        ctx
+        ctx,
       )
     } else {
       fallthroughAttrs(
         inheritAttrs,
         props,
         propsOptions,
-        Component.props ? attrs : getFunctionalFallthrough(attrs)
+        Component.props ? attrs : getFunctionalFallthrough(attrs),
       )
       // functional
       const render = Component as FunctionalComponent
@@ -222,11 +222,11 @@ function fallthroughAttrs(
   inheritAttrs?: boolean,
   props?: Data,
   propsOptions?: NormalizedProps,
-  fallthroughAttrs?: Data
+  fallthroughAttrs?: Data,
 ) {
   if (props && fallthroughAttrs && inheritAttrs !== false) {
     const keys = Object.keys(fallthroughAttrs).filter(
-      key => key !== 'class' && key !== 'style'
+      key => key !== 'class' && key !== 'style',
     )
     if (!keys.length) {
       return
@@ -258,7 +258,7 @@ interface ComponentInternalInstanceScopedSlots
 }
 
 function componentUpdateScopedSlotsFn(
-  this: ComponentInternalInstanceScopedSlots
+  this: ComponentInternalInstanceScopedSlots,
 ) {
   const scopedSlotsData = this.$scopedSlotsData
   if (!scopedSlotsData || scopedSlotsData.length === 0) {
@@ -279,7 +279,7 @@ function componentUpdateScopedSlotsFn(
     } else {
       const diffScopedSlotData: Record<string, any> = diff(
         data,
-        oldScopedSlotData[index]
+        oldScopedSlotData[index],
       )
       Object.keys(diffScopedSlotData).forEach(name => {
         diffData[diffPath + '.' + name] = diffScopedSlotData[name]
@@ -289,6 +289,7 @@ function componentUpdateScopedSlotsFn(
   scopedSlotsData.length = 0
   if (Object.keys(diffData).length) {
     if (process.env.UNI_DEBUG) {
+      /* eslint-disable-next-line no-console */
       console.log(
         '[' +
           +new Date() +
@@ -299,7 +300,7 @@ function componentUpdateScopedSlotsFn(
           '][耗时' +
           (Date.now() - start) +
           ']作用域插槽差量更新',
-        JSON.stringify(diffData)
+        JSON.stringify(diffData),
       )
     }
     mpInstance.setData(diffData)
@@ -308,14 +309,14 @@ function componentUpdateScopedSlotsFn(
 
 function toggleRecurse(
   { effect, update }: ComponentInternalInstance,
-  allowed: boolean
+  allowed: boolean,
 ) {
   effect.allowRecurse = update.allowRecurse = allowed
 }
 
 function setupRenderEffect(instance: ComponentInternalInstance) {
   const updateScopedSlots = componentUpdateScopedSlotsFn.bind(
-    instance as ComponentInternalInstanceScopedSlots
+    instance as ComponentInternalInstanceScopedSlots,
   )
 
   ;(instance as ComponentInternalInstanceScopedSlots).$updateScopedSlots = () =>
@@ -373,11 +374,16 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
   // create reactive effect for rendering
   const effect = (instance.effect = new ReactiveEffect(
     componentUpdateFn,
-    () => queueJob(instance.update),
-    instance.scope // track it in component's effect scope
+    NOOP,
+    () => queueJob(update),
+    instance.scope, // track it in component's effect scope
   ))
 
-  const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
+  const update: SchedulerJob = (instance.update = () => {
+    if (effect.dirty) {
+      effect.run()
+    }
+  })
   update.id = instance.uid
   // allowRecurse
   // #1801, #2043 component render effects should allow recursive updates
@@ -390,7 +396,7 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
     effect.onTrigger = instance.rtg
       ? e => invokeArrayFns(instance.rtg!, e)
       : void 0
-    // @ts-ignore (for scheduler)
+    //  (for scheduler)
     update.ownerInstance = instance
   }
 
@@ -462,10 +468,10 @@ export function createVueApp(rootComponent: Component, rootProps = null) {
 
   const createComponent: (
     initialVNode: VNode,
-    options: CreateComponentOptions
+    options: CreateComponentOptions,
   ) => ComponentPublicInstance = function createComponent(
     initialVNode,
-    options
+    options,
   ) {
     return mountComponent(createVNode(initialVNode), options)
   }
@@ -485,8 +491,8 @@ export function createVueApp(rootComponent: Component, rootProps = null) {
         mpInstance: null,
         parentComponent: null,
         slots: [],
-        props: null
-      }
+        props: null,
+      },
     )
     app._instance = instance.$
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {

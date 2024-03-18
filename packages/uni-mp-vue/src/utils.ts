@@ -1,9 +1,9 @@
 import { unref } from '@vue/reactivity'
-import {
+import type {
   AsyncComponentLoader,
   AsyncComponentOptions,
   Component,
-  ComponentPublicInstance
+  ComponentPublicInstance,
 } from '@vue/runtime-core'
 
 export function unwrapper<T>(target: T) {
@@ -11,7 +11,7 @@ export function unwrapper<T>(target: T) {
 }
 
 export function defineAsyncComponent<
-  T extends Component = { new (): ComponentPublicInstance }
+  T extends Component = { new (): ComponentPublicInstance },
 >(source: AsyncComponentLoader<T> | AsyncComponentOptions<T>) {
   console.error('defineAsyncComponent is unsupported')
 }

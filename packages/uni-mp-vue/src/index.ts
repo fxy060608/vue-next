@@ -6,5 +6,5 @@ export function createVNode() {}
 export {
   devtoolsComponentUpdated,
   devtoolsComponentRemoved,
-  devtoolsComponentAdded
+  devtoolsComponentAdded,
 } from '@vue/runtime-core'

@@ -1,15 +1,12 @@
 export { createVueApp } from './renderer'
 // vue-global-api
 export { defineAsyncComponent } from './utils'
-export { logError } from 'packages/runtime-core/src/errorHandling'
-export { injectHook } from 'packages/runtime-core/src/apiLifecycle'
-export {
-  getExposeProxy,
-  isInSSRComponentSetup
-} from 'packages/runtime-core/src/component'
-export { setCurrentRenderingInstance } from 'packages/runtime-core/src/componentRenderContext'
-export { updateProps } from 'packages/runtime-core/src/componentProps'
-export { invalidateJob, hasQueueJob } from 'packages/runtime-core/src/scheduler'
+export { logError } from '@vue/runtime-core'
+export { injectHook } from '@vue/runtime-core'
+export { getExposeProxy, isInSSRComponentSetup } from '@vue/runtime-core'
+export { setCurrentRenderingInstance } from '@vue/runtime-core'
+export { updateProps } from '@vue/runtime-core'
+export { invalidateJob, hasQueueJob } from '@vue/runtime-core'
 export { EMPTY_OBJ } from '@vue/shared'
 export { setTemplateRef } from './rendererTemplateRef'
 // @vue/reactivity
@@ -37,7 +34,7 @@ export {
   toRef,
   toRefs,
   triggerRef,
-  unref
+  unref,
 } from '@vue/reactivity'
 
 export {
@@ -98,7 +95,7 @@ export {
   withScopeId,
   // vue-i18n 使用到了
   Text,
-  Fragment
+  Fragment,
 } from '@vue/runtime-core'
 export { useCssModule } from '@vue/runtime-dom'
 export { useCssVars } from './helpers/useCssVars'

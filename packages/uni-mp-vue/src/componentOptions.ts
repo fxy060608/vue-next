@@ -1,18 +1,18 @@
-import {
-  ComponentOptions,
+import type {
   ComponentInternalInstance,
-  ComponentPublicInstance
+  ComponentOptions,
+  ComponentPublicInstance,
 } from '@vue/runtime-core'
 
 export function onApplyOptions(
   options: ComponentOptions,
   instance: ComponentInternalInstance,
-  publicThis: ComponentPublicInstance
+  publicThis: ComponentPublicInstance,
 ) {
   instance.appContext.config.globalProperties.$applyOptions(
     options,
     instance,
-    publicThis
+    publicThis,
   )
   const computedOptions = options.computed
   if (computedOptions) {

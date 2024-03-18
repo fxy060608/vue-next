@@ -1,7 +1,7 @@
 import {
+  type ComponentInternalInstance,
   getCurrentInstance,
   warn,
-  ComponentInternalInstance
 } from '@vue/runtime-core'
 /**
  * Runtime helper for SFC's CSS variable injection feature.
@@ -22,7 +22,7 @@ export function useCssVars(getter: (ctx: any) => Record<string, string>) {
 
 function initCssVarsRender(
   instance: ComponentInternalInstance,
-  getter: (ctx: any) => Record<string, string>
+  getter: (ctx: any) => Record<string, string>,
 ) {
   instance.ctx.__cssVars = () => {
     const vars = getter(instance.proxy!)

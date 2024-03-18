@@ -62,7 +62,7 @@ function _diff(current: any, pre: any, path: string, result: any) {
             setResult(
               result,
               (path == '' ? '' : path + '.') + key,
-              currentValue
+              currentValue,
             )
           }
         } else if (currentType == ARRAYTYPE) {
@@ -70,14 +70,14 @@ function _diff(current: any, pre: any, path: string, result: any) {
             setResult(
               result,
               (path == '' ? '' : path + '.') + key,
-              currentValue
+              currentValue,
             )
           } else {
             if (currentValue.length < preValue.length) {
               setResult(
                 result,
                 (path == '' ? '' : path + '.') + key,
-                currentValue
+                currentValue,
               )
             } else {
               currentValue.forEach((item: any, index: number) => {
@@ -85,7 +85,7 @@ function _diff(current: any, pre: any, path: string, result: any) {
                   item,
                   preValue[index],
                   (path == '' ? '' : path + '.') + key + '[' + index + ']',
-                  result
+                  result,
                 )
               })
             }
@@ -98,7 +98,7 @@ function _diff(current: any, pre: any, path: string, result: any) {
             setResult(
               result,
               (path == '' ? '' : path + '.') + key,
-              currentValue
+              currentValue,
             )
           } else {
             for (let subKey in currentValue) {
@@ -106,7 +106,7 @@ function _diff(current: any, pre: any, path: string, result: any) {
                 currentValue[subKey],
                 preValue[subKey],
                 (path == '' ? '' : path + '.') + key + '.' + subKey,
-                result
+                result,
               )
             }
           }

@@ -1,28 +1,33 @@
 import {
-  ConcreteComponent,
-  Data,
+  type Component,
+  type ComponentInternalInstance,
+  type ConcreteComponent,
+  type Data,
+  // getExposeProxy,
   validateComponentName,
-  Component,
-  ComponentInternalInstance
 } from './component'
-import {
+import type {
   ComponentOptions,
   MergedComponentOptions,
-  RuntimeCompilerOptions
+  RuntimeCompilerOptions,
 } from './componentOptions'
-import {
+import type {
   ComponentCustomProperties,
-  ComponentPublicInstance
+  ComponentPublicInstance,
 } from './componentPublicInstance'
-import { Directive, validateDirectiveName } from './directives'
-import { RootRenderFunction } from './renderer'
-import { InjectionKey } from './apiInject'
+import { type Directive, validateDirectiveName } from './directives'
+import type { ElementNamespace, RootRenderFunction } from './renderer'
+import type { InjectionKey } from './apiInject'
 import { warn } from './warning'
-import { RootHydrateFunction } from './hydration'
-import { isFunction, NO, isObject } from '@vue/shared'
+// import { type VNode, cloneVNode, createVNode } from './vnode'
+import type { RootHydrateFunction } from './hydration'
+// import { devtoolsInitApp, devtoolsUnmountApp } from './devtools'
+import { NO, extend, isFunction, isObject } from '@vue/shared'
 import { version } from '.'
-import { NormalizedPropsOptions } from './componentProps'
-import { ObjectEmitsOptions } from './componentEmits'
+// import { installAppCompatProperties } from './compat/global'
+import type { NormalizedPropsOptions } from './componentProps'
+import type { ObjectEmitsOptions } from './componentEmits'
+import type { DefineComponent } from './apiDefineComponent'
 
 export interface App<HostElement = any> {
   version: string
@@ -36,16 +41,24 @@ export interface App<HostElement = any> {
 
   mixin(mixin: ComponentOptions): this
   component(name: string): Component | undefined
-  component(name: string, component: Component): this
-  directive(name: string): Directive | undefined
-  directive(name: string, directive: Directive): this
+  component(name: string, component: Component | DefineComponent): this
+  directive<T = any, V = any>(name: string): Directive<T, V> | undefined
+  directive<T = any, V = any>(name: string, directive: Directive<T, V>): this
   mount(
     rootContainer: HostElement | string,
     isHydrate?: boolean,
-    isSVG?: boolean
+    namespace?: boolean | ElementNamespace,
   ): ComponentPublicInstance
   unmount(): void
   provide<T>(key: InjectionKey<T> | string, value: T): this
+
+  /**
+   * Runs a function with the app as active instance. This allows using of `inject()` within the function to get access
+   * to variables provided via `app.provide()`.
+   *
+   * @param fn - function to run with the app as active instance
+   */
+  runWithContext<T>(fn: () => T): T
 
   // internal, but we need to expose these for the server-renderer and devtools
   _uid: number
@@ -71,7 +84,7 @@ export type OptionMergeFunction = (to: unknown, from: unknown) => any
 
 export interface AppConfig {
   // @private
-  readonly isNativeTag?: (tag: string) => boolean
+  readonly isNativeTag: (tag: string) => boolean
 
   performance: boolean
   optionMergeStrategies: Record<string, OptionMergeFunction>
@@ -79,12 +92,12 @@ export interface AppConfig {
   errorHandler?: (
     err: unknown,
     instance: ComponentPublicInstance | null,
-    info: string
+    info: string,
   ) => void
   warnHandler?: (
     msg: string,
     instance: ComponentPublicInstance | null,
-    trace: string
+    trace: string,
   ) => void
 
   /**
@@ -99,10 +112,10 @@ export interface AppConfig {
   isCustomElement?: (tag: string) => boolean
 
   /**
-   * Temporary config for opt-in to unwrap injected refs.
-   * TODO deprecate in 3.3
+   * TODO document for 3.5
+   * Enable warnings for computed getters that recursively trigger itself.
    */
-  unwrapInjectedRef?: boolean
+  warnRecursiveComputed?: boolean
 }
 
 export interface AppContext {
@@ -142,17 +155,19 @@ export interface AppContext {
   filters?: Record<string, Function>
 }
 
-type PluginInstallFunction<Options> = Options extends unknown[]
+type PluginInstallFunction<Options = any[]> = Options extends unknown[]
   ? (app: App, ...options: Options) => any
   : (app: App, options: Options) => any
 
+export type ObjectPlugin<Options = any[]> = {
+  install: PluginInstallFunction<Options>
+}
+export type FunctionPlugin<Options = any[]> = PluginInstallFunction<Options> &
+  Partial<ObjectPlugin<Options>>
+
 export type Plugin<Options = any[]> =
-  | (PluginInstallFunction<Options> & {
-      install?: PluginInstallFunction<Options>
-    })
-  | {
-      install: PluginInstallFunction<Options>
-    }
+  | FunctionPlugin<Options>
+  | ObjectPlugin<Options>
 
 export function createAppContext(): AppContext {
   return {
@@ -164,7 +179,7 @@ export function createAppContext(): AppContext {
       optionMergeStrategies: {},
       errorHandler: undefined,
       warnHandler: undefined,
-      compilerOptions: {}
+      compilerOptions: {},
     },
     mixins: [],
     components: {},
@@ -172,24 +187,24 @@ export function createAppContext(): AppContext {
     provides: Object.create(null),
     optionsCache: new WeakMap(),
     propsCache: new WeakMap(),
-    emitsCache: new WeakMap()
+    emitsCache: new WeakMap(),
   }
 }
 
 export type CreateAppFunction<HostElement> = (
   rootComponent: Component,
-  rootProps?: Data | null
+  rootProps?: Data | null,
 ) => App<HostElement>
 
 let uid = 0
 
 export function createAppAPI<HostElement>(
   render?: RootRenderFunction<HostElement>, // fixed by xxxxxx
-  hydrate?: RootHydrateFunction
+  hydrate?: RootHydrateFunction,
 ): CreateAppFunction<HostElement> {
   return function createApp(rootComponent, rootProps = null) {
     if (!isFunction(rootComponent)) {
-      rootComponent = { ...rootComponent }
+      rootComponent = extend({}, rootComponent)
     }
 
     if (rootProps != null && !isObject(rootProps)) {
@@ -198,7 +213,8 @@ export function createAppAPI<HostElement>(
     }
 
     const context = createAppContext()
-    const installedPlugins = new Set()
+    const installedPlugins = new WeakSet()
+
     // fixed by xxxxxx
     // let isMounted = false
 
@@ -219,7 +235,7 @@ export function createAppAPI<HostElement>(
       set config(v) {
         if (__DEV__) {
           warn(
-            `app.config cannot be replaced. Modify individual options instead.`
+            `app.config cannot be replaced. Modify individual options instead.`,
           )
         }
       },
@@ -236,7 +252,7 @@ export function createAppAPI<HostElement>(
         } else if (__DEV__) {
           warn(
             `A plugin must either be a function or an object with an "install" ` +
-              `function.`
+              `function.`,
           )
         }
         return app
@@ -249,7 +265,7 @@ export function createAppAPI<HostElement>(
           } else if (__DEV__) {
             warn(
               'Mixin has already been applied to target app' +
-                (mixin.name ? `: ${mixin.name}` : '')
+                (mixin.name ? `: ${mixin.name}` : ''),
             )
           }
         } else if (__DEV__) {
@@ -295,14 +311,24 @@ export function createAppAPI<HostElement>(
         if (__DEV__ && (key as string | symbol) in context.provides) {
           warn(
             `App already provides property with key "${String(key)}". ` +
-              `It will be overwritten with the new value.`
+              `It will be overwritten with the new value.`,
           )
         }
 
         context.provides[key as string | symbol] = value
 
         return app
-      }
+      },
+
+      runWithContext(fn) {
+        const lastApp = currentApp
+        currentApp = app
+        try {
+          return fn()
+        } finally {
+          currentApp = lastApp
+        }
+      },
     })
     // fixed by xxxxxx
     // if (__COMPAT__) {
@@ -312,3 +338,9 @@ export function createAppAPI<HostElement>(
     return app
   }
 }
+
+/**
+ * @internal Used to identify the current app when using `inject()` within
+ * `app.runWithContext()`.
+ */
+export let currentApp: App<unknown> | null = null

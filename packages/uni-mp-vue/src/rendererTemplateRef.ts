@@ -1,21 +1,21 @@
 import {
-  ComponentInternalInstance,
-  ComponentPublicInstance,
-  onBeforeUnmount
+  type ComponentInternalInstance,
+  type ComponentPublicInstance,
+  onBeforeUnmount,
 } from '@vue/runtime-core'
-import type { VNodeNormalizedRefAtom } from 'packages/runtime-core/src/vnode'
-import { Data, getExposeProxy } from 'packages/runtime-core/src/component'
+import type { VNodeNormalizedRefAtom } from '@vue/runtime-core'
+import { type Data, getExposeProxy } from '@vue/runtime-core'
 import {
   hasOwn,
   isArray,
   isFunction,
+  isObject,
   isString,
   remove,
-  isObject
 } from '@vue/shared'
 import { isRef, markRaw } from '@vue/reactivity'
-import { warn } from 'packages/runtime-core/src/warning'
-import { MPInstance } from './patch'
+import { warn } from '@vue/runtime-core'
+import type { MPInstance } from './patch'
 import { nextTick } from './nextTick'
 
 export type TemplateRef = Omit<VNodeNormalizedRefAtom, 'i'> & {
@@ -38,7 +38,7 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
   const {
     setupState,
     $templateRefs,
-    ctx: { $scope, $mpPlatform }
+    ctx: { $scope, $mpPlatform },
   } = instance as TemplateRefsComponentInternalInstance
   if ($mpPlatform === 'mp-alipay') {
     return
@@ -48,7 +48,7 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
   }
   if (isUnmount) {
     return $templateRefs.forEach(templateRef =>
-      setTemplateRef(templateRef, null, setupState)
+      setTemplateRef(templateRef, null, setupState),
     )
   }
   const check = $mpPlatform === 'mp-baidu' || $mpPlatform === 'mp-toutiao'
@@ -58,7 +58,7 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
       // 字节小程序 selectAllComponents 可能返回 null
       // https://github.com/dcloudio/uni-app/issues/3954
       ($scope.selectAllComponents('.r') || []).concat(
-        $scope.selectAllComponents('.r-i-f') || []
+        $scope.selectAllComponents('.r-i-f') || [],
       )
     return refs.filter(templateRef => {
       const refValue = findComponentPublicInstance(mpComponents, templateRef.i)
@@ -96,7 +96,7 @@ function toSkip<T extends unknown>(value: T) {
 
 function findComponentPublicInstance(mpComponents: MPInstance[], id: string) {
   const mpInstance = mpComponents.find(
-    com => com && (com.properties || com.props).uI === id
+    com => com && (com.properties || com.props).uI === id,
   )
   if (mpInstance) {
     const vm = mpInstance.$vm
@@ -112,7 +112,7 @@ function findComponentPublicInstance(mpComponents: MPInstance[], id: string) {
 export function setTemplateRef(
   { r, f }: TemplateRef,
   refValue: ComponentPublicInstance | Record<string, any> | null,
-  setupState: Data
+  setupState: Data,
 ) {
   if (isFunction(r)) {
     r(refValue as ComponentPublicInstance, {})

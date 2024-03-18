@@ -1,4 +1,4 @@
-import { AppConfig } from '@vue/runtime-core'
+import type { AppConfig } from '@vue/runtime-core'
 
 import { nextTick } from './nextTick'
 

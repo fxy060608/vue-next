@@ -14,23 +14,23 @@ const SIMPLE_TYPES: PlainObject = {
   nil: null,
   object: { key: 'value' },
   array: [1, 2, 3],
-  fn() {}
+  fn() {},
 }
 
 const COMPLEX_TYPES: PlainObject = {
   array: ['foo', { bar: 'baz' }],
-  object: { foo: { bar: 'baz' } }
+  object: { foo: { bar: 'baz' } },
 }
 
 const circularObj: PlainObject = {
-  foo: { bar: 'baz' }
+  foo: { bar: 'baz' },
 }
 
 circularObj.circular = circularObj
 
 const COMPLEX_CIRCULAR_TYPES: PlainObject = {
   array: [circularObj],
-  object: circularObj
+  object: circularObj,
 }
 
 const UNSUPPORTED_TYPES: PlainObject = {
@@ -52,7 +52,7 @@ const UNSUPPORTED_TYPES: PlainObject = {
   uint8Array: new Uint8Array([12, 15]),
   uint8ClampedArray: new Uint8ClampedArray([12, 15]),
   uint16Array: new Uint16Array([12, 15]),
-  uint32Array: new Uint32Array([12, 15])
+  uint32Array: new Uint32Array([12, 15]),
 }
 
 describe('deepCopy', () => {
@@ -80,7 +80,7 @@ describe('deepCopy', () => {
   test('unsupported', () => {
     Object.keys(UNSUPPORTED_TYPES).forEach(name => {
       const unsupported = {
-        [name]: UNSUPPORTED_TYPES[name]
+        [name]: UNSUPPORTED_TYPES[name],
       }
       const result = deepCopy(unsupported)
       expect(result).not.toBe(unsupported)

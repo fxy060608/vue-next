@@ -1,14 +1,14 @@
-import {
+import type {
   ComponentInternalInstance,
-  ComponentPublicInstance
+  ComponentPublicInstance,
 } from '@vue/runtime-core'
-import { MPType } from './renderer'
+import type { MPType } from './renderer'
 
 import { diff } from './diff'
 import { flushCallbacks } from './nextTick'
 
 import { flushPreFlushCbs } from '../../runtime-core/src/scheduler'
-import { Data } from '../../runtime-core/src/component'
+import type { Data } from '../../runtime-core/src/component'
 import { deepCopy } from './deepCopy'
 export interface MPInstance {
   data: any
@@ -38,7 +38,7 @@ function getMPInstanceData(instance: MPInstance, keys: string[]) {
 export function patch(
   instance: ComponentInternalInstance,
   data: Data,
-  oldData?: Data
+  oldData?: Data,
 ) {
   if (!data) {
     return
@@ -61,6 +61,7 @@ export function patch(
     const diffData = diff(data, oldData || getMPInstanceData(mpInstance, keys))
     if (Object.keys(diffData).length) {
       if (process.env.UNI_DEBUG) {
+        /* eslint-disable-next-line no-console */
         console.log(
           '[' +
             +new Date() +
@@ -71,7 +72,7 @@ export function patch(
             '][耗时' +
             (Date.now() - start) +
             ']差量更新',
-          JSON.stringify(diffData)
+          JSON.stringify(diffData),
         )
       }
       ctx.__next_tick_pending = true
