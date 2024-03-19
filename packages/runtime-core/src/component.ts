@@ -550,7 +550,7 @@ export function createComponentInstance(
     sp: null,
     $waitNativeRender(fn: () => void) {
       const document = (
-        this.proxy as
+        this.proxy?.$root as
           | (ComponentPublicInstance & {
               $nativePage: UniXPage
             })
