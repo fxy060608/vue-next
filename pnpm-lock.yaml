@@ -385,8 +385,20 @@ importers:
       '@dcloudio/uni-shared':
         specifier: /Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared
         version: link:../../../uni-app-next/packages/uni-shared
+      '@vue/compiler-dom':
+        specifier: workspace:*
+        version: link:../compiler-dom
+      '@vue/compiler-sfc':
+        specifier: workspace:*
+        version: link:../compiler-sfc
+      '@vue/runtime-dom':
+        specifier: workspace:*
+        version: link:../runtime-dom
+      '@vue/server-renderer':
+        specifier: workspace:*
+        version: link:../server-renderer
       '@vue/shared':
-        specifier: ^3.2.39
+        specifier: workspace:*
         version: link:../shared
 
   packages/vue:
