@@ -1,19 +1,19 @@
-import { UniNode } from '@dcloudio/uni-shared'
+import type { UniNode } from '@dcloudio/uni-shared'
 
 import {
+  type App,
+  type CreateAppFunction,
+  type Renderer,
+  type RootRenderFunction,
   createRenderer,
-  RootRenderFunction,
-  CreateAppFunction,
-  Renderer,
-  App,
-  version
+  version,
 } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
-import { patchProp, forcePatchProp } from './patchProp'
+import { forcePatchProp, patchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
-import { isHTMLTag, isSVGTag, extend, isString } from '@vue/shared'
+import { extend, isHTMLTag, isSVGTag, isString } from '@vue/shared'
 import { createComment } from '@vue/uni-app-service-vue'
-import { devtoolsInitApp } from 'packages/runtime-core/src/devtools'
+import { devtoolsInitApp } from '@vue/runtime-core'
 
 export * from './dom'
 
@@ -64,7 +64,7 @@ function injectNativeTagCheck(app: App) {
   // this is used for component name validation (dev only)
   Object.defineProperty(app.config, 'isNativeTag', {
     value: (tag: string) => isHTMLTag(tag) || isSVGTag(tag),
-    writable: false
+    writable: false,
   })
 }
 
@@ -73,10 +73,10 @@ export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
 
 // DOM-only components
-export { Transition, TransitionProps } from './components/Transition'
+export { Transition, type TransitionProps } from './components/Transition'
 export {
   TransitionGroup,
-  TransitionGroupProps
+  type TransitionGroupProps,
 } from './components/TransitionGroup'
 
 // **Internal** DOM-only runtime directive helpers

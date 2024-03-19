@@ -1,9 +1,9 @@
 import {
-  UniElement,
-  UniTextNode,
   UniCommentNode,
+  UniElement,
   UniInputElement,
-  UniTextAreaElement
+  UniTextAreaElement,
+  UniTextNode,
 } from '@dcloudio/uni-shared'
 
 export function createElement(tagName: string, container?: UniElement) {

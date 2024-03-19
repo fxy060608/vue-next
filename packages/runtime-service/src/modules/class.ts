@@ -1,4 +1,4 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import type { UniElement } from '@dcloudio/uni-shared'
 
 // compiler should normalize class + :class bindings on the same element
 // into a single binding ['staticClass', dynamic]

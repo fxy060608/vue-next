@@ -1,6 +1,6 @@
-import { UniNode, UniElement } from '@dcloudio/uni-shared'
+import type { UniElement, UniNode } from '@dcloudio/uni-shared'
 
-import { RendererOptions } from '@vue/runtime-core'
+import type { RendererOptions } from '@vue/runtime-core'
 import { createComment, createElement, createTextNode } from './dom'
 
 let tempContainer: UniElement
@@ -81,5 +81,5 @@ export const nodeOps: Omit<
       node = temp.firstChild as UniElement
     }
     return [first, last]
-  }
+  },
 }

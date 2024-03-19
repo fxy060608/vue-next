@@ -1,8 +1,8 @@
-import { UniInputElement, UniTextAreaElement } from '@dcloudio/uni-shared'
+import type { UniInputElement, UniTextAreaElement } from '@dcloudio/uni-shared'
 
-import { ObjectDirective, VNode } from '@vue/runtime-core'
+import type { ObjectDirective, VNode } from '@vue/runtime-core'
 import { addEventListener } from '../modules/events'
-import { isArray, invokeArrayFns, toNumber } from '@vue/shared'
+import { invokeArrayFns, isArray, toNumber } from '@vue/shared'
 
 type AssignerFn = (value: any) => void
 
@@ -41,7 +41,7 @@ export const vModelText: ModelDirective<UniInputElement | UniTextAreaElement> =
       if (el.value !== newValue) {
         el.value = newValue
       }
-    }
+    },
   }
 
 export const vModelDynamic = vModelText

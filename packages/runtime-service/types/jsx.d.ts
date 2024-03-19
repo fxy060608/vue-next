@@ -26,8 +26,8 @@
 //                 Kanitkorn Sujautra <https://github.com/lukyth>
 //                 Sebastian Silbermann <https://github.com/eps1lon>
 
-import { VNode } from '@vue/runtime-core'
-import * as CSS from 'csstype'
+import type { VNode } from '@vue/runtime-core'
+import type * as CSS from 'csstype'
 
 export interface CSSProperties extends CSS.Properties<string | number> {
   /**
@@ -1304,7 +1304,7 @@ type EventHandlers<E> = {
 
 // use namespace import to avoid collision with generated types which use
 // named imports.
-import * as RuntimeCore from '@vue/runtime-core'
+import type * as RuntimeCore from '@vue/runtime-core'
 
 type ReservedProps = {
   key?: string | number
@@ -1333,7 +1333,7 @@ declare global {
     }
     interface IntrinsicElements extends NativeElements {
       // allow arbitrary elements
-      // @ts-ignore suppress ts:2374 = Duplicate string index signature.
+      // @ts-expect-error suppress ts:2374 = Duplicate string index signature.
       [name: string]: any
     }
     interface IntrinsicAttributes extends ReservedProps {}

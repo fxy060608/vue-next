@@ -1,13 +1,13 @@
 import {
   BaseTransition,
-  BaseTransitionProps,
+  type BaseTransitionProps,
+  DeprecationTypes,
+  type FunctionalComponent,
+  compatUtils,
   h,
   warn,
-  FunctionalComponent,
-  compatUtils,
-  DeprecationTypes
 } from '@vue/runtime-core'
-import { isObject, toNumber, extend, isArray } from '@vue/shared'
+import { extend, isArray, isObject, toNumber } from '@vue/shared'
 
 const TRANSITION = 'transition'
 const ANIMATION = 'animation'
@@ -41,7 +41,7 @@ export interface ElementWithTransition extends HTMLElement {
 // base Transition component, with DOM-specific logic.
 export const Transition: FunctionalComponent<TransitionProps> = (
   props,
-  { slots }
+  { slots },
 ) => h(BaseTransition, resolveTransitionProps(props), slots)
 
 Transition.displayName = 'Transition'
@@ -55,7 +55,7 @@ const DOMTransitionPropsValidators = {
   type: String,
   css: {
     type: Boolean,
-    default: true
+    default: true,
   },
   duration: [String, Number, Object],
   enterFromClass: String,
@@ -66,14 +66,15 @@ const DOMTransitionPropsValidators = {
   appearToClass: String,
   leaveFromClass: String,
   leaveActiveClass: String,
-  leaveToClass: String
+  leaveToClass: String,
 }
 
-export const TransitionPropsValidators = (Transition.props = /*#__PURE__*/ extend(
-  {},
-  (BaseTransition as any).props,
-  DOMTransitionPropsValidators
-))
+export const TransitionPropsValidators = (Transition.props =
+  /*#__PURE__*/ extend(
+    {},
+    (BaseTransition as any).props,
+    DOMTransitionPropsValidators,
+  ))
 
 /**
  * #3227 Incoming hooks may be merged into arrays when wrapping Transition
@@ -81,7 +82,7 @@ export const TransitionPropsValidators = (Transition.props = /*#__PURE__*/ exten
  */
 const callHook = (
   hook: Function | Function[] | undefined,
-  args: any[] = []
+  args: any[] = [],
 ) => {
   if (isArray(hook)) {
     hook.forEach(h => h(...args))
@@ -95,7 +96,7 @@ const callHook = (
  * intends to explicitly control the end of the transition.
  */
 const hasExplicitCallback = (
-  hook: Function | Function[] | undefined
+  hook: Function | Function[] | undefined,
 ): boolean => {
   return hook
     ? isArray(hook)
@@ -105,7 +106,7 @@ const hasExplicitCallback = (
 }
 
 export function resolveTransitionProps(
-  rawProps: TransitionProps
+  rawProps: TransitionProps,
 ): BaseTransitionProps<Element> {
   const baseProps: BaseTransitionProps<Element> = {}
   for (const key in rawProps) {
@@ -130,7 +131,7 @@ export function resolveTransitionProps(
     appearToClass = enterToClass,
     leaveFromClass = `${name}-leave-from`,
     leaveActiveClass = `${name}-leave-active`,
-    leaveToClass = `${name}-leave-to`
+    leaveToClass = `${name}-leave-to`,
   } = rawProps
 
   // legacy transition class compat
@@ -164,7 +165,7 @@ export function resolveTransitionProps(
     onLeaveCancelled,
     onBeforeAppear = onBeforeEnter,
     onAppear = onEnter,
-    onAppearCancelled = onEnterCancelled
+    onAppearCancelled = onEnterCancelled,
   } = baseProps
 
   const finishEnter = (el: Element, isAppear: boolean, done?: () => void) => {
@@ -189,7 +190,7 @@ export function resolveTransitionProps(
         if (__COMPAT__ && legacyClassEnabled) {
           removeTransitionClass(
             el,
-            isAppear ? legacyAppearFromClass : legacyEnterFromClass
+            isAppear ? legacyAppearFromClass : legacyEnterFromClass,
           )
         }
         addTransitionClass(el, isAppear ? appearToClass : enterToClass)
@@ -251,12 +252,12 @@ export function resolveTransitionProps(
     onLeaveCancelled(el) {
       finishLeave(el)
       callHook(onLeaveCancelled, [el])
-    }
+    },
   } as BaseTransitionProps<Element>)
 }
 
 function normalizeDuration(
-  duration: TransitionProps['duration']
+  duration: TransitionProps['duration'],
 ): [number, number] | null {
   if (duration == null) {
     return null
@@ -278,12 +279,12 @@ function validateDuration(val: unknown) {
   if (typeof val !== 'number') {
     warn(
       `<transition> explicit duration is not a valid number - ` +
-        `got ${JSON.stringify(val)}.`
+        `got ${JSON.stringify(val)}.`,
     )
   } else if (isNaN(val)) {
     warn(
       `<transition> explicit duration is NaN - ` +
-        'the duration expression might be incorrect.'
+        'the duration expression might be incorrect.',
     )
   }
 }
@@ -319,7 +320,7 @@ function whenTransitionEnds(
   el: Element & { _endId?: number },
   expectedType: TransitionProps['type'] | undefined,
   explicitTimeout: number | null,
-  resolve: () => void
+  resolve: () => void,
 ) {
   const id = (el._endId = ++endId)
   const resolveIfNotStale = () => {
@@ -365,7 +366,7 @@ interface CSSTransitionInfo {
 
 export function getTransitionInfo(
   el: Element,
-  expectedType?: TransitionProps['type']
+  expectedType?: TransitionProps['type'],
 ): CSSTransitionInfo {
   const styles: any = window.getComputedStyle(el)
   // JSDOM may return undefined for transition properties
@@ -414,7 +415,7 @@ export function getTransitionInfo(
     type,
     timeout,
     propCount,
-    hasTransform
+    hasTransform,
   }
 }
 

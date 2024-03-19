@@ -1,9 +1,13 @@
-import { UniElement, UniEvent, UniEventListener } from '@dcloudio/uni-shared'
+import type {
+  UniElement,
+  UniEvent,
+  UniEventListener,
+} from '@dcloudio/uni-shared'
 
 import { hyphenate, isArray } from '@vue/shared'
 import {
-  ComponentInternalInstance,
-  callWithAsyncErrorHandling
+  type ComponentInternalInstance,
+  callWithAsyncErrorHandling,
 } from '@vue/runtime-core'
 import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
 
@@ -17,7 +21,7 @@ export function addEventListener(
   el: UniElement,
   event: string,
   handler: UniEventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.addEventListener(event, handler, options)
 }
@@ -26,7 +30,7 @@ export function removeEventListener(
   el: UniElement,
   event: string,
   handler: UniEventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.removeEventListener(event, handler, options)
 }
@@ -36,7 +40,7 @@ export function patchEvent(
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   // vei = vue event invokers
   const invokers = el._vei || (el._vei = {})
@@ -76,14 +80,14 @@ function parseName(name: string): [string, EventListenerOptions | undefined] {
 
 function createInvoker(
   initialValue: EventValue,
-  instance: ComponentInternalInstance | null
+  instance: ComponentInternalInstance | null,
 ) {
   const invoker: Invoker = (e: UniEvent) => {
     callWithAsyncErrorHandling(
       invoker.value,
       instance,
       ErrorCodes.NATIVE_EVENT_HANDLER,
-      [e]
+      [e],
     )
   }
   invoker.value = initialValue
@@ -111,19 +115,19 @@ function createInvoker(
 
 function initWxsEvent(
   invoker: Invoker,
-  instance: ComponentInternalInstance | null
+  instance: ComponentInternalInstance | null,
 ) {
   if (!instance) {
     return
   }
-  const { $wxsModules } = (instance as unknown) as { $wxsModules: string[] }
+  const { $wxsModules } = instance as unknown as { $wxsModules: string[] }
   if (!$wxsModules) {
     return
   }
   const invokerSourceCode = invoker.value.toString()
   if (
     !$wxsModules.find(
-      module => invokerSourceCode.indexOf('.' + module + '.') > -1
+      module => invokerSourceCode.indexOf('.' + module + '.') > -1,
     )
   ) {
     return

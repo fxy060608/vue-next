@@ -1,4 +1,4 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import type { UniElement } from '@dcloudio/uni-shared'
 
 import { isString } from '@vue/shared'
 

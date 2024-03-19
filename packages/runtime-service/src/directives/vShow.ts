@@ -1,5 +1,5 @@
-import { UniElement } from '@dcloudio/uni-shared'
-import { ObjectDirective } from '@vue/runtime-core'
+import type { UniElement } from '@dcloudio/uni-shared'
+import type { ObjectDirective } from '@vue/runtime-core'
 
 export const vShow: ObjectDirective<UniElement> = {
   beforeMount(el, { value }) {
@@ -11,7 +11,7 @@ export const vShow: ObjectDirective<UniElement> = {
   },
   beforeUnmount(el, { value }) {
     setDisplay(el, value)
-  }
+  },
 }
 
 function setDisplay(el: UniElement, value: unknown): void {

@@ -1,15 +1,15 @@
 import {
-  getCurrentInstance,
-  warn,
-  VNode,
   Fragment,
   Static,
+  type VNode,
+  getCurrentInstance,
   onMounted,
+  onUpdated,
+  warn,
   watchEffect,
-  onUpdated
 } from '@vue/runtime-core'
 import { ShapeFlags } from '@vue/shared'
-import { UniElement } from '@dcloudio/uni-shared'
+import type { UniElement } from '@dcloudio/uni-shared'
 /**
  * Runtime helper for SFC's CSS variable injection feature.
  * @private

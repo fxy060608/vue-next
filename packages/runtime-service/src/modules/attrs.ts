@@ -1,4 +1,4 @@
-import { UniElement } from '@dcloudio/uni-shared'
+import type { UniElement } from '@dcloudio/uni-shared'
 
 export function patchAttr(el: UniElement, key: string, value: any) {
   if (value == null) {

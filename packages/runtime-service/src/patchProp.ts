@@ -1,6 +1,10 @@
-import { JSON_PROTOCOL, UniNode, UniElement } from '@dcloudio/uni-shared'
+import {
+  JSON_PROTOCOL,
+  type UniElement,
+  type UniNode,
+} from '@dcloudio/uni-shared'
 import { isModelListener, isObject, isOn } from '@vue/shared'
-import { RendererOptions } from '@vue/runtime-core'
+import type { RendererOptions } from '@vue/runtime-core'
 
 import { patchClass } from './modules/class'
 import { patchStyle } from './modules/style'
@@ -16,11 +20,11 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   key,
   prevValue,
   nextValue,
-  isSVG = false,
+  namespace,
   prevChildren,
   parentComponent,
   parentSuspense,
-  unmountChildren
+  unmountChildren,
 ) => {
   switch (key) {
     // special
