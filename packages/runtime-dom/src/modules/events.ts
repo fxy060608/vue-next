@@ -1,9 +1,9 @@
 import { hyphenate, isArray } from '@vue/shared'
 import {
-  ComponentInternalInstance,
-  callWithAsyncErrorHandling
+  type ComponentInternalInstance,
+  ErrorCodes,
+  callWithAsyncErrorHandling,
 } from '@vue/runtime-core'
-import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
 
 interface Invoker extends EventListener {
   value: EventValue
@@ -16,7 +16,7 @@ export function addEventListener(
   el: Element,
   event: string,
   handler: EventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.addEventListener(event, handler, options)
 }
@@ -25,20 +25,22 @@ export function removeEventListener(
   el: Element,
   event: string,
   handler: EventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.removeEventListener(event, handler, options)
 }
 
+const veiKey = Symbol('_vei')
+
 export function patchEvent(
-  el: Element & { _vei?: Record<string, Invoker | undefined> },
+  el: Element & { [veiKey]?: Record<string, Invoker | undefined> },
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   // vei = vue event invokers
-  const invokers = el._vei || (el._vei = {})
+  const invokers = el[veiKey] || (el[veiKey] = {})
   const existingInvoker = invokers[rawName]
   if (nextValue && existingInvoker) {
     // patch
@@ -82,7 +84,7 @@ const getNow = () =>
 
 function createInvoker(
   initialValue: EventValue,
-  instance: ComponentInternalInstance | null
+  instance: ComponentInternalInstance | null,
 ) {
   const invoker: Invoker = (e: Event & { _vts?: number }) => {
     // async edge case vuejs/vue#6566
@@ -114,19 +116,19 @@ function createInvoker(
           fn,
           instance,
           ErrorCodes.NATIVE_EVENT_HANDLER,
-          !(fn as any).__wwe ? normalizeNativeEvent(e) : [e]
+          !(fn as any).__wwe ? normalizeNativeEvent(e) : [e],
         )
       }
       return
     }
     callWithAsyncErrorHandling(
-      patchStopImmediatePropagation(e, value),
+      patchStopImmediatePropagation(e, invoker.value),
       instance,
       ErrorCodes.NATIVE_EVENT_HANDLER,
       // fixed by xxxxxx
       normalizeNativeEvent && !(value as any).__wwe
         ? normalizeNativeEvent(e, value, instance)
-        : [e]
+        : [e],
     )
   }
   invoker.value = initialValue
@@ -136,7 +138,7 @@ function createInvoker(
 
 function patchStopImmediatePropagation(
   e: Event,
-  value: EventValue
+  value: EventValue,
 ): EventValue {
   if (isArray(value)) {
     const originalStop = e.stopImmediatePropagation
@@ -144,11 +146,7 @@ function patchStopImmediatePropagation(
       originalStop.call(e)
       ;(e as any)._stopped = true
     }
-    return value.map(fn => {
-      const patchedFn = (e: Event) => !(e as any)._stopped && fn && fn(e)
-      patchedFn.__wwe = (fn as any).__wwe
-      return patchedFn
-    })
+    return value.map(fn => (e: Event) => !(e as any)._stopped && fn && fn(e))
   } else {
     return value
   }

@@ -1,12 +1,12 @@
-import { VNode } from './vnode'
-import { ComponentInternalInstance } from './component'
-import { warn, pushWarningContext, popWarningContext } from './warning'
-import { isPromise, isFunction } from '@vue/shared'
+import type { VNode } from './vnode'
+import type { ComponentInternalInstance } from './component'
+import { popWarningContext, pushWarningContext, warn } from './warning'
+import { isFunction, isPromise } from '@vue/shared'
 import { LifecycleHooks } from './enums'
 
 // contexts where user provided function may be executed, in addition to
 // lifecycle hooks.
-export const enum ErrorCodes {
+export enum ErrorCodes {
   SETUP_FUNCTION,
   RENDER_FUNCTION,
   WATCH_GETTER,
@@ -21,7 +21,7 @@ export const enum ErrorCodes {
   APP_WARN_HANDLER,
   FUNCTION_REF,
   ASYNC_COMPONENT_LOADER,
-  SCHEDULER
+  SCHEDULER,
 }
 
 export const ErrorTypeStrings: Record<LifecycleHooks | ErrorCodes, string> = {
@@ -34,8 +34,10 @@ export const ErrorTypeStrings: Record<LifecycleHooks | ErrorCodes, string> = {
   [LifecycleHooks.UPDATED]: 'updated',
   [LifecycleHooks.BEFORE_UNMOUNT]: 'beforeUnmount hook',
   [LifecycleHooks.UNMOUNTED]: 'unmounted hook',
+  // fixed by xxxxxx
   [LifecycleHooks.BEFORE_ACTIVATE]: 'beforeActivate hook',
   [LifecycleHooks.ACTIVATED]: 'activated hook',
+  // fixed by xxxxxx
   [LifecycleHooks.BEFORE_DEACTIVATE]: 'beforeDeactivate hook',
   [LifecycleHooks.DEACTIVATED]: 'deactivated hook',
   [LifecycleHooks.ERROR_CAPTURED]: 'errorCaptured hook',
@@ -57,7 +59,7 @@ export const ErrorTypeStrings: Record<LifecycleHooks | ErrorCodes, string> = {
   [ErrorCodes.ASYNC_COMPONENT_LOADER]: 'async component loader',
   [ErrorCodes.SCHEDULER]:
     'scheduler flush. This is likely a Vue internals bug. ' +
-    'Please open an issue at https://new-issue.vuejs.org/?repo=vuejs/core'
+    'Please open an issue at https://github.com/vuejs/core .',
 }
 
 export type ErrorTypes = LifecycleHooks | ErrorCodes
@@ -66,22 +68,20 @@ export function callWithErrorHandling(
   fn: Function,
   instance: ComponentInternalInstance | null,
   type: ErrorTypes,
-  args?: unknown[]
+  args?: unknown[],
 ) {
-  let res
   try {
-    res = args ? fn(...args) : fn()
+    return args ? fn(...args) : fn()
   } catch (err) {
     handleError(err, instance, type)
   }
-  return res
 }
 
 export function callWithAsyncErrorHandling(
   fn: Function | Function[],
   instance: ComponentInternalInstance | null,
   type: ErrorTypes,
-  args?: unknown[]
+  args?: unknown[],
 ): any[] {
   if (isFunction(fn)) {
     const res = callWithErrorHandling(fn, instance, type, args)
@@ -104,7 +104,7 @@ export function handleError(
   err: unknown,
   instance: ComponentInternalInstance | null,
   type: ErrorTypes,
-  throwInDev = true
+  throwInDev = true,
 ) {
   const contextVNode = instance ? instance.vnode : null
   if (instance) {
@@ -113,7 +113,9 @@ export function handleError(
     const exposedInstance = instance.proxy
     // in production the hook receives only the error code
     // fixed by xxxxxx
-    const errorInfo = __DEV__ ? ErrorTypeStrings[type] || type : type
+    const errorInfo = __DEV__
+      ? ErrorTypeStrings[type] || type
+      : `https://vuejs.org/error-reference/#runtime-${type}`
     while (cur) {
       const errorCapturedHooks = cur.ec
       if (errorCapturedHooks) {
@@ -134,7 +136,7 @@ export function handleError(
         appErrorHandler,
         null,
         ErrorCodes.APP_ERROR_HANDLER,
-        [err, exposedInstance, errorInfo]
+        [err, exposedInstance, errorInfo],
       )
       return
     }
@@ -146,7 +148,7 @@ function logError(
   err: unknown,
   type: ErrorTypes,
   contextVNode: VNode | null,
-  throwInDev = true
+  throwInDev = true,
 ) {
   if (__DEV__) {
     const info = ErrorTypeStrings[type] || type // fixed by xxxxxx
@@ -158,10 +160,9 @@ function logError(
       popWarningContext()
     }
     // crash in dev by default so it's more noticeable
-    // 不要 crash，经常会导致整个App运行失败，比如路由跳转失败，不能返回了
-    /* if (throwInDev) {
+    if (throwInDev) {
       throw err
-    } else */ if (!__TEST__) {
+    } else if (!__TEST__) {
       console.error(err)
     }
   } else {

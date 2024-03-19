@@ -1,4 +1,4 @@
-import { ComponentInternalInstance, nextTick } from '@vue/runtime-core'
+import { type ComponentInternalInstance, nextTick } from '@vue/runtime-core'
 interface WXSElement {
   __wxsProps?: { [name: string]: unknown }
 }
@@ -6,7 +6,7 @@ export function patchWxs(
   el: Element & WXSElement,
   rawName: string,
   nextValue: Function | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   if (!nextValue || !instance) {
     return
@@ -25,7 +25,7 @@ export function patchWxs(
       nextPropValue,
       prevPropValue,
       (proxy as any).$gcd(proxy, true),
-      (proxy as any).$gcd(proxy, false)
+      (proxy as any).$gcd(proxy, false),
     )
   })
 }

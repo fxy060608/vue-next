@@ -1,39 +1,40 @@
 import {
-  createRenderer,
-  createHydrationRenderer,
-  warn,
-  RootRenderFunction,
-  CreateAppFunction,
-  Renderer,
-  HydrationRenderer,
-  App,
-  RootHydrateFunction,
-  isRuntimeOnly,
+  type App,
+  type CreateAppFunction,
   DeprecationTypes,
-  compatUtils
+  type ElementNamespace,
+  type HydrationRenderer,
+  type Renderer,
+  type RootHydrateFunction,
+  type RootRenderFunction,
+  compatUtils,
+  createHydrationRenderer,
+  createRenderer,
+  isRuntimeOnly,
+  warn,
 } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
-import { patchProp, forcePatchProp } from './patchProp' // fixed by xxxxxx
+import { forcePatchProp, patchProp } from './patchProp' // fixed by xxxxxx
 // Importing from the compiler, will be tree-shaken in prod
 import {
-  isFunction,
-  isString,
-  isHTMLTag,
-  isSVGTag,
+  NOOP,
   extend,
-  NOOP
+  isFunction,
+  isHTMLTag,
+  isMathMLTag,
+  isSVGTag,
+  isString,
 } from '@vue/shared'
 
 declare module '@vue/reactivity' {
   export interface RefUnwrapBailTypes {
-    // Note: if updating this, also update `types/refBail.d.ts`.
     runtimeDOMBailTypes: Node | Window
   }
 }
 // fixed by xxxxxx
 const rendererOptions = /*#__PURE__*/ extend(
   { patchProp, forcePatchProp },
-  nodeOps
+  nodeOps,
 )
 
 // lazy create the renderer - this makes core renderer logic tree-shakable
@@ -93,7 +94,7 @@ export const createApp = ((...args) => {
           if (attr.name !== 'v-cloak' && /^(v-|:|@)/.test(attr.name)) {
             compatUtils.warnDeprecation(
               DeprecationTypes.GLOBAL_MOUNT_CONTAINER,
-              null
+              null,
             )
             break
           }
@@ -103,7 +104,7 @@ export const createApp = ((...args) => {
 
     // clear content before mounting
     container.innerHTML = ''
-    const proxy = mount(container, false, container instanceof SVGElement)
+    const proxy = mount(container, false, resolveRootNamespace(container))
     if (container instanceof Element) {
       container.removeAttribute('v-cloak')
       container.setAttribute('data-v-app', '')
@@ -126,19 +127,31 @@ export const createSSRApp = ((...args) => {
   app.mount = (containerOrSelector: Element | ShadowRoot | string): any => {
     const container = normalizeContainer(containerOrSelector)
     if (container) {
-      return mount(container, true, container instanceof SVGElement)
+      return mount(container, true, resolveRootNamespace(container))
     }
   }
 
   return app
 }) as CreateAppFunction<Element>
 
+function resolveRootNamespace(container: Element): ElementNamespace {
+  if (container instanceof SVGElement) {
+    return 'svg'
+  }
+  if (
+    typeof MathMLElement === 'function' &&
+    container instanceof MathMLElement
+  ) {
+    return 'mathml'
+  }
+}
+
 function injectNativeTagCheck(app: App) {
   // Inject `isNativeTag`
   // this is used for component name validation (dev only)
   Object.defineProperty(app.config, 'isNativeTag', {
-    value: (tag: string) => isHTMLTag(tag) || isSVGTag(tag),
-    writable: false
+    value: (tag: string) => isHTMLTag(tag) || isSVGTag(tag) || isMathMLTag(tag),
+    writable: false,
   })
 }
 
@@ -153,9 +166,9 @@ function injectCompilerOptionsCheck(app: App) {
       set() {
         warn(
           `The \`isCustomElement\` config option is deprecated. Use ` +
-            `\`compilerOptions.isCustomElement\` instead.`
+            `\`compilerOptions.isCustomElement\` instead.`,
         )
-      }
+      },
     })
 
     const compilerOptions = app.config.compilerOptions
@@ -166,7 +179,7 @@ function injectCompilerOptionsCheck(app: App) {
       `must be passed to \`@vue/compiler-dom\` in the build setup instead.\n` +
       `- For vue-loader: pass it via vue-loader's \`compilerOptions\` loader option.\n` +
       `- For vue-cli: see https://cli.vuejs.org/guide/webpack.html#modifying-options-of-a-loader\n` +
-      `- For vite: pass it via @vitejs/plugin-vue options. See https://github.com/vitejs/vite/tree/main/packages/plugin-vue#example-for-passing-options-to-vuecompiler-dom`
+      `- For vite: pass it via @vitejs/plugin-vue options. See https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue#example-for-passing-options-to-vuecompiler-sfc`
 
     Object.defineProperty(app.config, 'compilerOptions', {
       get() {
@@ -175,19 +188,19 @@ function injectCompilerOptionsCheck(app: App) {
       },
       set() {
         warn(msg)
-      }
+      },
     })
   }
 }
 
 function normalizeContainer(
-  container: Element | ShadowRoot | string
+  container: Element | ShadowRoot | string,
 ): Element | null {
   if (isString(container)) {
     const res = document.querySelector(container)
     if (__DEV__ && !res) {
       warn(
-        `Failed to mount app: mount target selector "${container}" returned null.`
+        `Failed to mount app: mount target selector "${container}" returned null.`,
       )
     }
     return res
@@ -199,7 +212,7 @@ function normalizeContainer(
     container.mode === 'closed'
   ) {
     warn(
-      `mounting on a ShadowRoot with \`{mode: "closed"}\` may lead to unpredictable bugs`
+      `mounting on a ShadowRoot with \`{mode: "closed"}\` may lead to unpredictable bugs`,
     )
   }
   return container as any
@@ -210,7 +223,7 @@ export {
   defineCustomElement,
   defineSSRCustomElement,
   VueElement,
-  VueElementConstructor
+  type VueElementConstructor,
 } from './apiCustomElement'
 
 // SFC CSS utilities
@@ -218,10 +231,10 @@ export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
 
 // DOM-only components
-export { Transition, TransitionProps } from './components/Transition'
+export { Transition, type TransitionProps } from './components/Transition'
 export {
   TransitionGroup,
-  TransitionGroupProps
+  type TransitionGroupProps,
 } from './components/TransitionGroup'
 
 // **Internal** DOM-only runtime directive helpers
@@ -230,7 +243,7 @@ export {
   vModelCheckbox,
   vModelRadio,
   vModelSelect,
-  vModelDynamic
+  vModelDynamic,
 } from './directives/vModel'
 export { withModifiers, withKeys } from './directives/vOn'
 export { vShow } from './directives/vShow'
@@ -256,3 +269,5 @@ export const initDirectivesForSSR = __SSR__
 // re-export everything from core
 // h, Component, reactivity API, nextTick, flags & types
 export * from '@vue/runtime-core'
+
+export * from './jsx'
