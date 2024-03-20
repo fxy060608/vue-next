@@ -3,7 +3,7 @@ export function isUndef(val: unknown) {
 }
 
 export function toMap<K extends string | number | symbol = string, V = any>(
-  value: Record<K, V> | Map<K, V>
+  value: Record<K, V> | Map<K, V>,
 ): Map<K, V> {
   if (value instanceof Map) {
     return value

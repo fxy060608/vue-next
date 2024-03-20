@@ -3,7 +3,7 @@ const backgroundImage = 'backgroundImage'
 
 export const transformBackground = function (
   prop: string,
-  value: string
+  value: string,
 ): Map<string, any> {
   const result = new Map<string, any>()
   if (/^#?\S+$/.test(value) || /^rgba?(.+)$/.test(value)) {

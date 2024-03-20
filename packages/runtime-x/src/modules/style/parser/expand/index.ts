@@ -32,7 +32,7 @@ const DeclTransforms = new Map<
   ['borderWidth', transformBorderWidth],
   ['borderColor', transformBorderColor],
   ['borderRadius', transformBorderRadius],
-  ['background', transformBackground]
+  ['background', transformBackground],
 ])
 
 /**

@@ -2,11 +2,11 @@ const properties = [
   'transitionProperty',
   'transitionDuration',
   'transitionTimingFunction',
-  'transitionDelay'
+  'transitionDelay',
 ]
 export const transformTransition = function (
   prop: string,
-  value: string
+  value: string,
 ): Map<string, any> {
   const CHUNK_REGEXP =
     /^(\S*)?\s*(\d*\.?\d+(?:ms|s)?)?\s*(\S*)?\s*(\d*\.?\d+(?:ms|s)?)?$/

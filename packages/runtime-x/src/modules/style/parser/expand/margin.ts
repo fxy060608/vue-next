@@ -5,7 +5,7 @@ const left = 'Left'
 
 export const transformMargin = function (
   prop: string,
-  value: string
+  value: string,
 ): Map<string, any> {
   const splitResult: string[] = value.split(/\s+/)
   switch (splitResult.length) {

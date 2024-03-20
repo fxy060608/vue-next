@@ -1,11 +1,11 @@
 import {
+  Fragment,
+  type VNode,
   getCurrentInstance,
   onMounted,
-  warn,
-  VNode,
-  Fragment,
   onUpdated,
-  watchEffect
+  warn,
+  watchEffect,
 } from '@vue/runtime-core'
 import { ShapeFlags } from '@vue/shared'
 

@@ -2,7 +2,7 @@
 // Reason: potentially setting innerHTML.
 // This can come from explicit usage of v-html or innerHTML as a prop in render
 
-import { warn, DeprecationTypes, compatUtils } from '@vue/runtime-core'
+import { /* DeprecationTypes, compatUtils,*/ warn } from '@vue/runtime-core'
 
 // functions. The user is responsible for using them with only trusted content.
 export function patchDOMProp(
@@ -15,7 +15,7 @@ export function patchDOMProp(
   prevChildren: any,
   parentComponent: any,
   parentSuspense: any,
-  unmountChildren: any
+  unmountChildren: any,
 ) {
   if (key === 'innerHTML' || key === 'textContent') {
     if (prevChildren) {
@@ -58,27 +58,27 @@ export function patchDOMProp(
     }
   }
 
-  if (
-    __COMPAT__ &&
-    value === false &&
-    compatUtils.isCompatEnabled(
-      DeprecationTypes.ATTR_FALSE_VALUE,
-      parentComponent
-    )
-  ) {
-    const type = typeof el[key]
-    if (type === 'string' || type === 'number') {
-      __DEV__ &&
-        compatUtils.warnDeprecation(
-          DeprecationTypes.ATTR_FALSE_VALUE,
-          parentComponent,
-          key
-        )
-      el[key] = type === 'number' ? 0 : ''
-      el.removeAttribute(key)
-      return
-    }
-  }
+  // if (
+  //   __COMPAT__ &&
+  //   value === false &&
+  //   compatUtils.isCompatEnabled(
+  //     DeprecationTypes.ATTR_FALSE_VALUE,
+  //     parentComponent,
+  //   )
+  // ) {
+  //   const type = typeof el[key]
+  //   if (type === 'string' || type === 'number') {
+  //     __DEV__ &&
+  //       compatUtils.warnDeprecation(
+  //         DeprecationTypes.ATTR_FALSE_VALUE,
+  //         parentComponent,
+  //         key,
+  //       )
+  //     el[key] = type === 'number' ? 0 : ''
+  //     el.removeAttribute(key)
+  //     return
+  //   }
+  // }
 
   // some properties perform value validation and throw
   try {
@@ -88,7 +88,7 @@ export function patchDOMProp(
       warn(
         `Failed setting prop "${key}" on <${el.tagName.toLowerCase()}>: ` +
           `value ${value} is invalid.`,
-        e
+        e,
       )
     }
   }

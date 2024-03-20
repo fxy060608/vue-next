@@ -1,22 +1,22 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 
 import {
+  type NormalizedStyle,
   camelize,
   isString,
-  NormalizedStyle,
-  parseStringStyle
+  parseStringStyle,
 } from '@vue/shared'
 import {
   getExtraClassStyle,
   getExtraStyle,
-  setExtraStyle
+  setExtraStyle,
 } from '../helpers/node'
 import { parseStyleDecl } from './style/parser'
 
 export function patchStyle(
   el: UniXElement,
   prev: NormalizedStyle | string,
-  next: NormalizedStyle | string
+  next: NormalizedStyle | string,
 ) {
   if (!next) {
     // TODO remove styles
@@ -64,7 +64,7 @@ export function patchStyle(
           (value: any, key: string) => {
             batchedStyles.set(key, value)
             style?.set(key, value)
-          }
+          },
         )
       }
     }
@@ -94,7 +94,7 @@ export function patchStyle(
 function setBatchedStyles(
   batchedStyles: Map<string, any>,
   key: string,
-  value: any | null
+  value: any | null,
 ) {
   parseStyleDecl(key, value).forEach((value: any, key: string) => {
     batchedStyles.set(key, value)

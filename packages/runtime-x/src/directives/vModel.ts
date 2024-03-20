@@ -1,8 +1,8 @@
-import { ObjectDirective, VNode } from '@vue/runtime-core'
-import { isArray, invokeArrayFns } from '@vue/shared'
-import {
+import type { ObjectDirective, VNode } from '@vue/runtime-core'
+import { invokeArrayFns, isArray } from '@vue/shared'
+import type {
   Element as UniXElement,
-  InputEvent as UniXInputEvent
+  InputEvent as UniXInputEvent,
 } from '@dcloudio/uni-app-x/types/native'
 
 type AssignerFn = (value: any) => void
@@ -24,5 +24,5 @@ export const vModelText: ObjectDirective = {
   },
   beforeUpdate(el, _binding, _vnode, _prevVNode) {
     el.setAnyAttribute('value', _binding.value ?? '')
-  }
+  },
 }

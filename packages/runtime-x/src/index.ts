@@ -1,16 +1,16 @@
 import {
+  type CreateAppFunction,
+  type Renderer,
+  type RootRenderFunction,
   createRenderer,
-  RootRenderFunction,
-  CreateAppFunction,
-  Renderer
 } from '@vue/runtime-core'
-import { setDocument, nodeOps } from './nodeOps'
+import { nodeOps, setDocument } from './nodeOps'
 import { patchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
 import { extend } from '@vue/shared'
-import {
+import type {
+  IDocument as UniXDocument,
   Element as UniXElement,
-  IDocument as UniXDocument
 } from '@dcloudio/uni-app-x/types/native'
 
 const rendererOptions = extend({ patchProp }, nodeOps)
@@ -49,7 +49,7 @@ export { useCssVars } from './helpers/useCssVars'
 export {
   useCssStyles,
   parseClassStyles,
-  parseClassList
+  parseClassList,
 } from './helpers/useCssStyles'
 // **Internal** DOM-only runtime directive helpers
 export { vModelText } from './directives/vModel'

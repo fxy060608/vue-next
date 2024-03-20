@@ -19,7 +19,7 @@ const modifierGuards: Record<
   middle: e => 'button' in e && (e as MouseEvent).button !== 1,
   right: e => 'button' in e && (e as MouseEvent).button !== 2,
   exact: (e, modifiers) =>
-    systemModifiers.some(m => (e as any)[`${m}Key`] && !modifiers.includes(m))
+    systemModifiers.some(m => (e as any)[`${m}Key`] && !modifiers.includes(m)),
 }
 
 /**

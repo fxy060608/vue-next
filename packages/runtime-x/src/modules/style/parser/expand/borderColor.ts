@@ -7,7 +7,7 @@ const borderLeft = 'borderLeft'
 
 export const transformBorderColor = function (
   prop: string,
-  value: string
+  value: string,
 ): Map<string, any> {
   let property = hyphenate(prop).split('-')[1]
   property = capitalize(property)

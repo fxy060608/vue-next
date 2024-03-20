@@ -1,5 +1,5 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
-import { ObjectDirective } from '@vue/runtime-core'
+import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { ObjectDirective } from '@vue/runtime-core'
 
 interface VShowElement extends UniXElement {
   // _vod = vue original display
@@ -38,7 +38,7 @@ export const vShow: ObjectDirective<VShowElement> = {
   },
   beforeUnmount(el, { value }) {
     setDisplay(el, value)
-  }
+  },
 }
 
 function setDisplay(el: VShowElement, value: unknown): void {

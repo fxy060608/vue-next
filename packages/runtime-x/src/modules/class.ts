@@ -1,22 +1,22 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
   parseClassStyles,
   parseStyleSheet,
-  toStyle
+  toStyle,
 } from '../helpers/useCssStyles'
 import {
   getExtraClassStyle,
   isCommentNode,
   setExtraClassStyle,
-  setExtraStyles
+  setExtraStyles,
 } from '../helpers/node'
 
 export function patchClass(
   el: UniXElement,
   pre: string | null,
   next: string | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   if (!instance) {
     return

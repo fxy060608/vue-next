@@ -1,4 +1,4 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 
 // 样式相关
 const NODE_EXT_STYLES = 'styles' // node 中存储的可用样式表
@@ -14,7 +14,7 @@ export function getNodeExtraData(el: UniXElement, name: string): any | null {
 }
 
 export function getExtraStyles(
-  el: UniXElement
+  el: UniXElement,
 ): Record<string, Record<string, Record<string, unknown>>> | null {
   return getNodeExtraData(el, NODE_EXT_STYLES) as Record<
     string,
@@ -24,7 +24,7 @@ export function getExtraStyles(
 
 export function setExtraStyles(
   el: UniXElement,
-  styles: Record<string, Record<string, Record<string, any>>>
+  styles: Record<string, Record<string, Record<string, any>>>,
 ) {
   setNodeExtraData(el, NODE_EXT_STYLES, styles)
 }
@@ -35,7 +35,7 @@ export function getExtraClassStyle(el: UniXElement): Map<string, any> | null {
 
 export function setExtraClassStyle(
   el: UniXElement,
-  classStyle: Map<string, any>
+  classStyle: Map<string, any>,
 ) {
   setNodeExtraData(el, NODE_EXT_CLASS_STYLE, classStyle)
 }

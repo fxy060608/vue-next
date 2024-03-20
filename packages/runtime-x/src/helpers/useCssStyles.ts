@@ -1,4 +1,4 @@
-import { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
 import { getExtraStyle, getExtraStyles } from './node'
@@ -93,7 +93,7 @@ const WEIGHT_IMPORTANT = 1000
 function parseClassName(
   { styles, weights }: ParseStyleContext,
   parentStyles: Record<string, Record<string, unknown>>,
-  el: UniXElement | null
+  el: UniXElement | null,
 ) {
   each(parentStyles).forEach(parentSelector => {
     if (parentSelector && el) {
@@ -127,11 +127,11 @@ interface ParseStyleContext {
 function parseClassListWithStyleSheet(
   classList: string[],
   stylesheet: NVueStyle | null,
-  el: UniXElement | null = null
+  el: UniXElement | null = null,
 ) {
   const context: ParseStyleContext = {
     styles: new Map(),
-    weights: {}
+    weights: {},
   }
   classList.forEach(className => {
     const parentStyles = stylesheet && stylesheet[className]
@@ -150,7 +150,7 @@ export function parseClassStyles(el: UniXElement) {
 export function parseClassList(
   classList: string[],
   instance: ComponentInternalInstance,
-  el: UniXElement | null = null
+  el: UniXElement | null = null,
 ) {
   return parseClassListWithStyleSheet(classList, parseStyleSheet(instance), el)
     .styles
@@ -159,7 +159,7 @@ export function parseClassList(
 export function parseStyleSheet({
   type,
   appContext,
-  root
+  root,
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
   if (!component.__styles) {
@@ -189,7 +189,7 @@ export function parseStyleSheet({
 
 export function extend<T>(
   a: Map<string, T>,
-  b: Map<string, T>
+  b: Map<string, T>,
 ): Map<string, T> {
   b.forEach((value, key) => {
     a.set(key, value)
@@ -200,7 +200,7 @@ export function extend<T>(
 export function toStyle(
   el: UniXElement,
   classStyle: Map<string, any>,
-  classStyleWeights: Record<string, number>
+  classStyleWeights: Record<string, number>,
 ): Map<string, any> {
   const res = extend<any>(new Map<string, any>(), classStyle)
   const style = getExtraStyle(el)

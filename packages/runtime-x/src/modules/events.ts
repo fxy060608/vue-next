@@ -1,13 +1,13 @@
-import {
+import type {
   IUniNativeElement,
   Element as UniXElement,
-  Event as UniXEvent
+  Event as UniXEvent,
 } from '@dcloudio/uni-app-x/types/native'
 
 import { hyphenate, isArray } from '@vue/shared'
 import {
-  ComponentInternalInstance,
-  callWithAsyncErrorHandling
+  type ComponentInternalInstance,
+  callWithAsyncErrorHandling,
 } from '@vue/runtime-core'
 import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
 
@@ -23,7 +23,7 @@ export function addEventListener(
   el: UniXElement,
   event: string,
   handler: UniXEventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.addEventListener(event, handler)
 }
@@ -37,7 +37,7 @@ export function patchEvent(
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   // vei = vue event invokers
   const invokers = el._vei || (el._vei = {})
@@ -84,14 +84,14 @@ function parseName(name: string): [string, EventListenerOptions | undefined] {
 
 function createInvoker(
   initialValue: EventValue,
-  instance: ComponentInternalInstance | null
+  instance: ComponentInternalInstance | null,
 ) {
   const invoker: Invoker = (e: UniXEvent) => {
     callWithAsyncErrorHandling(
       invoker.value,
       instance,
       ErrorCodes.NATIVE_EVENT_HANDLER,
-      [e]
+      [e],
     )
   }
   invoker.value = initialValue

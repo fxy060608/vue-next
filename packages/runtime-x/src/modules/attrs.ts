@@ -1,10 +1,10 @@
-import { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
+import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
+  camelize,
+  isString,
   normalizeStyle,
   parseStringStyle,
-  isString,
-  camelize
 } from '@vue/shared'
 import { parseClassList } from '../helpers'
 
@@ -12,7 +12,7 @@ export function patchAttr(
   el: UniXElement,
   key: string,
   value: unknown,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   if (instance) {
     ;[key, value] = transformAttr(el, key, value, instance)
@@ -31,28 +31,28 @@ const ATTR_MASK_STYLE = 'maskStyle'
 const CLASS_AND_STYLES: Record<string, { class: string[]; style: string[] }> = {
   view: {
     class: [ATTR_HOVER_CLASS],
-    style: []
+    style: [],
   },
   button: {
     class: [ATTR_HOVER_CLASS],
-    style: []
+    style: [],
   },
   navigator: {
     class: [ATTR_HOVER_CLASS],
-    style: []
+    style: [],
   },
   input: {
     class: [ATTR_PLACEHOLDER_CLASS],
-    style: [ATTR_PLACEHOLDER_STYLE]
+    style: [ATTR_PLACEHOLDER_STYLE],
   },
   textarea: {
     class: [ATTR_PLACEHOLDER_CLASS],
-    style: [ATTR_PLACEHOLDER_STYLE]
+    style: [ATTR_PLACEHOLDER_STYLE],
   },
   'picker-view': {
     class: [ATTR_INDICATOR_CLASS, ATTR_MASK_CLASS],
-    style: [ATTR_INDICATOR_STYLE, ATTR_MASK_STYLE]
-  }
+    style: [ATTR_INDICATOR_STYLE, ATTR_MASK_STYLE],
+  },
 }
 
 /**
@@ -62,7 +62,7 @@ function transformAttr(
   el: UniXElement,
   key: string,
   value: unknown,
-  instance: ComponentInternalInstance
+  instance: ComponentInternalInstance,
 ): [string, unknown] {
   if (!value) {
     return [key, value]

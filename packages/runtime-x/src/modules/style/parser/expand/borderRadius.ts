@@ -5,7 +5,7 @@ const borderBottomLeftRadius = 'borderBottomLeftRadius'
 
 export const transformBorderRadius = function (
   prop: string,
-  value: string
+  value: string,
 ): Map<string, any> {
   const splitResult = value.split(/\s+/)
   const result = new Map<string, any>()

@@ -1,59 +1,72 @@
 import {
-  isArray,
-  isFunction,
-  isString,
-  isObject,
   EMPTY_ARR,
-  extend,
   PatchFlags,
   ShapeFlags,
   SlotFlags,
-  isOn
+  extend,
+  isArray,
+  isFunction,
+  isObject,
+  isOn,
+  isString,
+  // normalizeClass,
+  // normalizeStyle,
 } from '@vue/shared'
+// fixed by xxxxxx
 import { normalizeClass, normalizeStyle } from '@dcloudio/uni-shared'
 import {
-  ComponentInternalInstance,
-  Data,
-  ConcreteComponent,
-  ClassComponent,
-  Component,
-  isClassComponent
+  type ClassComponent,
+  type Component,
+  type ComponentInternalInstance,
+  type ConcreteComponent,
+  type Data,
+  isClassComponent,
 } from './component'
-import { RawSlots } from './componentSlots'
-import { isProxy, Ref, toRaw, ReactiveFlags, isRef } from '@vue/reactivity'
-import { AppContext } from './apiCreateApp'
+import type { RawSlots } from './componentSlots'
 import {
-  Suspense,
-  SuspenseImpl,
+  type ReactiveFlags,
+  type Ref,
+  isProxy,
+  isRef,
+  toRaw,
+} from '@vue/reactivity'
+import type { AppContext } from './apiCreateApp'
+import {
+  type Suspense,
+  type SuspenseBoundary,
+  type SuspenseImpl,
   isSuspense,
-  SuspenseBoundary
 } from './components/Suspense'
-import { DirectiveBinding } from './directives'
-import { TransitionHooks } from './components/BaseTransition'
+import type { DirectiveBinding } from './directives'
+import type { TransitionHooks } from './components/BaseTransition'
 import { warn } from './warning'
-import { Teleport, TeleportImpl, isTeleport } from './components/Teleport'
+import {
+  type Teleport,
+  type TeleportImpl,
+  isTeleport,
+} from './components/Teleport'
 import {
   currentRenderingInstance,
-  currentScopeId
+  currentScopeId,
 } from './componentRenderContext'
-import { RendererNode, RendererElement } from './renderer'
+import type { RendererElement, RendererNode } from './renderer'
 import { NULL_DYNAMIC_COMPONENT } from './helpers/resolveAssets'
 import { hmrDirtyComponents } from './hmr'
 import { convertLegacyComponent } from './compat/component'
 import { convertLegacyVModelProps } from './compat/componentVModel'
 import { defineLegacyVNodeProperties } from './compat/renderFn'
-import { callWithAsyncErrorHandling, ErrorCodes } from './errorHandling'
-import { ComponentPublicInstance } from './componentPublicInstance'
+import { ErrorCodes, callWithAsyncErrorHandling } from './errorHandling'
+import type { ComponentPublicInstance } from './componentPublicInstance'
 
-export const Fragment = Symbol(__DEV__ ? 'Fragment' : undefined) as any as {
+export const Fragment = Symbol.for('v-fgt') as any as {
   __isFragment: true
   new (): {
     $props: VNodeProps
   }
 }
-export const Text = Symbol(__DEV__ ? 'Text' : undefined)
-export const Comment = Symbol(__DEV__ ? 'Comment' : undefined)
-export const Static = Symbol(__DEV__ ? 'Static' : undefined)
+export const Text = Symbol.for('v-txt')
+export const Comment = Symbol.for('v-cmt')
+export const Static = Symbol.for('v-stc')
 
 export type VNodeTypes =
   | string
@@ -73,7 +86,7 @@ export type VNodeRef =
   | Ref
   | ((
       ref: Element | ComponentPublicInstance | null,
-      refs: Record<string, any>
+      refs: Record<string, any>,
     ) => void)
 
 export type VNodeNormalizedRefAtom = {
@@ -133,7 +146,7 @@ export type VNodeNormalizedChildren =
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
-  ExtraProps = { [key: string]: any }
+  ExtraProps = { [key: string]: any },
 > {
   /**
    * @internal
@@ -308,7 +321,7 @@ export function createElementBlock(
   children?: any,
   patchFlag?: number,
   dynamicProps?: string[],
-  shapeFlag?: number
+  shapeFlag?: number,
 ) {
   return setupBlock(
     createBaseVNode(
@@ -318,8 +331,8 @@ export function createElementBlock(
       patchFlag,
       dynamicProps,
       shapeFlag,
-      true /* isBlock */
-    )
+      true /* isBlock */,
+    ),
   )
 }
 
@@ -335,7 +348,7 @@ export function createBlock(
   props?: Record<string, any> | null,
   children?: any,
   patchFlag?: number,
-  dynamicProps?: string[]
+  dynamicProps?: string[],
 ): VNode {
   return setupBlock(
     createVNode(
@@ -344,8 +357,8 @@ export function createBlock(
       children,
       patchFlag,
       dynamicProps,
-      true /* isBlock: prevent a block from tracking itself */
-    )
+      true /* isBlock: prevent a block from tracking itself */,
+    ),
   )
 }
 
@@ -372,7 +385,7 @@ export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
 let vnodeArgsTransformer:
   | ((
       args: Parameters<typeof _createVNode>,
-      instance: ComponentInternalInstance | null
+      instance: ComponentInternalInstance | null,
     ) => Parameters<typeof _createVNode>)
   | undefined
 
@@ -392,7 +405,7 @@ const createVNodeWithArgsTransform = (
   return _createVNode(
     ...(vnodeArgsTransformer
       ? vnodeArgsTransformer(args, currentRenderingInstance)
-      : args)
+      : args),
   )
 }
 
@@ -404,8 +417,11 @@ const normalizeKey = ({ key }: VNodeProps): VNode['key'] =>
 const normalizeRef = ({
   ref,
   ref_key,
-  ref_for
+  ref_for,
 }: VNodeProps): VNodeNormalizedRefAtom | null => {
+  if (typeof ref === 'number') {
+    ref = '' + ref
+  }
   return (
     ref != null
       ? isString(ref) || isRef(ref) || isFunction(ref)
@@ -423,7 +439,7 @@ function createBaseVNode(
   dynamicProps: string[] | null = null,
   shapeFlag = type === Fragment ? 0 : ShapeFlags.ELEMENT,
   isBlockNode = false,
-  needFullChildrenNormalization = false
+  needFullChildrenNormalization = false,
 ) {
   const vnode = {
     __v_isVNode: true,
@@ -453,7 +469,7 @@ function createBaseVNode(
     appContext: null,
     // fixed by xxxxxx
     hostInstance: currentRenderingInstance,
-    ctx: currentRenderingInstance
+    ctx: currentRenderingInstance,
   } as VNode
 
   if (needFullChildrenNormalization) {
@@ -489,7 +505,7 @@ function createBaseVNode(
     (vnode.patchFlag > 0 || shapeFlag & ShapeFlags.COMPONENT) &&
     // the EVENTS flag is only for hydration and if it is the only flag, the
     // vnode should not be considered dynamic due to handler caching.
-    vnode.patchFlag !== PatchFlags.HYDRATE_EVENTS
+    vnode.patchFlag !== PatchFlags.NEED_HYDRATION
   ) {
     currentBlock.push(vnode)
   }
@@ -514,7 +530,7 @@ function _createVNode(
   children: unknown = null,
   patchFlag: number = 0,
   dynamicProps: string[] | null = null,
-  isBlockNode = false
+  isBlockNode = false,
 ): VNode {
   if (!type || type === NULL_DYNAMIC_COMPONENT) {
     if (__DEV__ && !type) {
@@ -574,24 +590,24 @@ function _createVNode(
   const shapeFlag = isString(type)
     ? ShapeFlags.ELEMENT
     : __FEATURE_SUSPENSE__ && isSuspense(type)
-    ? ShapeFlags.SUSPENSE
-    : isTeleport(type)
-    ? ShapeFlags.TELEPORT
-    : isObject(type)
-    ? ShapeFlags.STATEFUL_COMPONENT
-    : isFunction(type)
-    ? ShapeFlags.FUNCTIONAL_COMPONENT
-    : 0
+      ? ShapeFlags.SUSPENSE
+      : isTeleport(type)
+        ? ShapeFlags.TELEPORT
+        : isObject(type)
+          ? ShapeFlags.STATEFUL_COMPONENT
+          : isFunction(type)
+            ? ShapeFlags.FUNCTIONAL_COMPONENT
+            : 0
 
   if (__DEV__ && shapeFlag & ShapeFlags.STATEFUL_COMPONENT && isProxy(type)) {
     type = toRaw(type)
     warn(
-      `Vue received a Component which was made a reactive object. This can ` +
-        `lead to unnecessary performance overhead, and should be avoided by ` +
+      `Vue received a Component that was made a reactive object. This can ` +
+        `lead to unnecessary performance overhead and should be avoided by ` +
         `marking the component with \`markRaw\` or using \`shallowRef\` ` +
         `instead of \`ref\`.`,
       `\nComponent that was made reactive: `,
-      type
+      type,
     )
   }
 
@@ -603,7 +619,7 @@ function _createVNode(
     dynamicProps,
     shapeFlag,
     isBlockNode,
-    true
+    true,
   )
 }
 
@@ -617,7 +633,7 @@ export function guardReactiveProps(props: (Data & VNodeProps) | null) {
 export function cloneVNode<T, U>(
   vnode: VNode<T, U>,
   extraProps?: (Data & VNodeProps) | null,
-  mergeRef = false
+  mergeRef = false,
 ): VNode<T, U> {
   // This is intentionally NOT using spread or extend to avoid the runtime
   // key enumeration cost.
@@ -656,7 +672,7 @@ export function cloneVNode<T, U>(
     // fast paths only.
     patchFlag:
       extraProps && vnode.type !== Fragment
-        ? patchFlag === -1 // hoisted node
+        ? patchFlag === PatchFlags.HOISTED // hoisted node
           ? PatchFlags.FULL_PROPS
           : patchFlag | PatchFlags.FULL_PROPS
         : patchFlag,
@@ -679,12 +695,12 @@ export function cloneVNode<T, U>(
     el: vnode.el,
     anchor: vnode.anchor,
     ctx: vnode.ctx,
-    ce: vnode.ce
+    ce: vnode.ce,
   }
   if (__COMPAT__) {
     defineLegacyVNodeProperties(cloned as VNode)
   }
-  return cloned as any
+  return cloned
 }
 
 /**
@@ -711,7 +727,7 @@ export function createTextVNode(text: string = ' ', flag: number = 0): VNode {
  */
 export function createStaticVNode(
   content: string,
-  numberOfNodes: number
+  numberOfNodes: number,
 ): VNode {
   // A static vnode can contain multiple stringified elements, and the number
   // of elements is necessary for hydration.
@@ -727,7 +743,7 @@ export function createCommentVNode(
   text: string = '',
   // when used as the v-else branch, the comment node must be created as a
   // block to ensure correct updates.
-  asBlock: boolean = false
+  asBlock: boolean = false,
 ): VNode {
   return asBlock
     ? (openBlock(), createBlock(Comment, null, text))
@@ -744,7 +760,7 @@ export function normalizeVNode(child: VNodeChild): VNode {
       Fragment,
       null,
       // #3666, avoid reference pollution when reusing vnode
-      child.slice()
+      child.slice(),
     )
   } else if (typeof child === 'object') {
     // already vnode, this should be the most common since compiled templates
@@ -854,10 +870,10 @@ export function invokeVNodeHook(
   hook: VNodeHook,
   instance: ComponentInternalInstance | null,
   vnode: VNode,
-  prevVNode: VNode | null = null
+  prevVNode: VNode | null = null,
 ) {
   callWithAsyncErrorHandling(hook, instance, ErrorCodes.VNODE_HOOK, [
     vnode,
-    prevVNode
+    prevVNode,
   ])
 }

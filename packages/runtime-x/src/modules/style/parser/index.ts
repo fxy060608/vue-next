@@ -6,7 +6,7 @@ import { expandStyle } from './expand'
  */
 export function parseStyleDecl(
   prop: string,
-  value: any | null
+  value: any | null,
 ): Map<string, any> {
   return expandStyle(prop, value)
 }

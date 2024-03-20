@@ -1,9 +1,9 @@
-import {
+import type {
+  IDocument as UniXDocument,
   Element as UniXElement,
-  IDocument as UniXDocument
 } from '@dcloudio/uni-app-x/types/native'
 
-import { RendererOptions } from '@vue/runtime-core'
+import type { RendererOptions } from '@vue/runtime-core'
 import { updateClassStyles } from './modules/class'
 
 let rootDocument: UniXDocument
@@ -76,7 +76,7 @@ export const nodeOps: Omit<
     el.setAttribute('value', text)
   },
   parentNode: node => node.parentNode as UniXElement | null,
-  nextSibling: node => node.nextSibling
+  nextSibling: node => node.nextSibling,
 }
 
 // patchClass 先子后父，所以插入父的时候 updateChildrenClassStyle
