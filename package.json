@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
+    "build:x": "node scripts/build.mjs uni-app-x",
     "size": "run-s size-global size-baseline",
     "size-global": "node scripts/build.mjs vue runtime-dom -f global -p",
     "size-baseline": "node scripts/build.mjs runtime-dom runtime-core reactivity shared -f esm-bundler && cd packages/size-check && vite build && node brotli",
