@@ -71,7 +71,19 @@ function transformAttr(
   if (opts) {
     const camelized = camelize(key)
     if (opts['class'].indexOf(camelized) > -1) {
-      return [camelized, parseClassList([value as string], instance, el)]
+      const classStyle = parseClassList([value as string], instance, el)
+      // 同步微信效果
+      // button 的 hoverClass = 'none'，忽略用户设定的.none css
+      // button 的 hoverClass = 'button-hover',并且没有设置对应样式，应当默认
+      if (el.tagName === 'BUTTON') {
+        if (
+          value === 'none' ||
+          (value == 'button-hover' && classStyle.size == 0)
+        ) {
+          return [camelized, value]
+        }
+      }
+      return [camelized, classStyle]
     }
     if (opts['style'].indexOf(camelized) > -1) {
       if (isString(value)) {
