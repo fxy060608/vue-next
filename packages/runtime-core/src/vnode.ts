@@ -518,9 +518,9 @@ function createBaseVNode(
   // 保持和微信一致
   // button 如果没有设置hoverClass属性，需要指定默认值
   if (type == 'button') {
-    if (vnode.props == null) vnode.props = new Map()
-    if (!vnode.props!.has('hoverClass') && !vnode.props!.has('hover-class')) {
-      vnode.props!.set('hoverClass', 'button-hover')
+    if (vnode.props == null) vnode.props = {}
+    if (!vnode.props!['hoverClass'] && !vnode.props!['hover-class']) {
+      vnode.props!['hoverClass'] = 'button-hover'
     }
   }
 
