@@ -19,9 +19,9 @@ module.exports = {
     'ts-jest': {
       tsconfig: {
         target: 'esnext',
-        sourceMap: true
-      }
-    }
+        sourceMap: true,
+      },
+    },
   },
   coverageDirectory: 'coverage',
   coverageReporters: ['html', 'lcov', 'text'],
@@ -40,7 +40,7 @@ module.exports = {
     // only used as a build entry
     '!packages/vue/src/runtime.ts',
     // mostly just entries
-    '!packages/vue-compat/**'
+    '!packages/vue-compat/**',
   ],
   watchPathIgnorePatterns: ['/node_modules/', '/dist/', '/.git/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
@@ -50,7 +50,7 @@ module.exports = {
     '^@vue/(.*?)$': '<rootDir>/packages/$1/src',
     'vue/compiler-sfc': '<rootDir>/packages/compiler-sfc/src',
     'vue/server-renderer': '<rootDir>/packages/server-renderer/src',
-    vue: '<rootDir>/packages/vue/src'
+    vue: '<rootDir>/packages/vue/src',
   },
   rootDir: __dirname,
   testMatch: ['<rootDir>/packages/**/__tests__/**/*spec.[jt]s?(x)'],
@@ -58,5 +58,5 @@ module.exports = {
     ? // ignore example tests on netlify builds since they don't contribute
       // to coverage and can cause netlify builds to fail
       ['/node_modules/', '/examples/__tests__']
-    : ['/node_modules/']
+    : ['/node_modules/'],
 }
