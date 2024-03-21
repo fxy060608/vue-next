@@ -56,6 +56,8 @@ export {
   onErrorCaptured,
   onServerPrefetch,
 } from './apiLifecycle'
+// fixed by xxxxxx
+export { onBeforeActivate, onBeforeDeactivate } from './components/KeepAlive'
 export { provide, inject, hasInjectionContext } from './apiInject'
 export { nextTick } from './scheduler'
 export { defineComponent } from './apiDefineComponent'
