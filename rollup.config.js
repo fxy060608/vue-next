@@ -176,6 +176,8 @@ function createConfig(format, output, plugins = []) {
   function resolveDefine() {
     /** @type {Record<string, string>} */
     const replacements = {
+      // fixed by xxxxxx
+      __X__: `${process.env.TARGET?.includes('uni-x-')}`,
       __COMMIT__: `"${process.env.COMMIT}"`,
       __VERSION__: `"${masterVersion}"`,
       // this is only used during Vue's internal tests
