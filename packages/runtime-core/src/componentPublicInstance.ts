@@ -250,7 +250,11 @@ export type PublicPropertiesMap = Record<
 function isUniBuiltInComponentInstance(
   p: Record<string, any> | ComponentPublicInstance | null,
 ): p is ComponentPublicInstance {
-  return p && p.$options && (p.$options.__reserved || p.$options.rootElement)
+  return !!(
+    p &&
+    p.$options &&
+    (p.$options.__reserved || p.$options.rootElement)
+  )
 }
 
 /**
@@ -273,6 +277,48 @@ const getPublicInstance = (
   return getPublicInstance(i.parent)
 }
 
+// fixed by xxxxxx copy and modify from packages/runtime-core/src/compat/instanceChildren.ts
+function getCompatChildren(
+  instance: ComponentInternalInstance,
+): ComponentInternalInstance[] {
+  const root = instance.subTree
+  const children: ComponentInternalInstance[] = []
+  if (root) {
+    walk(root, children)
+  }
+  return children
+}
+
+// fixed by xxxxxx copy and modify from packages/runtime-core/src/compat/instanceChildren.ts
+function walk(vnode: VNode, children: ComponentInternalInstance[]) {
+  if (vnode.component) {
+    children.push(vnode.component)
+  } else if (vnode.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    const vnodes = vnode.children as VNode[]
+    for (let i = 0; i < vnodes.length; i++) {
+      walk(vnodes[i], children)
+    }
+  }
+}
+
+// fixed by xxxxxx
+const createForceUpdate = (i: ComponentInternalInstance) => {
+  return function () {
+    i.effect.dirty = true
+    queueJob(i.update)
+    if (!__X__) {
+      return
+    }
+    const children = getCompatChildren(i)
+    children.forEach(child => {
+      const p = getExposeProxy(child) || child.proxy
+      if (isUniBuiltInComponentInstance(p)) {
+        p.$forceUpdate()
+      }
+    })
+  }
+}
+
 export const publicPropertiesMap: PublicPropertiesMap =
   // Move PURE marker to new line to workaround compiler discarding it
   // due to type annotation
@@ -289,32 +335,7 @@ export const publicPropertiesMap: PublicPropertiesMap =
     $emit: i => i.emit,
     $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
     // fixed by xxxxxx
-    $forceUpdate: i =>
-      i.f ||
-      (i.f = () => {
-        queueJob(i.update)
-        if (!__X__) {
-          return
-        }
-        const subTree = i.subTree
-        if (subTree.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-          const vnodes = subTree.children as VNode[]
-          vnodes.forEach(vnode => {
-            if (!vnode.component) {
-              return
-            }
-            const p = getExposeProxy(vnode.component) || vnode.component.proxy
-            if (isUniBuiltInComponentInstance(p)) {
-              p.$forceUpdate()
-            }
-          })
-        } else if (subTree.component) {
-          const p = getExposeProxy(subTree.component) || subTree.component.proxy
-          if (isUniBuiltInComponentInstance(p)) {
-            p.$forceUpdate()
-          }
-        }
-      }),
+    $forceUpdate: i => i.f || (i.f = createForceUpdate(i)),
     $nextTick: i => i.n || (i.n = nextTick.bind(i.proxy!)),
     $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP),
   } as PublicPropertiesMap)
