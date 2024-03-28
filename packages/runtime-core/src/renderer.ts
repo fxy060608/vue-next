@@ -947,7 +947,7 @@ function baseCreateRenderer(
             // #1471 force patch value
             if (
               next !== prev ||
-              key === 'value' ||
+              // key === 'value' || // fixed by xxxxxx
               (hostForcePatchProp && hostForcePatchProp(el, key)) // fixed by xxxxxx
             ) {
               hostPatchProp(
