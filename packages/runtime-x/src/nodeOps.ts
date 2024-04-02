@@ -5,6 +5,17 @@ import type {
 
 import type { RendererOptions } from '@vue/runtime-core'
 import { updateClassStyles } from './modules/class'
+import {
+  getExtraChildNode,
+  getExtraChildNodes,
+  getExtraParentNode,
+  isExtraTextNode,
+  isTextElement,
+  setExtraChildNode,
+  setExtraChildNodes,
+  setExtraIsTextNode,
+  setExtraParentNode,
+} from './helpers/node'
 
 let rootDocument: UniXDocument
 export function getDocument() {
@@ -24,11 +35,36 @@ export function isInDocument(parent: UniXElement): boolean {
   return !!parent.pageId
 }
 
+function updateTextNode(node: UniXElement) {
+  // TODO use native TextNode
+  const childNode = getExtraChildNode(node)
+  if (childNode !== null) {
+    // TODO multi TextNode
+    const text = childNode!.getAttribute('value')
+    node.setAttribute('value', text || '')
+  }
+}
+
 export const nodeOps: Omit<
   RendererOptions<UniXElement, UniXElement>,
   'patchProp'
 > = {
   insert: (el, parent, anchor) => {
+    // TODO use native TextNode
+    if (isTextElement(parent)) {
+      if (isExtraTextNode(el)) {
+        // TODO multi TextNode
+        const childNode = getExtraChildNode(parent)
+        if (childNode !== null) {
+          console.error('Multiple text nodes are not allowed.')
+        } else {
+          setExtraChildNode(parent, el)
+          setExtraParentNode(el, parent)
+          updateTextNode(parent)
+        }
+        return
+      }
+    }
     if (!anchor) {
       parent.appendChild(el)
     } else {
@@ -44,6 +80,14 @@ export const nodeOps: Omit<
   remove: child => {
     const parent = child.parentNode
     if (parent) {
+      const childNodes = getExtraChildNodes(parent)
+      if (childNodes !== null) {
+        const index = childNodes.indexOf(child)
+        if (index !== -1) {
+          childNodes.splice(index, 1)
+          setExtraChildNodes(parent, childNodes)
+        }
+      }
       parent.removeChild(child)
     }
   },
@@ -53,6 +97,7 @@ export const nodeOps: Omit<
   createText: (text, container) => {
     const textNode = getDocument().createElement('text')
     textNode.setAttribute('value', text)
+    setExtraIsTextNode(textNode, true)
     return textNode
   },
   createComment: (text, container) => {
@@ -60,6 +105,12 @@ export const nodeOps: Omit<
   },
   setText: (node, text) => {
     node.setAttribute('value', text)
+
+    // TODO use native TextNode
+    const parent = getExtraParentNode(node)
+    if (parent !== null) {
+      updateTextNode(parent)
+    }
   },
   setElementText: (el, text) => {
     // 非文本节点自动嵌套文本子节点
