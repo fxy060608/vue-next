@@ -449,7 +449,9 @@ export function hmrShouldReload(
 ): boolean {
   if (
     !next.scriptSetup ||
-    (next.scriptSetup.lang !== 'ts' && next.scriptSetup.lang !== 'tsx')
+    (next.scriptSetup.lang !== 'ts' &&
+      next.scriptSetup.lang !== 'tsx' &&
+      next.scriptSetup.lang !== 'uts') // fixed by xxxxxx
   ) {
     return false
   }

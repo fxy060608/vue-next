@@ -176,7 +176,8 @@ export function compileScript(
     )
   }
 
-  if (scriptSetupLang && !ctx.isJS && !ctx.isTS) {
+  if (scriptSetupLang && !ctx.isJS && !ctx.isTS && !ctx.isUTS) {
+    // fixed by xxxxxx
     // do not process non js/ts script blocks
     return scriptSetup
   }
@@ -228,7 +229,7 @@ export function compileScript(
     let isUsedInTemplate = needTemplateUsageCheck
     if (
       needTemplateUsageCheck &&
-      ctx.isTS &&
+      (ctx.isTS || ctx.isUTS) && // fixed by xxxxxx
       sfc.template &&
       !sfc.template.src &&
       !sfc.template.lang
@@ -645,7 +646,8 @@ export function compileScript(
       )
     }
 
-    if (ctx.isTS) {
+    if (ctx.isTS || ctx.isUTS) {
+      // fixed by xxxxxx
       // move all Type declarations to outer scope
       if (
         node.type.startsWith('TS') ||
@@ -781,7 +783,7 @@ export function compileScript(
 
   // inject temp variables for async context preservation
   if (hasAwait) {
-    const any = ctx.isTS ? `: any` : ``
+    const any = ctx.isTS || ctx.isUTS ? `: any` : `` // fixed by xxxxxx
     ctx.s.prependLeft(startOffset, `\nlet __temp${any}, __restore${any}\n`)
   }
 
@@ -947,7 +949,8 @@ export function compileScript(
   const exposeCall =
     ctx.hasDefineExposeCall || options.inlineTemplate ? `` : `  __expose();\n`
   // wrap setup code with function.
-  if (ctx.isTS) {
+  if (ctx.isTS || ctx.isUTS) {
+    // fixed by xxxxxx
     // for TS, make sure the exported type is still valid type with
     // correct props information
     // we have to use object spread for types to be merged properly

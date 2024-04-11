@@ -11,7 +11,8 @@ export function processNormalScript(
   scopeId: string,
 ) {
   const script = ctx.descriptor.script!
-  if (script.lang && !ctx.isJS && !ctx.isTS) {
+  if (script.lang && !ctx.isJS && !ctx.isTS && !ctx.isUTS) {
+    // fixed by xxxxxx
     // do not process non js/ts script blocks
     return script
   }
@@ -27,6 +28,17 @@ export function processNormalScript(
       const defaultVar = genDefaultAs || normalScriptDefaultVar
       const s = new MagicString(content)
       rewriteDefaultAST(scriptAst.body, s, defaultVar)
+      // fixed by xxxxxx
+      if (ctx.isUTS) {
+        scriptAst.body.forEach(node => {
+          if (node.type === 'ExportDefaultDeclaration') {
+            if (node.declaration.type === 'ObjectExpression') {
+              s.appendLeft(node.declaration.start!, `defineComponent(`)
+              s.appendRight(node.declaration.end!, `)`)
+            }
+          }
+        })
+      }
       content = s.toString()
       if (cssVars.length && !ctx.options.templateOptions?.ssr) {
         content += genNormalScriptCssVarsCode(

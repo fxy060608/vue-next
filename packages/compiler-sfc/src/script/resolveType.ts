@@ -907,6 +907,12 @@ function importSourceToScope(
       // relative import - fast path
       const filename = joinPaths(dirname(scope.filename), source)
       resolved = resolveExt(filename, fs)
+      // fixed by xxxxxx
+    } else if (process.env.UNI_INPUT_DIR && source.startsWith('@/')) {
+      resolved = resolveExt(
+        joinPaths(process.env.UNI_INPUT_DIR, source.replace('@/', '')),
+        fs,
+      )
     } else {
       // module or aliased import - use full TS resolution, only supported in Node
       if (!__CJS__) {
@@ -1123,7 +1129,8 @@ function parseFile(
   parserPlugins?: SFCScriptCompileOptions['babelParserPlugins'],
 ): Statement[] {
   const ext = extname(filename)
-  if (ext === '.ts' || ext === '.tsx') {
+  if (ext === '.uts' || ext === '.ts' || ext === '.tsx') {
+    // fixed by xxxxxx
     return babelParse(content, {
       plugins: resolveParserPlugins(
         ext.slice(1),
@@ -1132,7 +1139,8 @@ function parseFile(
       ),
       sourceType: 'module',
     }).program.body
-  } else if (ext === '.vue') {
+  } else if (ext === '.vue' || ext === '.uvue' || ext === '.nvue') {
+    // fixed by xxxxxx
     const {
       descriptor: { script, scriptSetup },
     } = parse(content)

@@ -12,6 +12,8 @@ import type { TypeScope } from './resolveType'
 export class ScriptCompileContext {
   isJS: boolean
   isTS: boolean
+  // fixed by xxxxxx
+  isUTS: boolean
   isCE = false
 
   scriptAst: Program | null
@@ -95,6 +97,8 @@ export class ScriptCompileContext {
       scriptLang === 'tsx' ||
       scriptSetupLang === 'ts' ||
       scriptSetupLang === 'tsx'
+    // fixed by xxxxxx
+    this.isUTS = scriptLang === 'uts' || scriptSetupLang === 'uts'
 
     const customElement = options.customElement
     const filename = this.descriptor.filename
@@ -110,13 +114,18 @@ export class ScriptCompileContext {
       options.babelParserPlugins,
     )
 
-    function parse(input: string, offset: number): Program {
+    function parse(input: string, offset: number, startLine?: number): Program {
+      // fixed by xxxxxx
       try {
         return babelParse(input, {
           plugins,
           sourceType: 'module',
         }).program
       } catch (e: any) {
+        // fixed by xxxxxx
+        if (e.loc && startLine) {
+          e.loc.line = e.loc.line + (startLine - 1)
+        }
         e.message = `[vue/compiler-sfc] ${e.message}\n\n${
           descriptor.filename
         }\n${generateCodeFrame(
@@ -130,11 +139,19 @@ export class ScriptCompileContext {
 
     this.scriptAst =
       descriptor.script &&
-      parse(descriptor.script.content, descriptor.script.loc.start.offset)
+      parse(
+        descriptor.script.content,
+        descriptor.script.loc.start.offset,
+        descriptor.script.loc.start.line,
+      ) // fixed by xxxxxx
 
     this.scriptSetupAst =
       descriptor.scriptSetup &&
-      parse(descriptor.scriptSetup!.content, this.startOffset!)
+      parse(
+        descriptor.scriptSetup!.content,
+        this.startOffset!,
+        descriptor.scriptSetup.loc.start.line,
+      ) // fixed by xxxxxx
   }
 
   getString(node: Node, scriptSetup = true): string {
@@ -182,7 +199,8 @@ export function resolveParserPlugins(
     // should remove the jsx from user options
     userPlugins = userPlugins.filter(p => p !== 'jsx')
   }
-  if (lang === 'ts' || lang === 'tsx') {
+  if (lang === 'ts' || lang === 'tsx' || lang === 'uts') {
+    // fixed by xxxxxx
     plugins.push(['typescript', { dts }], 'explicitResourceManagement')
     if (!userPlugins || !userPlugins.includes('decorators')) {
       plugins.push('decorators-legacy')

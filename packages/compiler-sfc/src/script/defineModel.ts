@@ -153,9 +153,10 @@ export function genModelProps(ctx: ScriptCompileContext) {
 
     let decl: string
     if (runtimeType && options) {
-      decl = ctx.isTS
-        ? `{ ${codegenOptions}, ...${options} }`
-        : `Object.assign({ ${codegenOptions} }, ${options})`
+      decl =
+        ctx.isTS || ctx.isUTS // fixed by xxxxxx
+          ? `{ ${codegenOptions}, ...${options} }`
+          : `Object.assign({ ${codegenOptions} }, ${options})`
     } else {
       decl = options || (runtimeType ? `{ ${codegenOptions} }` : '{}')
     }
