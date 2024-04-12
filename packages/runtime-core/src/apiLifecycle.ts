@@ -14,7 +14,7 @@ import {
   resetTracking,
 } from '@vue/reactivity'
 import { LifecycleHooks } from './enums'
-import { ON_LOAD, isRootHook, isRootImmediateHook } from '@dcloudio/uni-shared'
+import { ON_LOAD, isRootHook, isRootImmediateHookX } from '@dcloudio/uni-shared'
 export { onActivated, onDeactivated } from './components/KeepAlive'
 
 export function injectHook(
@@ -27,7 +27,8 @@ export function injectHook(
     // fixed by xxxxxx
     if (isRootHook(type) && target !== target.root) {
       target = target.root
-      if (isRootImmediateHook(type)) {
+
+      if (isRootImmediateHookX(type)) {
         // 作用域应该是组件还是页面？目前绑定的是页面
         const proxy = target.proxy!
         callWithAsyncErrorHandling(
