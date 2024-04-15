@@ -286,6 +286,24 @@ export const publicPropertiesMap: PublicPropertiesMap =
     $watch: i => (__FEATURE_OPTIONS_API__ ? instanceWatch.bind(i) : NOOP),
   } as PublicPropertiesMap)
 
+// fixed by xxxxxx
+if (__X__) {
+  publicPropertiesMap.$callMethod = i => {
+    return (methodName: string, ...args: any[]) => {
+      const proxy = (getExposeProxy(i) || i.proxy) as Record<string, any>
+      if (!proxy) {
+        return null
+      }
+      const method = proxy[methodName]
+      if (method) {
+        return method(...args)
+      }
+      console.error(`method ${methodName} not found`)
+      return null
+    }
+  }
+}
+
 if (__COMPAT__) {
   installCompatInstanceProperties(publicPropertiesMap)
 }
