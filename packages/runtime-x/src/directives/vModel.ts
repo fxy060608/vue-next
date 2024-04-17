@@ -26,3 +26,5 @@ export const vModelText: ObjectDirective = {
     el.setAnyAttribute('value', _binding.value ?? '')
   },
 }
+
+export const vModelDynamic = vModelText
