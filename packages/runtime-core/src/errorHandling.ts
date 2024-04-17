@@ -159,11 +159,19 @@ function logError(
       popWarningContext()
     }
     // crash in dev by default so it's more noticeable
-    if (throwInDev) {
-      throw err
-    } else if (!__TEST__) {
+    // fixed by xxxxxx
+    if (err instanceof Error) {
+      console.error(
+        `---BEGIN:EXCEPTION---${err.message}\n${err.stack || ''}---END:EXCEPTION---`,
+      )
+    } else {
       console.error(err)
     }
+    // if (throwInDev) {
+    //   throw err
+    // } else if (!__TEST__) {
+    //   console.error(err)
+    // }
   } else {
     // recover in prod to reduce the impact on end-user
     console.error(err)
