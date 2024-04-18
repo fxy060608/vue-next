@@ -1,6 +1,7 @@
 import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
+  type NVueStyle,
   parseClassStyles,
   parseStyleSheet,
   toStyle,
@@ -9,6 +10,7 @@ import {
   getExtraClassStyle,
   isCommentNode,
   setExtraClassStyle,
+  setExtraParentStyles,
   setExtraStyles,
 } from '../helpers/node'
 
@@ -24,7 +26,14 @@ export function patchClass(
   const classList = next ? next.split(' ') : []
   el.classList = classList
   setExtraStyles(el, parseStyleSheet(instance))
-  // TODO 如果当前元素是组件根节点(非页面)
+  // 如果当前元素是组件根节点(非页面)
+  // todo 和安卓有差异 el === instance.subTree.el
+  if (instance.parent != null && instance !== instance.root) {
+    setExtraParentStyles(
+      el,
+      (instance.parent!.type as any).styles as NVueStyle[],
+    )
+  }
   updateClassStyles(el)
 }
 
