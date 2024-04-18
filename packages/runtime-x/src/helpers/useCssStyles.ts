@@ -1,9 +1,9 @@
 import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
-import { getExtraStyle, getExtraStyles } from './node'
+import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
 
-type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
+export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
 interface NVueComponent {
   mpType: 'page' | 'app'
@@ -119,32 +119,53 @@ function parseClassName(
   })
 }
 
-interface ParseStyleContext {
+class ParseStyleContext {
   styles: Map<string, unknown>
   weights: Record<string, number>
+
+  constructor() {
+    this.styles = new Map()
+    this.weights = {}
+  }
 }
 
 function parseClassListWithStyleSheet(
   classList: string[],
   stylesheet: NVueStyle | null,
+  parentStylesheet: NVueStyle[] | null,
   el: UniXElement | null = null,
-) {
-  const context: ParseStyleContext = {
-    styles: new Map(),
-    weights: {},
-  }
+): ParseStyleContext {
+  const context: ParseStyleContext = new ParseStyleContext()
   classList.forEach(className => {
     const parentStyles = stylesheet && stylesheet[className]
     if (parentStyles) {
       parseClassName(context, parentStyles, el)
     }
   })
+
+  // 自定义组件根节点class需要访问父组件的样式
+  if (parentStylesheet != null) {
+    classList.forEach(className => {
+      // 和 android 是 map，ios 是 array []
+      const parentStyles = (parentStylesheet ?? []).find(
+        style => style[className] !== null,
+      )?.[className]
+      if (parentStyles != null) {
+        parseClassName(context, parentStyles!, el)
+      }
+    })
+  }
   return context
 }
 
 export function parseClassStyles(el: UniXElement) {
   const styles = getExtraStyles(el)
-  return parseClassListWithStyleSheet(el.classList, styles, el)
+  const parentStyles = getExtraParentStyles(el)
+  if ((styles == null && parentStyles == null) || el.classList.length == 0) {
+    return new ParseStyleContext()
+  }
+
+  return parseClassListWithStyleSheet(el.classList, styles, parentStyles, el)
 }
 
 export function parseClassList(
@@ -152,8 +173,12 @@ export function parseClassList(
   instance: ComponentInternalInstance,
   el: UniXElement | null = null,
 ) {
-  return parseClassListWithStyleSheet(classList, parseStyleSheet(instance), el)
-    .styles
+  return parseClassListWithStyleSheet(
+    classList,
+    parseStyleSheet(instance),
+    null,
+    el,
+  ).styles
 }
 
 export function parseStyleSheet({

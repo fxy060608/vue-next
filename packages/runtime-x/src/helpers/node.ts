@@ -1,7 +1,8 @@
 import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
-
+import type { NVueStyle } from './useCssStyles'
 // 样式相关
 const NODE_EXT_STYLES = 'styles' // node 中存储的可用样式表
+const NODE_EXT_PARENT_STYLES = 'parentStyles' // node 中存储的父组件可用样式表
 const NODE_EXT_CLASS_STYLE = 'classStyle' // node 中存储的 classStyle
 const NODE_EXT_STYLE = 'style' // node 中存储的 style
 
@@ -19,20 +20,25 @@ export function getNodeExtraData(el: UniXElement, name: string): any | null {
   return el.ext.get(name)
 }
 
-export function getExtraStyles(
-  el: UniXElement,
-): Record<string, Record<string, Record<string, unknown>>> | null {
+// get/set extraStyles
+export function getExtraStyles(el: UniXElement): NVueStyle | null {
   return getNodeExtraData(el, NODE_EXT_STYLES) as Record<
     string,
     Record<string, Record<string, unknown>>
   > | null
 }
 
-export function setExtraStyles(
-  el: UniXElement,
-  styles: Record<string, Record<string, Record<string, any>>>,
-) {
+export function setExtraStyles(el: UniXElement, styles: NVueStyle) {
   setNodeExtraData(el, NODE_EXT_STYLES, styles)
+}
+
+// get/set extraParentStyles
+export function getExtraParentStyles(el: UniXElement): Array<NVueStyle> | null {
+  return getNodeExtraData(el, NODE_EXT_PARENT_STYLES) as Array<NVueStyle> | null
+}
+
+export function setExtraParentStyles(el: UniXElement, styles: NVueStyle[]) {
+  setNodeExtraData(el, NODE_EXT_PARENT_STYLES, styles)
 }
 
 export function getExtraClassStyle(el: UniXElement): Map<string, any> | null {
