@@ -308,8 +308,8 @@ importers:
   packages/runtime-core:
     dependencies:
       '@dcloudio/uni-shared':
-        specifier: 3.0.0-alpha-4000120240201002
-        version: 3.0.0-alpha-4000120240201002
+        specifier: 3.0.0-alpha-4010320240417001
+        version: 3.0.0-alpha-4010320240417001
       '@vue/reactivity':
         specifier: workspace:*
         version: link:../reactivity
@@ -341,8 +341,8 @@ importers:
   packages/runtime-x:
     dependencies:
       '@dcloudio/uni-shared':
-        specifier: 3.0.0-alpha-4000120240201002
-        version: 3.0.0-alpha-4000120240201002
+        specifier: 3.0.0-alpha-4010320240417001
+        version: 3.0.0-alpha-4010320240417001
 
   packages/server-renderer:
     dependencies:
@@ -669,10 +669,10 @@ packages:
     resolution: {integrity: sha512-xE0y6akvqmXlXv57DYcYbqwd6RLRy+ehLOBPzKZhJwckFJ9+HSkAOa35wbknDG4wDT29fsQsos6trSAHojECBQ==}
     dev: true
 
-  /@dcloudio/uni-shared@3.0.0-alpha-4000120240201002:
-    resolution: {integrity: sha512-QOYAdVmZ0sip6iAIRiMGLxIMYPoaujE9ODKsOevbquj+HjreAXfLhaPBAUBhtoC2C492rEO/HETF/lBgUVChgA==}
+  /@dcloudio/uni-shared@3.0.0-alpha-4010320240417001:
+    resolution: {integrity: sha512-RFREx8S6HWQzqN3Dqd/iOgSzNRMr6lsV6amKQdqpihxwSW39le2cF9W/qc+LDZmcYyELKAmdk8eeI1V9xGAFog==}
     dependencies:
-      '@vue/shared': 3.3.11
+      '@vue/shared': 3.4.21
     dev: false
 
   /@esbuild/aix-ppc64@0.19.10:
@@ -1898,8 +1898,8 @@ packages:
     resolution: {integrity: sha512-D3dl2ZB9qE6mTuWPk9RlhDeP1dgNRUKC3NJxji74A4yL8M2MwlhLKUC/49WHjrNzSPug58fWx/yFbaTzGAQSBw==}
     dev: false
 
-  /@vue/shared@3.3.11:
-    resolution: {integrity: sha512-u2G8ZQ9IhMWTMXaWqZycnK4UthG1fA238CD+DP4Dm4WJi5hdUKKLg0RMRaRpDPNMdkTwIDkp7WtD0Rd9BH9fLw==}
+  /@vue/shared@3.4.21:
+    resolution: {integrity: sha512-PuJe7vDIi6VYSinuEbUIQgMIRZGgM8e4R+G+/dQTk0X1NEdvgvvgv7m+rfmDH1gZzyA1OjjoWskvHlfRNfQf3g==}
     dev: false
 
   /@zeit/schemas@2.29.0:
