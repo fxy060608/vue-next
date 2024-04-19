@@ -196,7 +196,10 @@ export function parseStyleSheet({
     const styles: NVueStyle[] = []
     if (appContext && __globalStyles) {
       // 全局样式，包括 app.css 以及 page.css
-      styles.push(__globalStyles)
+      const globalStyles = isArray(__globalStyles)
+        ? __globalStyles
+        : [__globalStyles]
+      styles.push(...globalStyles)
     }
     // 合并页面样式
     // TODO 添加额外缓存
