@@ -68,17 +68,20 @@ export function nextTick<T = void>(
   const current =
     currentFlushPromise === null || instance === null
       ? promise
-      : promise.then(() => {
-          return new Promise<void>(resolve => {
-            if (instance === null) {
-              resolve()
-            } else {
-              instance.$waitNativeRender(() => {
+      : ({
+          then(resolve: Function) {
+            promise.then(() => {
+              if (instance === null) {
                 resolve()
-              })
-            }
-          })
-        })
+              } else {
+                instance.$waitNativeRender(() => {
+                  resolve()
+                })
+              }
+            })
+          },
+        } as Promise<any>)
+
   return fn ? current.then(this ? fn.bind(this) : fn) : current
 }
 
