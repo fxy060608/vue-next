@@ -11,12 +11,6 @@ describe('modules style.ts', () => {
     },
   } as unknown as UniXElement
 
-  vi.mock('./style/parser', () => {
-    return {
-      // parseStyleDecl:
-    }
-  })
-
   vi.mock('../src/helpers/node.ts', () => {
     return {
       getExtraClassStyle: vi.fn(() => new Map()),
