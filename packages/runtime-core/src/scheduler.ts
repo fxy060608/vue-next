@@ -5,6 +5,7 @@ import {
   getComponentName,
   getCurrentInstance,
 } from './component'
+import PromisePolyfill from 'promise-polyfill'
 
 export interface SchedulerJob extends Function {
   id?: number
@@ -46,13 +47,8 @@ let flushIndex = 0
 const pendingPostFlushCbs: SchedulerJob[] = []
 let activePostFlushCbs: SchedulerJob[] | null = null
 let postFlushIndex = 0
-// fixed by xxxxxx iOS
-const iOSPromise = {
-  then(callback: Function) {
-    setTimeout(() => callback(), 0)
-  },
-} as Promise<any>
-const resolvedPromise = /*#__PURE__*/ iOSPromise as Promise<any>
+// fixed by xxxxxx iOS15 以下 Promise 执行顺序与预期不一致
+const resolvedPromise = /*#__PURE__*/ PromisePolyfill.resolve() as Promise<any>
 let currentFlushPromise: Promise<void> | null = null
 
 const RECURSION_LIMIT = 100
@@ -68,20 +64,17 @@ export function nextTick<T = void>(
   const current =
     currentFlushPromise === null || instance === null
       ? promise
-      : ({
-          then(resolve: Function) {
-            promise.then(() => {
-              if (instance === null) {
+      : promise.then(() => {
+          return new Promise<void>(resolve => {
+            if (instance === null) {
+              resolve()
+            } else {
+              instance.$waitNativeRender(() => {
                 resolve()
-              } else {
-                instance.$waitNativeRender(() => {
-                  resolve()
-                })
-              }
-            })
-          },
-        } as Promise<any>)
-
+              })
+            }
+          })
+        })
   return fn ? current.then(this ? fn.bind(this) : fn) : current
 }
 

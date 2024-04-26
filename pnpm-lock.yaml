@@ -47,6 +47,9 @@ importers:
       '@types/node':
         specifier: ^20.11.28
         version: 20.11.28
+      '@types/promise-polyfill':
+        specifier: ^6.0.6
+        version: 6.0.6
       '@types/semver':
         specifier: ^7.5.8
         version: 7.5.8
@@ -125,6 +128,9 @@ importers:
       pretty-bytes:
         specifier: ^6.1.1
         version: 6.1.1
+      promise-polyfill:
+        specifier: ^8.3.0
+        version: 8.3.0
       pug:
         specifier: ^3.0.2
         version: 3.0.2
@@ -316,6 +322,9 @@ importers:
       '@vue/shared':
         specifier: workspace:*
         version: link:../shared
+      promise-polyfill:
+        specifier: ^8.3.0
+        version: 8.3.0
 
   packages/runtime-dom:
     dependencies:
@@ -1521,6 +1530,10 @@ packages:
 
   /@types/normalize-package-data@2.4.3:
     resolution: {integrity: sha512-ehPtgRgaULsFG8x0NeYJvmyH1hmlfsNLujHe9dQEia/7MAJYdzMSi19JtchUHjmBA6XC/75dK55mzZH+RyieSg==}
+    dev: true
+
+  /@types/promise-polyfill@6.0.6:
+    resolution: {integrity: sha512-nKg0HIgdKRKfi5S3IlrpiNWqxiJOqYOV70jAtalqhvb5zJt5IoQMgy1QS3y5wsbUQPOCZHQxaPg+btBUVbA+hA==}
     dev: true
 
   /@types/resolve@1.20.2:
@@ -4779,6 +4792,9 @@ packages:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
     engines: {node: '>=0.4.0'}
     dev: true
+
+  /promise-polyfill@8.3.0:
+    resolution: {integrity: sha512-H5oELycFml5yto/atYqmjyigJoAo3+OXwolYiH7OfQuYlAqhxNvTfiNMbV9hsC6Yp83yE5r2KTVmtrG6R9i6Pg==}
 
   /promise@7.3.1:
     resolution: {integrity: sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==}
