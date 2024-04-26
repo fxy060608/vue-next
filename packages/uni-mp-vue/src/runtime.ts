@@ -67,6 +67,8 @@ export {
   onServerPrefetch,
   onUpdated,
   provide,
+  // vue-demi 使用到了
+  hasInjectionContext,
   queuePostFlushCb,
   resolveComponent,
   resolveDirective,
