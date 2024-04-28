@@ -115,7 +115,11 @@ export interface RendererOptions<
     type: string, // fixed by xxxxxx
     container: RendererElement,
   ): HostElement
-  createText(text: string, container: RendererElement): HostNode // fixed by xxxxxx
+  createText(
+    text: string,
+    container: RendererElement,
+    isAnchor?: boolean,
+  ): HostNode // fixed by xxxxxx
   createComment(text: string, container: RendererElement): HostNode // fixed by xxxxxx
   setText(node: HostNode, text: string): void
   setElementText(node: HostElement, text: string): void
@@ -1126,10 +1130,10 @@ function baseCreateRenderer(
   ) => {
     const fragmentStartAnchor = (n2.el = n1
       ? n1.el
-      : hostCreateComment('', container))! // fixed by xxxxxx
+      : hostCreateText('', container, true))! // fixed by xxxxxx
     const fragmentEndAnchor = (n2.anchor = n1
       ? n1.anchor
-      : hostCreateComment('', container))! // fixed by xxxxxx
+      : hostCreateText('', container, true))! // fixed by xxxxxx
 
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
 

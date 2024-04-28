@@ -94,7 +94,10 @@ export const nodeOps: Omit<
   createElement: (tag, container): UniXElement => {
     return getDocument().createElement(tag)
   },
-  createText: (text, container) => {
+  createText: (text, container, isAnchor) => {
+    if (isAnchor) {
+      return getDocument().createComment(text)
+    }
     const textNode = getDocument().createElement('text')
     textNode.setAttribute('value', text)
     setExtraIsTextNode(textNode, true)
