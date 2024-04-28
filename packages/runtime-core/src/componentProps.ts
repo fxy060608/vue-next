@@ -665,9 +665,9 @@ function validateProp(
   props: Data,
   isAbsent: boolean,
 ) {
-  const { type, required, validator, skipCheck } = prop
+  const { type, required, validator, skipCheck, default: defaultValue } = prop
   // required!
-  if (required && isAbsent) {
+  if (defaultValue == null && required && isAbsent) {
     warn('Missing required prop: "' + name + '"')
     return
   }
