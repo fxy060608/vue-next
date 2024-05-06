@@ -146,7 +146,12 @@ function patchStopImmediatePropagation(
       originalStop.call(e)
       ;(e as any)._stopped = true
     }
-    return value.map(fn => (e: Event) => !(e as any)._stopped && fn && fn(e))
+    // fixed by xxxxxx
+    return value.map(fn => {
+      const patchedFn = (e: Event) => !(e as any)._stopped && fn && fn(e)
+      patchedFn.__wwe = (fn as any).__wwe
+      return patchedFn
+    })
   } else {
     return value
   }
