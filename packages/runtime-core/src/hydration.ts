@@ -452,6 +452,9 @@ export function createHydrationFunctions(
             // check hydration mismatch
             if (
               __DEV__ &&
+              // fixed by xxxxxx 暂时不对比style，因为服务器style会rpx2unit，而客户端是在setStyle的时候处理的，此时还没有格式化
+              // 后续考虑调整客户端rpx2unit的时机，提前到vnode处
+              key !== 'style' &&
               propHasMismatch(el, key, props[key], vnode, parentComponent)
             ) {
               hasMismatch = true
