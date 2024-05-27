@@ -252,7 +252,9 @@ export function createHydrationFunctions(
             (domType !== DOMNodeTypes.ELEMENT ||
               (__X__ &&
                 (vnode.type as string).toLowerCase() !==
-                  'uni-' + (node as Element).tagName.toLowerCase())) &&
+                  'uni-' + (node as Element).tagName.toLowerCase() &&
+                vnode.type !== 'uni-cloud-db-element' &&
+                (node as Element).tagName !== 'UNICLOUD-DB')) &&
             !isTemplateNode(node)
           ) {
             nextNode = onMismatch()
