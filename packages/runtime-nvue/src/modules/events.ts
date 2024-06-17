@@ -1,13 +1,13 @@
 import type {
   NVueElement,
   UniEvent,
-  UniEventListener
+  UniEventListener,
 } from '@dcloudio/uni-shared'
 
 import { hyphenate, isArray } from '@vue/shared'
 import {
-  ComponentInternalInstance,
-  callWithAsyncErrorHandling
+  type ComponentInternalInstance,
+  callWithAsyncErrorHandling,
 } from '@vue/runtime-core'
 import { ErrorCodes } from 'packages/runtime-core/src/errorHandling'
 
@@ -21,7 +21,7 @@ export function addEventListener(
   el: NVueElement,
   event: string,
   handler: UniEventListener,
-  options?: EventListenerOptions
+  options?: EventListenerOptions,
 ) {
   el.addEvent(event, handler)
 }
@@ -35,7 +35,7 @@ export function patchEvent(
   rawName: string,
   prevValue: EventValue | null,
   nextValue: EventValue | null,
-  instance: ComponentInternalInstance | null = null
+  instance: ComponentInternalInstance | null = null,
 ) {
   // vei = vue event invokers
   const invokers = el._vei || (el._vei = {})
@@ -76,20 +76,20 @@ function parseName(name: string): [string, EventListenerOptions | undefined] {
       options
     }
   }
-  const event = name[2] === ':' ? name.slice(3) : name.slice(2)
-  return [formatEventName(hyphenate(event)), options]
+  const event = name[2] === ':' ? name.slice(3) : hyphenate(name.slice(2))
+  return [formatEventName(event), options]
 }
 
 function createInvoker(
   initialValue: EventValue,
-  instance: ComponentInternalInstance | null
+  instance: ComponentInternalInstance | null,
 ) {
   const invoker: Invoker = (e: UniEvent) => {
     callWithAsyncErrorHandling(
       invoker.value,
       instance,
       ErrorCodes.NATIVE_EVENT_HANDLER,
-      [e]
+      [e],
     )
   }
   invoker.value = initialValue
