@@ -187,7 +187,9 @@ export function parseStyleSheet({
   root,
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
-  if (!component.__styles) {
+  // 这里判断有值就跳过，导致了样式问题，临时规避问题
+  // if (!component.__styles)
+  {
     const __globalStyles = appContext.provides.__globalStyles
     // nvue 和 vue 混合开发时，__globalStyles注入的是未处理过的
     if (appContext && isArray(__globalStyles)) {
