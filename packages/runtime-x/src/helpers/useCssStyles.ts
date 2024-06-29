@@ -8,7 +8,6 @@ export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 interface NVueComponent {
   mpType: 'page' | 'app'
   styles: NVueStyle[]
-  __styles: NVueStyle
 }
 
 function each(obj: Record<string, unknown>) {
@@ -187,9 +186,14 @@ export function parseStyleSheet({
   root,
 }: ComponentInternalInstance) {
   const component = type as NVueComponent
-  // 这里判断有值就跳过，导致了样式问题，临时规避问题
-  // if (!component.__styles)
-  {
+  const pageInstance = root as ComponentInternalInstance & {
+    componentStylesCache?: Map<NVueComponent, NVueStyle>
+  }
+  if (!pageInstance.componentStylesCache) {
+    pageInstance.componentStylesCache = new Map()
+  }
+  let cache = pageInstance.componentStylesCache.get(component)
+  if (!cache) {
     const __globalStyles = appContext.provides.__globalStyles
     // nvue 和 vue 混合开发时，__globalStyles注入的是未处理过的
     if (appContext && isArray(__globalStyles)) {
@@ -212,9 +216,10 @@ export function parseStyleSheet({
     if (isArray(component.styles)) {
       styles.push(...component.styles)
     }
-    component.__styles = useCssStyles(styles)
+    cache = useCssStyles(styles)
+    pageInstance.componentStylesCache.set(component, cache)
   }
-  return component.__styles
+  return cache
 }
 
 export function extend<T>(
