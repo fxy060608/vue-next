@@ -87,7 +87,8 @@ function transformAttr(
     }
     if (opts['style'].indexOf(camelized) > -1) {
       if (isString(value)) {
-        return [camelized, parseStringStyle(value)]
+        const sytle = parseStringStyle(camelize(value))
+        return [camelized, sytle]
       }
       return [camelized, normalizeStyle(value)]
     }
