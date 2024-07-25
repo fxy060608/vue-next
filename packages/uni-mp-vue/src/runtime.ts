@@ -11,30 +11,38 @@ export { EMPTY_OBJ } from '@vue/shared'
 export { setTemplateRef } from './rendererTemplateRef'
 // @vue/reactivity
 export {
-  EffectScope,
-  ReactiveEffect,
-  customRef,
-  effect,
-  effectScope,
-  getCurrentScope,
+  // core
+  reactive,
+  ref,
+  readonly,
+  // utilities
+  unref,
+  proxyRefs,
+  isRef,
+  toRef,
+  toValue,
+  toRefs,
   isProxy,
   isReactive,
   isReadonly,
-  isRef,
-  markRaw,
-  onScopeDispose,
-  proxyRefs,
-  reactive,
-  readonly,
-  ref,
+  isShallow,
+  // advanced
+  customRef,
+  triggerRef,
+  shallowRef,
   shallowReactive,
   shallowReadonly,
-  shallowRef,
+  markRaw,
   toRaw,
-  toRef,
-  toRefs,
-  triggerRef,
-  unref,
+  // effect
+  effect,
+  stop,
+  ReactiveEffect,
+  // effect scope
+  effectScope,
+  EffectScope,
+  getCurrentScope,
+  onScopeDispose,
 } from '@vue/reactivity'
 
 export {
@@ -42,6 +50,7 @@ export {
   callWithErrorHandling,
   camelize,
   computed,
+  createPropsRestProxy,
   defineComponent,
   defineEmits,
   defineExpose,
@@ -50,6 +59,7 @@ export {
   inject,
   mergeDefaults,
   mergeProps,
+  mergeModels,
   nextTick,
   normalizeClass,
   normalizeProps,
@@ -73,7 +83,6 @@ export {
   resolveComponent,
   resolveDirective,
   resolveFilter,
-  stop,
   toDisplayString,
   toHandlerKey,
   toHandlers,
@@ -98,6 +107,8 @@ export {
   // vue-i18n 使用到了
   Text,
   Fragment,
+  // 新增
+  useModel,
 } from '@vue/runtime-core'
 export { useCssModule } from '@vue/runtime-dom'
 export { useCssVars } from './helpers/useCssVars'
