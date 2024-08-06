@@ -67,7 +67,9 @@ export function injectHook(
 }
 
 export const createHook =
-  <T extends Function = () => any>(lifecycle: LifecycleHooks) =>
+  <T extends Function = () => /* fixed by xxxxxx */ void>(
+    lifecycle: LifecycleHooks,
+  ) =>
   (hook: T, target: ComponentInternalInstance | null = currentInstance) =>
     // post-create lifecycle registrations are noops during SSR (except for serverPrefetch)
     (!isInSSRComponentSetup || lifecycle === LifecycleHooks.SERVER_PREFETCH) &&

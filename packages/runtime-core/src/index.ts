@@ -421,3 +421,38 @@ export const compatUtils = (
 export const DeprecationTypes = (
   __COMPAT__ ? _DeprecationTypes : null
 ) as typeof _DeprecationTypes
+
+// fixed by xxxxxx
+export { defineComponent as defineMixin } from './apiDefineComponent'
+import type { CreateAppFunction } from './apiCreateApp'
+export let createApp: CreateAppFunction<Element>
+export let createSSRApp: CreateAppFunction<Element>
+
+/**
+ * @private
+ */
+export declare const withModifiers: <
+  T extends (event: Event, ...args: unknown[]) => any,
+>(
+  fn: T & {
+    _withMods?:
+      | {
+          [key: string]: T
+        }
+      | undefined
+  },
+  modifiers: string[],
+) => T
+/**
+ * @private
+ */
+export declare const withKeys: <T extends (event: KeyboardEvent) => any>(
+  fn: T & {
+    _withKeys?:
+      | {
+          [k: string]: T
+        }
+      | undefined
+  },
+  modifiers: string[],
+) => T
