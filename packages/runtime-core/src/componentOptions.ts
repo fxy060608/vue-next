@@ -484,16 +484,15 @@ interface LegacyOptions<
       Mixin,
       Extends
     >,
-    // fixed by xxxxxx
-    // vm: CreateComponentPublicInstance<
-    //   Props,
-    //   {},
-    //   {},
-    //   {},
-    //   MethodOptions,
-    //   Mixin,
-    //   Extends
-    // >,
+    vm: CreateComponentPublicInstance<
+      Props,
+      {},
+      {},
+      {},
+      MethodOptions,
+      Mixin,
+      Extends
+    >,
   ) => D
   computed?: C
   methods?: M
@@ -715,7 +714,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
           `Plain object usage is no longer supported.`,
       )
     }
-    const data = dataOptions.call(publicThis /*, publicThis*/) // fixed by xxxxxx
+    const data = dataOptions.call(publicThis, publicThis)
     if (__DEV__ && isPromise(data)) {
       warn(
         `data() returned a Promise - note data() cannot be async; If you ` +

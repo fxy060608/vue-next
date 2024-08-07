@@ -546,12 +546,11 @@ describe('with mixins', () => {
       },
     },
 
-    data(/*vm*/) {
-      // fixed by uts
-      // expectType<number>(vm.a)
-      // expectType<number>(vm.b)
-      // expectType<number>(vm.c)
-      // expectType<number>(vm.d)
+    data(vm) {
+      expectType<number>(vm.a)
+      expectType<number>(vm.b)
+      expectType<number>(vm.c)
+      expectType<number>(vm.d)
 
       // should also expose declared props on `this`
       expectType<number>(this.a)
