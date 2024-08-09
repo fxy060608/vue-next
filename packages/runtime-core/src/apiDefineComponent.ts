@@ -55,6 +55,7 @@ export type DefineComponent<
   Props = ResolveProps<PropsOrPropOptions, E>,
   Defaults = ExtractDefaultPropTypes<PropsOrPropOptions>,
   S extends SlotsType = {},
+  I extends ComponentInjectOptions = {}, // fixed by xxxxxx
 > = ComponentPublicInstanceConstructor<
   CreateComponentPublicInstance<
     Props,
@@ -68,7 +69,7 @@ export type DefineComponent<
     PP & Props,
     Defaults,
     true,
-    {},
+    I,
     S
   >
 > &
@@ -197,7 +198,8 @@ export function defineComponent<
   PublicProps,
   ResolveProps<Props, E>,
   ExtractDefaultPropTypes<Props>,
-  S
+  S,
+  I // fixed by xxxxxx
 >
 
 // overload 3: object format with array props declaration

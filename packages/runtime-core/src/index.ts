@@ -61,7 +61,7 @@ export { nextTick } from './scheduler'
 export { defineComponent } from './apiDefineComponent'
 export { defineAsyncComponent } from './apiAsyncComponent'
 export { useAttrs, useSlots } from './apiSetupHelpers'
-export { useModel } from './helpers/useModel'
+// export { useModel } from './helpers/useModel' // fixed by xxxxxx
 
 // <script setup> API ----------------------------------------------------------
 
@@ -456,3 +456,10 @@ export declare const withKeys: <T extends (event: KeyboardEvent) => any>(
   },
   modifiers: string[],
 ) => T
+
+import type { ModelRef } from './apiSetupHelpers'
+export declare function useModel<R>(
+  props: any,
+  name: string,
+  options?: any,
+): ModelRef<R, string>
