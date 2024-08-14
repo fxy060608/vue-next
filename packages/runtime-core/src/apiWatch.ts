@@ -64,8 +64,8 @@ type MapSources<T, Immediate> = {
         : T[K]
       : never
 }
-
-type OnCleanup = (cleanupFn: () => void) => void
+// fixed by xxxxxx
+export type OnCleanup = (cleanupFn: () => void) => void
 
 export interface WatchOptionsBase extends DebuggerOptions {
   flush?: 'pre' | 'post' | 'sync'

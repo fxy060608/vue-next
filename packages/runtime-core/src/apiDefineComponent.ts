@@ -33,8 +33,8 @@ import type { SlotsType } from './componentSlots'
 export type PublicProps = VNodeProps &
   AllowedComponentProps &
   ComponentCustomProps
-
-type ResolveProps<PropsOrPropOptions, E extends EmitsOptions> = Readonly<
+// fixed by xxxxxx
+export type ResolveProps<PropsOrPropOptions, E extends EmitsOptions> = Readonly<
   PropsOrPropOptions extends ComponentPropsOptions
     ? ExtractPropTypes<PropsOrPropOptions>
     : PropsOrPropOptions

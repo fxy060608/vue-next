@@ -423,7 +423,7 @@ export const DeprecationTypes = (
 ) as typeof _DeprecationTypes
 
 // fixed by xxxxxx
-export { defineComponent as defineMixin } from './apiDefineComponent'
+export type { OnCleanup } from './apiWatch'
 import type { CreateAppFunction } from './apiCreateApp'
 export let createApp: CreateAppFunction<Element>
 export let createSSRApp: CreateAppFunction<Element>
@@ -463,3 +463,160 @@ export declare function useModel<R>(
   name: string,
   options?: any,
 ): ModelRef<R, string>
+
+import type { ObjectDirective } from './directives'
+export declare const vShow: ObjectDirective
+
+import type {
+  ComponentInjectOptions,
+  ComponentOptionsMixin,
+  ComponentOptionsWithArrayProps,
+  ComponentOptionsWithObjectProps,
+  ComponentOptionsWithoutProps,
+  ComputedOptions,
+  MethodOptions,
+} from './componentOptions'
+import type { EmitsOptions } from './componentEmits'
+import type { SlotsType } from './componentSlots'
+import type {
+  DefineComponent,
+  PublicProps,
+  ResolveProps,
+} from './apiDefineComponent'
+import type {
+  ComponentPropsOptions,
+  ExtractDefaultPropTypes,
+} from './componentProps'
+
+export declare function defineMixin<
+  Props = {},
+  RawBindings = {},
+  D = {},
+  C extends ComputedOptions = {},
+  M extends MethodOptions = {},
+  Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+  Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+  E extends EmitsOptions = {},
+  EE extends string = string,
+  S extends SlotsType = {},
+  I extends ComponentInjectOptions = {},
+  II extends string = string,
+>(
+  options: ComponentOptionsWithoutProps<
+    Props,
+    RawBindings,
+    D,
+    C,
+    M,
+    Mixin,
+    Extends,
+    E,
+    EE,
+    I,
+    II,
+    S
+  >,
+): DefineComponent<
+  Props,
+  RawBindings,
+  D,
+  C,
+  M,
+  Mixin,
+  Extends,
+  E,
+  EE,
+  PublicProps,
+  ResolveProps<Props, E>,
+  ExtractDefaultPropTypes<Props>,
+  {}
+>
+export declare function defineMixin<
+  PropNames extends string,
+  RawBindings,
+  D = {},
+  C extends ComputedOptions = {},
+  M extends MethodOptions = {},
+  Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+  Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+  E extends EmitsOptions = {},
+  EE extends string = string,
+  S extends SlotsType = {},
+  I extends ComponentInjectOptions = {},
+  II extends string = string,
+  Props = Readonly<{
+    [key in PropNames]?: any
+  }>,
+>(
+  options: ComponentOptionsWithArrayProps<
+    PropNames,
+    RawBindings,
+    D,
+    C,
+    M,
+    Mixin,
+    Extends,
+    E,
+    EE,
+    I,
+    II,
+    S
+  >,
+): DefineComponent<
+  Props,
+  RawBindings,
+  D,
+  C,
+  M,
+  Mixin,
+  Extends,
+  E,
+  EE,
+  PublicProps,
+  ResolveProps<Props, E>,
+  ExtractDefaultPropTypes<Props>,
+  {}
+>
+export declare function defineMixin<
+  PropsOptions extends Readonly<ComponentPropsOptions>,
+  RawBindings,
+  D = {},
+  C extends ComputedOptions = {},
+  M extends MethodOptions = {},
+  Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+  Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+  E extends EmitsOptions = {},
+  EE extends string = string,
+  S extends SlotsType = {},
+  I extends ComponentInjectOptions = {},
+  II extends string = string,
+>(
+  options: ComponentOptionsWithObjectProps<
+    PropsOptions,
+    RawBindings,
+    D,
+    C,
+    M,
+    Mixin,
+    Extends,
+    E,
+    EE,
+    I,
+    II,
+    S
+  >,
+): DefineComponent<
+  PropsOptions,
+  RawBindings,
+  D,
+  C,
+  M,
+  Mixin,
+  Extends,
+  E,
+  EE,
+  PublicProps,
+  ResolveProps<PropsOptions, E>,
+  ExtractDefaultPropTypes<PropsOptions>,
+  {}
+>
