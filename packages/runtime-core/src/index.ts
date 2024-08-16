@@ -469,6 +469,7 @@ export declare const vShow: ObjectDirective
 
 import type {
   ComponentInjectOptions,
+  ComponentOptions,
   ComponentOptionsMixin,
   ComponentOptionsWithArrayProps,
   ComponentOptionsWithObjectProps,
@@ -478,15 +479,8 @@ import type {
 } from './componentOptions'
 import type { EmitsOptions } from './componentEmits'
 import type { SlotsType } from './componentSlots'
-import type {
-  DefineComponent,
-  PublicProps,
-  ResolveProps,
-} from './apiDefineComponent'
-import type {
-  ComponentPropsOptions,
-  ExtractDefaultPropTypes,
-} from './componentProps'
+import type { ResolveProps } from './apiDefineComponent'
+import type { ComponentPropsOptions } from './componentProps'
 
 export declare function defineMixin<
   Props = {},
@@ -516,25 +510,11 @@ export declare function defineMixin<
     II,
     S
   >,
-): DefineComponent<
-  Props,
-  RawBindings,
-  D,
-  C,
-  M,
-  Mixin,
-  Extends,
-  E,
-  EE,
-  PublicProps,
-  ResolveProps<Props, E>,
-  ExtractDefaultPropTypes<Props>,
-  {}
->
+): ComponentOptions<Props, RawBindings, D, C, M, any, any, E, S>
 export declare function defineMixin<
   PropNames extends string,
   RawBindings,
-  D = {},
+  D,
   C extends ComputedOptions = {},
   M extends MethodOptions = {},
   Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
@@ -562,25 +542,11 @@ export declare function defineMixin<
     II,
     S
   >,
-): DefineComponent<
-  Props,
-  RawBindings,
-  D,
-  C,
-  M,
-  Mixin,
-  Extends,
-  E,
-  EE,
-  PublicProps,
-  ResolveProps<Props, E>,
-  ExtractDefaultPropTypes<Props>,
-  {}
->
+): ComponentOptions<Props, RawBindings, D, C, M, any, any, E, S>
 export declare function defineMixin<
   PropsOptions extends Readonly<ComponentPropsOptions>,
   RawBindings,
-  D = {},
+  D,
   C extends ComputedOptions = {},
   M extends MethodOptions = {},
   Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
@@ -590,6 +556,7 @@ export declare function defineMixin<
   S extends SlotsType = {},
   I extends ComponentInjectOptions = {},
   II extends string = string,
+  Props = ResolveProps<PropsOptions, EmitsOptions>,
 >(
   options: ComponentOptionsWithObjectProps<
     PropsOptions,
@@ -605,18 +572,4 @@ export declare function defineMixin<
     II,
     S
   >,
-): DefineComponent<
-  PropsOptions,
-  RawBindings,
-  D,
-  C,
-  M,
-  Mixin,
-  Extends,
-  E,
-  EE,
-  PublicProps,
-  ResolveProps<PropsOptions, E>,
-  ExtractDefaultPropTypes<PropsOptions>,
-  {}
->
+): ComponentOptions<Props, RawBindings, D, C, M, any, any, E, S>

@@ -441,7 +441,13 @@ export type ComponentInjectOptions = string[] | ObjectInjectOptions
 
 type ObjectInjectOptions = Record<
   string | symbol,
-  string | symbol | { from?: string | symbol; default?: unknown }
+  | string
+  | symbol
+  | {
+      type?: unknown // fixed by uts 给 inject 补充类型信息
+      from?: string | symbol
+      default?: unknown
+    }
 >
 
 export type InjectToObject<T extends ComponentInjectOptions> =
