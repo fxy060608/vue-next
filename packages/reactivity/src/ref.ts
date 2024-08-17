@@ -448,6 +448,17 @@ export function toRef<T extends object, K extends keyof T>(
   key: K,
   defaultValue: T[K],
 ): ToRef<Exclude<T[K], undefined>>
+// fixed by xxxxxx toRef<number>({num:1},'num')
+export function toRef<T>(
+  value: object,
+  key: string,
+): T extends () => infer R
+  ? Readonly<Ref<R>>
+  : T extends Ref
+    ? T
+    : Ref<UnwrapRef<T>>
+// fixed by xxxxxx toRef<number>((): number => 1))
+export function toRef<T>(value: () => T): Readonly<Ref<T>>
 export function toRef(
   source: Record<string, any> | MaybeRef,
   key?: string,
