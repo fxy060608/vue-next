@@ -46,8 +46,9 @@ export function patchStyle(
     // 修改 prev
     for (const key in prev) {
       const _key = camelize(key)
+      // 如果 next 不存在当前 key，场景：样式被移除
       if (next[key] == null) {
-        // 先读取 class 样式
+        // 尝试从 class 读取，读取不到回填为空字符串
         const value =
           classStyle != null && classStyle.has(_key)
             ? classStyle!.get(_key)

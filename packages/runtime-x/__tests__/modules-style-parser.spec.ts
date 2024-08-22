@@ -41,4 +41,22 @@ describe('测试 parseStyleDecl', () => {
       ]),
     )
   })
+  it('空值 border回退默认值', () => {
+    let result
+
+    result = parseStyleDecl(camelize('border'), '')
+    expect(result).toEqual(
+      new Map([
+        ['borderColor', '#000000'],
+        ['borderStyle', 'none'],
+        ['borderWidth', 'medium'],
+      ]),
+    )
+  })
+  it('空值 border回退默认值', () => {
+    let result
+
+    result = parseStyleDecl(camelize('background'), '')
+    expect(result).toEqual(new Map([['backgroundColor', '']]))
+  })
 })
