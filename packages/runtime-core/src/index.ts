@@ -432,7 +432,10 @@ export let createSSRApp: CreateAppFunction<Element>
  * @private
  */
 export declare const withModifiers: <
-  T extends (event: Event, ...args: unknown[]) => any,
+  T extends (
+    event: any /* Event // 开发者可能指定了具体的子类型，会导致不匹配，比如 MouseEvent */,
+    ...args: unknown[]
+  ) => any,
 >(
   fn: T & {
     _withMods?:

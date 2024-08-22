@@ -362,7 +362,7 @@ export type ComponentOptions<
   D = any,
   C extends ComputedOptions = any,
   M extends MethodOptions = any,
-  Mixin extends ComponentOptionsMixin = any,
+  Mixin extends ComponentOptionsMixin = any, // any, fixed by xxxxxx
   Extends extends ComponentOptionsMixin = any,
   E extends EmitsOptions = any,
   S extends SlotsType = any,
@@ -398,7 +398,7 @@ export type ComponentOptionsMixin = ComponentOptionsBase<
   any,
   any,
   any,
-  any,
+  ComponentOptionsMixin, // fixed by xxxxxx
   any,
   any,
   any,
@@ -453,11 +453,11 @@ type ObjectInjectOptions = Record<
 export type InjectToObject<T extends ComponentInjectOptions> =
   T extends string[]
     ? {
-        [K in T[number]]?: unknown
+        [K in T[number]]?: any // fixed by xxxxxx
       }
     : T extends ObjectInjectOptions
       ? {
-          [K in keyof T]?: unknown
+          [K in keyof T]?: any // fixed by xxxxxx
         }
       : never
 
@@ -510,7 +510,7 @@ interface LegacyOptions<
   filters?: Record<string, Function>
 
   // composition
-  mixins?: Mixin[]
+  mixins?: Mixin[] // fixed by xxxxxx
   extends?: Extends
 
   // lifecycle
