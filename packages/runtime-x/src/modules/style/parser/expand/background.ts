@@ -9,11 +9,14 @@ export const transformBackground = function (
   // eg: #fff / rgba(0,0,0,0.5)
   if (/^#?\S+$/.test(value) || /^rgba?(.+)$/.test(value)) {
     result.set(backgroundColor, value)
+    result.set(backgroundImage, '')
     // linear-gradient(90deg, #000, #fff)
   } else if (/^linear-gradient(.+)$/.test(value)) {
     result.set(backgroundImage, value)
+    result.set(backgroundColor, '')
   } else if (value == '') {
     result.set(backgroundColor, '')
+    result.set(backgroundImage, '')
   } else {
     result.set(prop, value)
   }
