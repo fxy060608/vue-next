@@ -104,14 +104,21 @@ describe('expandStyle border', () => {
 describe('expand background', () => {
   it('test background 0 param', () => {
     let result = expandStyle('background', '')
-    expect(result).toEqual(new Map([['backgroundColor', '']]))
+    expect(result).toEqual(
+      new Map([
+        ['backgroundColor', ''],
+        ['backgroundImage', ''],
+      ]),
+    )
   })
   it('test background 1 param', () => {
     let result = expandStyle('background', 'red')
-    expect(result).toEqual(new Map([['backgroundColor', 'red']]))
-
-    // let result = expandStyle('background', 'url("test.jpg")')
-    // expect(result).toEqual(new Map([['backgroundImage', 'url("test.jpg")']]))
+    expect(result).toEqual(
+      new Map([
+        ['backgroundColor', 'red'],
+        ['backgroundImage', ''],
+      ]),
+    )
 
     result = expandStyle(
       'background',
@@ -120,6 +127,7 @@ describe('expand background', () => {
 
     expect(result).toEqual(
       new Map([
+        ['backgroundColor', ''],
         [
           'backgroundImage',
           'linear-gradient(to bottom,rgba(255, 255, 255, 0.95),rgba(255, 255, 255, 0.6))',
