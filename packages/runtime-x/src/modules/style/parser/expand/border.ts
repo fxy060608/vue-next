@@ -21,12 +21,8 @@ export const transformBorder = function (
   })
   const result = new Map<string, any>()
   // [1px solid red] / ['']
-  if (
-    splitResult.length > 0 &&
-    // prettier-ignore
-    splitResult.length == 1 &&
-    splitResult[0] != ''
-  ) {
+  const isEmptyStringArray = splitResult.length == 1 && splitResult[0] == ''
+  if (splitResult.length > 0 && !isEmptyStringArray) {
     result.set(prop, value)
     return result
   }
