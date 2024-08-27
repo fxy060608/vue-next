@@ -6,7 +6,7 @@ import { parseStyleDecl } from '../src/modules/style/parser/index'
 describe('测试 parseStyleDecl', () => {
   it('解析 style，返回 Map', () => {
     let result
-    result = parseStyleDecl(camelize('width'), null)
+    result = parseStyleDecl(camelize('width'), '')
     expect(result).toEqual(new Map([['width', '']]))
     result = parseStyleDecl(camelize('font-size'), 14)
     expect(result).toEqual(new Map([['fontSize', '14']]))
