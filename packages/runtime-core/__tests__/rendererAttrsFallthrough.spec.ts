@@ -668,7 +668,7 @@ describe('attribute fallthrough', () => {
     render(h(Hello), root)
 
     expect(root.innerHTML).toBe(
-      `<!--hello--><button class="foo"></button><!--world-->`,
+      `<!--hello--><button hoverclass="button-hover" class="foo"></button><!--world-->`,
     )
     const button = root.children[0] as HTMLElement
     button.dispatchEvent(new CustomEvent('click'))

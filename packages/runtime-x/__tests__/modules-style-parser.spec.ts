@@ -59,8 +59,8 @@ describe('测试 parseStyleDecl', () => {
     result = parseStyleDecl(camelize('background'), '')
     expect(result).toEqual(
       new Map([
-        ['backgroundColor', ''],
-        ['backgroundImage', ''],
+        ['backgroundColor', 'transparent'],
+        ['backgroundImage', 'none'],
       ]),
     )
   })
