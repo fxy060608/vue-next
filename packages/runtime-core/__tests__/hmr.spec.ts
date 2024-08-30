@@ -182,7 +182,9 @@ describe('hot module replacement', () => {
     }
 
     render(h(Parent), root)
-    expect(serializeInner(root)).toBe(`<button></button><div>0</div>`)
+    expect(serializeInner(root)).toBe(
+      `<button hoverClass="button-hover"></button><div>0</div>`,
+    )
 
     reload(childId, {
       __hmrId: childId,
@@ -252,7 +254,9 @@ describe('hot module replacement', () => {
     }
 
     render(h(Parent), root)
-    expect(serializeInner(root)).toBe(`<button></button><div>0</div>`)
+    expect(serializeInner(root)).toBe(
+      `<button hoverClass="button-hover"></button><div>0</div>`,
+    )
 
     reload(childId, {
       __hmrId: childId,
@@ -330,7 +334,9 @@ describe('hot module replacement', () => {
     }
 
     render(h(Parent), root)
-    expect(serializeInner(root)).toBe(`<button></button><div>0</div>`)
+    expect(serializeInner(root)).toBe(
+      `<button hoverClass="button-hover"></button><div>0</div>`,
+    )
 
     reload(childId, {
       __hmrId: childId,
@@ -437,14 +443,14 @@ describe('hot module replacement', () => {
 
     render(h(Comp), root)
     expect(serializeInner(root)).toBe(
-      `<div><div>0</div><button>++</button></div>`,
+      `<div><div>0</div><button hoverClass="button-hover">++</button></div>`,
     )
 
     // 1. click to trigger update
     triggerEvent((root as any).children[0].children[1], 'click')
     await nextTick()
     expect(serializeInner(root)).toBe(
-      `<div><div>1</div><button>++</button></div>`,
+      `<div><div>1</div><button hoverClass="button-hover">++</button></div>`,
     )
 
     // 2. trigger HMR

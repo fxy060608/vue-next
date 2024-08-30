@@ -773,7 +773,7 @@ describe('SSR hydration', () => {
     serverResolve(Comp)
     const html = await htmlPromise
     expect(html).toMatchInlineSnapshot(
-      `"<!--[-->hello<button>hello!</button>world<!--]-->"`,
+      `"<!--[-->hello<button hoverClass="button-hover">hello!</button>world<!--]-->"`,
     )
 
     // hydration
