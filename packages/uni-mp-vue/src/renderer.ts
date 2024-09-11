@@ -405,6 +405,23 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
 
 function unmountComponent(instance: ComponentInternalInstance) {
   const { bum, scope, update, um } = instance
+  if (__FEATURE_OPTIONS_API__) {
+    // $children
+    const parentInstance = instance.parent
+    if (parentInstance) {
+      let $children = parentInstance.ctx.$children as (
+        | ComponentPublicInstance
+        | Record<string, any>
+      )[]
+
+      let target = getExposeProxy(instance) || instance.proxy
+      let index = $children.indexOf(target!)
+      if (index > -1) {
+        $children.splice(index, 1)
+      }
+    }
+  }
+
   // beforeUnmount hook
   if (bum) {
     invokeArrayFns(bum)
