@@ -1115,10 +1115,13 @@ export function getExposeProxy(instance: ComponentInternalInstance) {
             return target[key]
           } else if (key in publicPropertiesMap) {
             return publicPropertiesMap[key](instance)
+          } else if (key === '$scope') {
+            // TODO 临时补充$scope 字段，后续通过publicPropertiesMap 字段补充。ask：199111
+            return instance.ctx.$scope
           }
         },
         has(target, key: string) {
-          return key in target || key in publicPropertiesMap
+          return key in target || key in publicPropertiesMap || key === '$scope'
         },
       }))
     )
