@@ -1,9 +1,11 @@
 import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ObjectDirective } from '@vue/runtime-core'
 
-interface VShowElement extends UniXElement {
+export interface VShowElement extends UniXElement {
   // _vod = vue original display
   _vod: string
+  // _vod = vShow hidden
+  _vsh: boolean
 }
 
 export const vShow: ObjectDirective<VShowElement> = {
@@ -43,4 +45,5 @@ export const vShow: ObjectDirective<VShowElement> = {
 
 function setDisplay(el: VShowElement, value: unknown): void {
   el.style.setProperty('display', value ? el._vod : 'none')
+  el._vsh = !value
 }

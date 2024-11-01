@@ -13,6 +13,7 @@ import {
   setExtraParentStyles,
   setExtraStyles,
 } from '../helpers/node'
+import type { VShowElement } from '../directives/vShow'
 
 export function patchClass(
   el: UniXElement,
@@ -59,5 +60,8 @@ export function updateClassStyles(el: UniXElement) {
   }
   // TODO validateStyles
   // validateStyles(el, oldClassStyle)
+  if ((el as VShowElement)._vsh) {
+    styles.set('display', 'none')
+  }
   el.updateStyle(styles)
 }

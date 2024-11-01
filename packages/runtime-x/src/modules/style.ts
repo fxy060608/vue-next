@@ -12,6 +12,7 @@ import {
   setExtraStyle,
 } from '../helpers/node'
 import { parseStyleDecl } from './style/parser'
+import type { VShowElement } from '../directives/vShow'
 
 function isSame(a: any | null, b: any | null): boolean {
   return (isString(a) && isString(b)) ||
@@ -89,7 +90,9 @@ export function patchStyle(
     return
   }
   // validateStyles(el, batchedStyles)
-
+  if ((el as VShowElement)._vsh) {
+    batchedStyles.set('display', 'none')
+  }
   el.updateStyle(batchedStyles)
 }
 
