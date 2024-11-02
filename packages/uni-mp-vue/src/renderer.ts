@@ -291,7 +291,7 @@ function componentUpdateScopedSlotsFn(
     if (process.env.UNI_DEBUG) {
       /* eslint-disable-next-line no-console */
       console.log(
-        '[' +
+        'uni-app:[' +
           +new Date() +
           '][' +
           (mpInstance.is || mpInstance.route) +
@@ -399,8 +399,9 @@ function setupRenderEffect(instance: ComponentInternalInstance) {
     //  (for scheduler)
     update.ownerInstance = instance
   }
-
-  update()
+  if (!__VUE_CREATED_DEFERRED__) {
+    update()
+  }
 }
 
 function unmountComponent(instance: ComponentInternalInstance) {

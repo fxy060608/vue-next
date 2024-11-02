@@ -1,11 +1,12 @@
-import type {
-  Component,
-  ComponentInternalInstance,
-  ComponentInternalOptions,
-  ConcreteComponent,
-  Data,
-  InternalRenderFunction,
-  SetupContext,
+import {
+  type Component,
+  type ComponentInternalInstance,
+  type ComponentInternalOptions,
+  type ConcreteComponent,
+  type Data,
+  type InternalRenderFunction,
+  type SetupContext,
+  setCurrentInstance,
 } from './component'
 import {
   type LooseRequired,
@@ -18,7 +19,7 @@ import {
   isPromise,
   isString,
 } from '@vue/shared'
-import { type Ref, isRef } from '@vue/reactivity'
+import { type Ref, isRef, pauseTracking, resetTracking } from '@vue/reactivity'
 import { computed } from './apiComputed'
 import {
   type WatchCallback,
@@ -674,8 +675,13 @@ export function applyOptions(instance: ComponentInternalInstance) {
   // - computed
   // - watch (deferred since it relies on `this` access)
   // fixed by xxxxxx
-  if (!__VUE_CREATED_DEFERRED__ && injectOptions) {
-    resolveInjections(injectOptions, ctx, checkDuplicateProperties)
+  function initInjections() {
+    if (injectOptions) {
+      resolveInjections(injectOptions, ctx, checkDuplicateProperties)
+    }
+  }
+  if (!__VUE_CREATED_DEFERRED__) {
+    initInjections()
   }
 
   if (methods) {
@@ -789,7 +795,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
     }
   }
   // fixed by xxxxxx
-  if (!__VUE_CREATED_DEFERRED__) {
+  function initProvides() {
     if (provideOptions) {
       const provides = isFunction(provideOptions)
         ? provideOptions.call(publicThis)
@@ -799,11 +805,28 @@ export function applyOptions(instance: ComponentInternalInstance) {
       })
     }
   }
+  if (!__VUE_CREATED_DEFERRED__) {
+    initProvides()
+  }
   // fixed by xxxxxx
   if (__VUE_CREATED_DEFERRED__) {
-    ctx.$callCreatedHook = function (name: 'created') {
+    function callCreatedHook() {
+      initInjections()
+      initProvides()
       if (created) {
-        return callHook(created, instance, LifecycleHooks.CREATED)
+        callHook(created, instance, LifecycleHooks.CREATED)
+      }
+      // 等 injections 和 provides 初始化完成之后，再执行 created 钩子，然后执行首次更新
+      instance.update()
+    }
+    ctx.$callCreatedHook = function (name: 'created') {
+      const reset = setCurrentInstance(instance)
+      pauseTracking()
+      try {
+        callCreatedHook()
+      } finally {
+        resetTracking()
+        reset()
       }
     }
   } else {

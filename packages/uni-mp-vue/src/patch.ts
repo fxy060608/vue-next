@@ -63,7 +63,7 @@ export function patch(
       if (process.env.UNI_DEBUG) {
         /* eslint-disable-next-line no-console */
         console.log(
-          '[' +
+          'uni-app:[' +
             +new Date() +
             '][' +
             (mpInstance.is || mpInstance.route) +

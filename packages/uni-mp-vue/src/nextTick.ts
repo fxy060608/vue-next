@@ -22,7 +22,7 @@ export function flushCallbacks(instance: ComponentInternalInstance) {
       const mpInstance = ctx.$scope as MPInstance
       /* eslint-disable-next-line no-console */
       console.log(
-        '[' +
+        'uni-app:[' +
           +new Date() +
           '][' +
           (mpInstance.is || mpInstance.route) +
@@ -51,7 +51,7 @@ export function nextTick(
       const mpInstance = ctx.$scope as MPInstance
       /* eslint-disable-next-line no-console */
       console.log(
-        '[' +
+        'uni-app:[' +
           +new Date() +
           '][' +
           (mpInstance.is || mpInstance.route) +
@@ -66,7 +66,7 @@ export function nextTick(
     const mpInstance = ctx.$scope as MPInstance
     /* eslint-disable-next-line no-console */
     console.log(
-      '[' +
+      'uni-app:[' +
         +new Date() +
         '][' +
         (mpInstance.is || mpInstance.route) +

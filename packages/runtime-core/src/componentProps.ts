@@ -229,10 +229,11 @@ export function initProps(
 }
 
 function isInHmrContext(instance: ComponentInternalInstance | null) {
-  while (instance) {
-    if (instance.type.__hmrId) return true
-    instance = instance.parent
-  }
+  // fixed by xxxxxx 可能死循环，无需此逻辑
+  // while (instance) {
+  //   if (instance.type.__hmrId) return true
+  //   instance = instance.parent
+  // }
 }
 
 export function updateProps(
