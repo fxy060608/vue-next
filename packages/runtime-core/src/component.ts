@@ -527,6 +527,10 @@ export interface ComponentInternalInstance {
    * @internal
    */
   getCssVars?: () => Record<string, string>
+  /**
+   * fixed by xxxxxx 用于存储uni-app的元素缓存
+   */
+  $uniElements?: Map<string, unknown>
 }
 
 const emptyAppContext = createAppContext()
@@ -620,6 +624,9 @@ export function createComponentInstance(
     rtc: null,
     ec: null,
     sp: null,
+
+    // fixed by xxxxxx 用于存储uni-app的元素缓存
+    $uniElements: new Map(),
   }
   if (__DEV__) {
     instance.ctx = createDevRenderContext(instance)

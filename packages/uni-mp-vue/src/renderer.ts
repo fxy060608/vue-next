@@ -168,6 +168,12 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     },
     inheritAttrs,
   } = instance
+  // UniElement ids
+  ;(
+    instance as unknown as {
+      $uniElementIds: Map<string, { name: string }>
+    }
+  ).$uniElementIds = new Map()
   // template refs
   ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
   // event
