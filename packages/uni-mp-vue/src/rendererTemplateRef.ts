@@ -29,6 +29,7 @@ interface TemplateRefsComponentInternalInstance
     $mpPlatform: 'mp-alipay'
   }
   $templateRefs: TemplateRef[]
+  $templateUniElementRefs: (TemplateRef & { v: any })[]
 }
 
 /**
@@ -38,18 +39,25 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
   const {
     setupState,
     $templateRefs,
+    $templateUniElementRefs,
     ctx: { $scope, $mpPlatform },
   } = instance as TemplateRefsComponentInternalInstance
   if ($mpPlatform === 'mp-alipay') {
     return
   }
-  if (!$templateRefs || !$scope) {
+  if (!$scope || (!$templateRefs && !$templateUniElementRefs)) {
     return
   }
   if (isUnmount) {
-    return $templateRefs.forEach(templateRef =>
-      setTemplateRef(templateRef, null, setupState),
-    )
+    $templateRefs &&
+      $templateRefs.forEach(templateRef =>
+        setTemplateRef(templateRef, null, setupState),
+      )
+    $templateUniElementRefs &&
+      $templateUniElementRefs.forEach(templateRef =>
+        setTemplateRef(templateRef, null, setupState),
+      )
+    return
   }
   const check = $mpPlatform === 'mp-baidu' || $mpPlatform === 'mp-toutiao'
 
@@ -75,12 +83,28 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
   }
 
   const doSet = () => {
-    const refs = doSetByRefs($templateRefs)
-    if (refs.length && instance.proxy && (instance.proxy as any).$scope) {
-      ;(instance.proxy as any).$scope.setData({ r1: 1 }, () => {
-        doSetByRefs(refs)
-      })
+    if ($templateRefs) {
+      const refs = doSetByRefs($templateRefs)
+      if (refs.length && instance.proxy && (instance.proxy as any).$scope) {
+        ;(instance.proxy as any).$scope.setData({ r1: 1 }, () => {
+          doSetByRefs(refs)
+        })
+      }
     }
+  }
+  // 不需要通过_$setRef设置，直接异步设置，因为setRef可能会使用nextSetDataTick机制s
+  if ($templateUniElementRefs && $templateUniElementRefs.length) {
+    nextTick(instance, () => {
+      $templateUniElementRefs.forEach(templateRef => {
+        if (isArray(templateRef.v)) {
+          templateRef.v.forEach(v => {
+            setTemplateRef(templateRef, v, setupState)
+          })
+        } else {
+          setTemplateRef(templateRef, templateRef.v, setupState)
+        }
+      })
+    })
   }
 
   if ($scope._$setRef) {
@@ -139,7 +163,9 @@ export function setTemplateRef(
             return
           }
           // 实例销毁时，移除
-          onBeforeUnmount(() => remove(existing, refValue), refValue.$)
+          if (refValue.$) {
+            onBeforeUnmount(() => remove(existing, refValue), refValue.$)
+          }
         }
       } else if (_isString) {
         if (hasOwn(setupState, r)) {

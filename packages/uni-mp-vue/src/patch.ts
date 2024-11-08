@@ -49,7 +49,8 @@ export function patch(
   // uni-indexed-list 组件 render 中并未访问 item.checked（在 uni-indexed-list-item 中访问了，但被小程序序列化了，无法响应式），故无法收集依赖
   data = deepCopy(data) as Data
   // data = JSON.parse(JSON.stringify(data))
-
+  // 仅 x 有用
+  data.$eS = instance.$eS || {}
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType
   if (mpType === 'page' || mpType === 'component') {

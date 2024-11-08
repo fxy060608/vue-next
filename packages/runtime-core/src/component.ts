@@ -530,7 +530,19 @@ export interface ComponentInternalInstance {
   /**
    * fixed by xxxxxx 用于存储uni-app的元素缓存
    */
-  $uniElements?: Map<string, unknown>
+  $uniElements: Map<string, unknown>
+  /**
+   * fixed by xxxxxx 用于存储uni-app的模板元素refs
+   */
+  $templateUniElementRefs: any[]
+  /**
+   * fixed by xxxxxx 用于存储uni-app的模板上 element 绑定的样式
+   */
+  $templateUniElementStyles: Record<string, string>
+  /**
+   * fixed by xxxxxx 用于存储最终的 element 样式
+   */
+  $eS: Record<string, string>
 }
 
 const emptyAppContext = createAppContext()
@@ -627,6 +639,9 @@ export function createComponentInstance(
 
     // fixed by xxxxxx 用于存储uni-app的元素缓存
     $uniElements: new Map(),
+    $templateUniElementRefs: [],
+    $templateUniElementStyles: {},
+    $eS: {},
   }
   if (__DEV__) {
     instance.ctx = createDevRenderContext(instance)

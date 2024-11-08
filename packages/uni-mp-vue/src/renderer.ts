@@ -176,6 +176,17 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
   ).$uniElementIds = new Map()
   // template refs
   ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
+  ;(
+    instance as unknown as {
+      $templateUniElementRefs: (TemplateRef & { v: any })[]
+    }
+  ).$templateUniElementRefs = []
+  // template element styles
+  ;(
+    instance as unknown as {
+      $templateUniElementStyles: Record<string, string>
+    }
+  ).$templateUniElementStyles = {}
   // event
   ;(instance as unknown as { $ei: number }).$ei = 0
   // props
