@@ -365,6 +365,7 @@ export { transformVNodeArgs } from './vnode'
 // fixed by xxxxxx
 export { injectHook } from './apiLifecycle'
 export { isInSSRComponentSetup } from './component'
+export { logError } from './errorHandling'
 
 // SSR -------------------------------------------------------------------------
 
