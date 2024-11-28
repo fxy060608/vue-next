@@ -386,6 +386,7 @@ export const ssrUtils = (__SSR__ ? _ssrUtils : null) as typeof _ssrUtils
 // fixed by xxxxxx
 export { injectHook } from './apiLifecycle'
 export { isInSSRComponentSetup } from './component'
+export { logError } from './errorHandling'
 
 // 2.x COMPAT ------------------------------------------------------------------
 

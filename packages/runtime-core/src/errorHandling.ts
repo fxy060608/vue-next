@@ -140,7 +140,8 @@ export function handleError(
   logError(err, type, contextVNode, throwInDev)
 }
 
-function logError(
+// fixed by xxxxxx
+export function logError(
   err: unknown,
   type: ErrorTypes,
   contextVNode: VNode | null,

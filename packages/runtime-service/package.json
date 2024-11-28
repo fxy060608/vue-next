@@ -13,6 +13,6 @@
     ]
   },
   "dependencies": {
-    "@dcloudio/uni-shared": "/Users/fxy/Projects/GitHub/uni-app/uni-app-next/packages/uni-shared"
+    "@dcloudio/uni-shared": "3.0.0-alpha-4030620241126001"
   }
 }
