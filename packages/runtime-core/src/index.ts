@@ -386,6 +386,7 @@ const _ssrUtils = {
 // fixed by xxxxxx
 export { injectHook } from './apiLifecycle'
 export { isInSSRComponentSetup } from './component'
+export { logError } from './errorHandling'
 
 /**
  * SSR utils for \@vue/server-renderer. Only exposed in ssr-possible builds.
