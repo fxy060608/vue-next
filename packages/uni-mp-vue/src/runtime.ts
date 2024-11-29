@@ -110,5 +110,5 @@ export {
   // 新增
   useModel,
 } from '@vue/runtime-core'
-export { useCssModule } from '@vue/runtime-dom'
+export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
