@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+// fixed by xxxxxx
+declare const UTSObjectMarker: unique symbol
+
 // Global compile-time constants
 declare var __DEV__: boolean
 declare var __TEST__: boolean

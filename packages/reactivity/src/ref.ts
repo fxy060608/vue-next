@@ -537,8 +537,11 @@ export type UnwrapRefSimple<T> = T extends
           ? WeakSet<UnwrapRefSimple<V>> & UnwrapRef<Omit<T, keyof WeakSet<any>>>
           : T extends ReadonlyArray<any>
             ? { [K in keyof T]: UnwrapRefSimple<T[K]> }
-            : T extends object & { [ShallowReactiveMarker]?: never }
-              ? {
-                  [P in keyof T]: P extends symbol ? T[P] : UnwrapRef<T[P]>
-                }
-              : T
+            : // fixed by xxxxxx
+              T extends { [UTSObjectMarker]?: true }
+              ? T
+              : T extends object & { [ShallowReactiveMarker]?: never }
+                ? {
+                    [P in keyof T]: P extends symbol ? T[P] : UnwrapRef<T[P]>
+                  }
+                : T
