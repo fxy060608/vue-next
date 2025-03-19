@@ -1,9 +1,13 @@
 import type {
   IDocument as UniXDocument,
   Element as UniXElement,
+  IPage as UniXPage,
 } from '@dcloudio/uni-app-x/types/native'
 
-import type { RendererOptions } from '@vue/runtime-core'
+import type {
+  ComponentPublicInstance,
+  RendererOptions,
+} from '@vue/runtime-core'
 import { updateClassStyles } from './modules/class'
 import {
   getExtraChildNode,
@@ -131,6 +135,19 @@ export const nodeOps: Omit<
   },
   parentNode: node => node.parentNode as UniXElement | null,
   nextSibling: node => node.nextSibling,
+  querySelector: (selector, parentComponent) => {
+    const document = (
+      parentComponent?.proxy as
+        | (ComponentPublicInstance & {
+            $nativePage: UniXPage
+          })
+        | null
+    )?.$nativePage?.document
+    if (document) {
+      return document.querySelector(selector)
+    }
+    return null
+  },
 }
 
 // patchClass 先子后父，所以插入父的时候 updateChildrenClassStyle

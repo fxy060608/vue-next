@@ -125,7 +125,10 @@ export interface RendererOptions<
   setElementText(node: HostElement, text: string): void
   parentNode(node: HostNode): HostElement | null
   nextSibling(node: HostNode): HostNode | null
-  querySelector?(selector: string): HostElement | null
+  querySelector?(
+    selector: string,
+    parentComponent: ComponentInternalInstance | null,
+  ): HostElement | null
   setScopeId?(el: HostElement, id: string): void
   cloneNode?(node: HostNode): HostNode
   insertStaticContent?(

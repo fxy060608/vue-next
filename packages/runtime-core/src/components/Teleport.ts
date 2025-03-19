@@ -35,6 +35,7 @@ const isTargetMathML = (target: RendererElement): boolean =>
 const resolveTarget = <T = RendererElement>(
   props: TeleportProps | null,
   select: RendererOptions['querySelector'],
+  parentComponent: ComponentInternalInstance | null,
 ): T | null => {
   const targetSelector = props && props.to
   if (isString(targetSelector)) {
@@ -46,7 +47,7 @@ const resolveTarget = <T = RendererElement>(
         )
       return null
     } else {
-      const target = select(targetSelector)
+      const target = select(targetSelector, parentComponent)
       if (!target) {
         __DEV__ &&
           warn(
@@ -112,7 +113,11 @@ export const TeleportImpl = {
           createText(''))
       insert(placeholder, container, anchor)
       insert(mainAnchor, container, anchor)
-      const target = (n2.target = resolveTarget(n2.props, querySelector))
+      const target = (n2.target = resolveTarget(
+        n2.props,
+        querySelector,
+        parentComponent,
+      ))
       // @ts-expect-error  fixed by xxxxxx
       const targetAnchor = (n2.targetAnchor = createText(''))
       if (target) {
@@ -219,6 +224,7 @@ export const TeleportImpl = {
           const nextTarget = (n2.target = resolveTarget(
             n2.props,
             querySelector,
+            parentComponent,
           ))
           if (nextTarget) {
             moveTeleport(
@@ -360,6 +366,7 @@ function hydrateTeleport(
   const target = (vnode.target = resolveTarget<Element>(
     vnode.props,
     querySelector,
+    parentComponent,
   ))
   if (target) {
     // if multiple teleports rendered to the same target element, we need to
