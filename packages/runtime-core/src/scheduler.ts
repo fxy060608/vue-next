@@ -1,5 +1,5 @@
 import { ErrorCodes, callWithErrorHandling, handleError } from './errorHandling'
-import { NOOP, getGlobalThis, isArray } from '@vue/shared'
+import { NOOP, isArray } from '@vue/shared'
 import {
   type ComponentInternalInstance,
   getComponentName,
@@ -48,7 +48,9 @@ const pendingPostFlushCbs: SchedulerJob[] = []
 let activePostFlushCbs: SchedulerJob[] | null = null
 let postFlushIndex = 0
 // fixed by xxxxxx iOS15 以下 Promise 执行顺序与预期不一致
-const isIOS = 'nativeApp' in getGlobalThis()
+// const isIOS = 'nativeApp' in getGlobalThis()
+// fixed by xxxxxx 鸿蒙也有iOS同样的问题
+const isIOS = true
 const resolvedPromise = /*#__PURE__*/ (
   isIOS ? PromisePolyfill : Promise
 ).resolve() as Promise<any>
