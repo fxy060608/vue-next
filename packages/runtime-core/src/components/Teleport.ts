@@ -102,15 +102,15 @@ export const TeleportImpl = {
     if (n1 == null) {
       // insert anchors in the main view
       const placeholder = (n2.el = __DEV__
-        ? // @ts-expect-error  fixed by xxxxxx
-          createComment('teleport start')
-        : // @ts-expect-error  fixed by xxxxxx
-          createText(''))
+        ? // fixed by xxxxxx
+          createComment('teleport start', container)
+        : // fixed by xxxxxx
+          createText('', container))
       const mainAnchor = (n2.anchor = __DEV__
-        ? // @ts-expect-error  fixed by xxxxxx
-          createComment('teleport end')
-        : // @ts-expect-error  fixed by xxxxxx
-          createText(''))
+        ? // fixed by xxxxxx
+          createComment('teleport end', container)
+        : // fixed by xxxxxx
+          createText('', container))
       insert(placeholder, container, anchor)
       insert(mainAnchor, container, anchor)
       const target = (n2.target = resolveTarget(
@@ -118,8 +118,8 @@ export const TeleportImpl = {
         querySelector,
         parentComponent,
       ))
-      // @ts-expect-error  fixed by xxxxxx
-      const targetAnchor = (n2.targetAnchor = createText(''))
+      // fixed by xxxxxx
+      const targetAnchor = (n2.targetAnchor = createText('', container))
       if (target) {
         insert(targetAnchor, target)
         // #2652 we could be teleporting from a non-SVG tree into an SVG tree

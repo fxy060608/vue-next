@@ -62,7 +62,7 @@
     "@babel/parser": "^7.24.0",
     "@babel/types": "^7.24.0",
     "@codspeed/vitest-plugin": "^3.1.0",
-    "@dcloudio/uni-app-x": "^0.7.5",
+    "@dcloudio/uni-app-x": "^0.7.56",
     "@dcloudio/uni-nvue-styler": "3.0.0-alpha-4040520250108001",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",

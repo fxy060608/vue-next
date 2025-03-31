@@ -29,16 +29,6 @@ export function getDocument() {
 export function setDocument(document: UniXDocument) {
   rootDocument = document
 }
-
-/**
- * 判断是否在document中
- * @param el
- * @returns
- */
-export function isInDocument(parent: UniXElement): boolean {
-  return !!parent.pageId
-}
-
 function updateTextNode(node: UniXElement) {
   // TODO use native TextNode
   const childNode = getExtraChildNode(node)
@@ -76,7 +66,7 @@ export const nodeOps: Omit<
     }
     // 判断是不是首次被完整插入DOM树中
     // vue 插入节点的顺序是，先子后父，所以等待父真正被完整插入document时，再遍历一遍子节点校正父子选择器样式
-    if (isInDocument(parent)) {
+    if (parent.isConnected) {
       updateClassStyles(el)
       updateChildrenClassStyle(el)
     }
@@ -95,20 +85,27 @@ export const nodeOps: Omit<
       parent.removeChild(child)
     }
   },
-  createElement: (tag, container): UniXElement => {
-    return getDocument().createElement(tag)
-  },
-  createText: (text, container, isAnchor) => {
-    if (isAnchor) {
-      return getDocument().createComment(text)
+  createElement: (tag, container: UniXElement): UniXElement => {
+    if (!container) {
+      return getDocument().createElement(tag)
+    } else {
+      const document = container.uniPage.document
+      return document.createElement(tag)
     }
-    const textNode = getDocument().createElement('text')
+  },
+  createText: (text, container: UniXElement, isAnchor) => {
+    const document = container.uniPage.document
+    if (isAnchor) {
+      return document.createComment(text)
+    }
+    const textNode = document.createElement('text')
     textNode.setAttribute('value', text)
     setExtraIsTextNode(textNode, true)
     return textNode
   },
   createComment: (text, container) => {
-    return getDocument().createComment(text)
+    const document = container.uniPage.document
+    return document.createComment(text)
   },
   setText: (node, text) => {
     node.setAttribute('value', text)

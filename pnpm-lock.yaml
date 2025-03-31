@@ -18,8 +18,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(vite@5.1.6(@types/node@20.11.28)(sass@1.72.0)(terser@5.29.2))(vitest@1.3.1(@types/node@20.11.28)(jsdom@24.0.0)(sass@1.72.0)(terser@5.29.2))
       '@dcloudio/uni-app-x':
-        specifier: ^0.7.5
-        version: 0.7.8
+        specifier: ^0.7.56
+        version: 0.7.56
       '@dcloudio/uni-nvue-styler':
         specifier: 3.0.0-alpha-4040520250108001
         version: 3.0.0-alpha-4040520250108001
@@ -555,8 +555,8 @@ packages:
       vite: ^4.2.0 || ^5.0.0
       vitest: '>=1.2.2'
 
-  '@dcloudio/uni-app-x@0.7.8':
-    resolution: {integrity: sha512-xE0y6akvqmXlXv57DYcYbqwd6RLRy+ehLOBPzKZhJwckFJ9+HSkAOa35wbknDG4wDT29fsQsos6trSAHojECBQ==}
+  '@dcloudio/uni-app-x@0.7.56':
+    resolution: {integrity: sha512-xMhlc2+e4a+MF1Qo666VtziElyhkXMSWzTy0KM2dZq2MSULxlX+HTWy7wsEqrJh4mfzoT9ZChyUm8vbP8Ho/jw==}
 
   '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
     resolution: {integrity: sha512-mM+pxIs9b/fRPNriY2/RnuOZxw7kaybHnQe6GXFGvZqfB5UMbARSeh7nScsZ9WBoiMus+WkGGVUarkjtSVTQyA==}
@@ -1033,31 +1033,26 @@ packages:
     resolution: {integrity: sha512-Iu0Kno1vrD7zHQDxOmvweqLkAzjxEVqNhUIXBsZ8hu8Oak7/5VTPrxOEZXYC1nmrBVJp0ZcL2E7lSuuOVaE3+w==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.13.0':
     resolution: {integrity: sha512-C31QrW47llgVyrRjIwiOwsHFcaIwmkKi3PCroQY5aVq4H0A5v/vVVAtFsI1nfBngtoRpeREvZOkIhmRwUKkAdw==}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-riscv64-gnu@4.13.0':
     resolution: {integrity: sha512-Oq90dtMHvthFOPMl7pt7KmxzX7E71AfyIhh+cPhLY9oko97Zf2C9tt/XJD4RgxhaGeAraAXDtqxvKE1y/j35lA==}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.13.0':
     resolution: {integrity: sha512-yUD/8wMffnTKuiIsl6xU+4IA8UNhQ/f1sAnQebmE/lyQ8abjsVyDkyRkWop0kdMhKMprpNIhPmYlCxgHrPoXoA==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.13.0':
     resolution: {integrity: sha512-9RyNqoFNdF0vu/qqX63fKotBh43fJQeYC98hCaf89DYQpv+xu0D8QFSOS0biA7cGuqJFOc1bJ+m2rhhsKcw1hw==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.13.0':
     resolution: {integrity: sha512-46ue8ymtm/5PUU6pCvjlic0z82qWkxv54GTJZgHrQUuZnVH+tvvSP0LsozIDsCBFO4VjJ13N68wqrKSeScUKdA==}
@@ -3815,7 +3810,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@dcloudio/uni-app-x@0.7.8': {}
+  '@dcloudio/uni-app-x@0.7.56': {}
 
   '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
     dependencies:

@@ -166,8 +166,8 @@ function mountSuspense(
     p: patch,
     o: { createElement },
   } = rendererInternals
-  // @ts-expect-error  fixed by xxxxxx
-  const hiddenContainer = createElement('div')
+  // fixed by xxxxxx
+  const hiddenContainer = createElement('div', container)
   const suspense = (vnode.suspense = createSuspenseBoundary(
     vnode,
     parentSuspense,
@@ -292,8 +292,8 @@ function patchSuspense(
       // discard effects from pending branch
       suspense.effects.length = 0
       // discard previous container
-      // @ts-expect-error  fixed by xxxxxx
-      suspense.hiddenContainer = createElement('div')
+      // fixed by xxxxxx
+      suspense.hiddenContainer = createElement('div', container)
 
       if (isInFallback) {
         // already in fallback state
