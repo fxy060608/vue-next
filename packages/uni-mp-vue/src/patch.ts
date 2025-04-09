@@ -51,6 +51,7 @@ export function patch(
   // data = JSON.parse(JSON.stringify(data))
   // 仅 x 有用
   data.$eS = instance.$eS || {}
+  data.$eA = instance.$eA || {}
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType
   if (mpType === 'page' || mpType === 'component') {

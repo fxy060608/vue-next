@@ -543,6 +543,10 @@ export interface ComponentInternalInstance {
    * fixed by xxxxxx 用于存储最终的 element 样式
    */
   $eS: Record<string, string>
+  /**
+   * fixed by xxxxxx 用于存储最终的 element animation 样式
+   */
+  $eA: Record<string, string>
 }
 
 const emptyAppContext = createAppContext()
@@ -642,6 +646,7 @@ export function createComponentInstance(
     $templateUniElementRefs: [],
     $templateUniElementStyles: {},
     $eS: {},
+    $eA: {},
   }
   if (__DEV__) {
     instance.ctx = createDevRenderContext(instance)
