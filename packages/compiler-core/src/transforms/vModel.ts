@@ -19,6 +19,9 @@ import {
 import { IS_REF } from '../runtimeHelpers'
 import { BindingTypes } from '../options'
 import { camelize } from '@vue/shared'
+import { unwrapTSNode } from '../babelUtils'
+import type { Expression } from '@babel/types'
+import { parseExpression } from '@babel/parser'
 
 export const transformModel: DirectiveTransform = (dir, node, context) => {
   const { exp, arg } = dir
@@ -31,7 +34,17 @@ export const transformModel: DirectiveTransform = (dir, node, context) => {
 
   // we assume v-model directives are always parsed
   // (not artificially created by a transform)
-  const rawExp = exp.loc.source
+  let rawExp = exp.loc.source
+
+  // fixed by xxxxxx 包含 as 语句，需要解析出 as 前的表达式
+  if (rawExp.includes(' as ')) {
+    const ast: Expression = parseExpression(rawExp, {
+      plugins: context.expressionPlugins,
+    })
+    const unwrapped = unwrapTSNode(ast)
+    rawExp = rawExp.slice(unwrapped.start!, unwrapped.end!)
+  }
+
   const expString =
     exp.type === NodeTypes.SIMPLE_EXPRESSION ? exp.content : rawExp
 
