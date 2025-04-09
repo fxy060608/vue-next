@@ -258,11 +258,19 @@ const getPublicInstance = (
   return getPublicInstance(i.parent)
 }
 
+// fixed by xxxxxx
+// 微信开发者工具 真机调试的时候会对代码进行编译处理，对 $: i => i 这样的代码编译后会出现死循环的Bug
+// 故使用此函数来绕过
+function getComponentInternalInstance(i: ComponentInternalInstance) {
+  return i
+}
+
 export const publicPropertiesMap: PublicPropertiesMap =
   // Move PURE marker to new line to workaround compiler discarding it
   // due to type annotation
   /*#__PURE__*/ extend(Object.create(null), {
-    $: i => i,
+    // fixed by xxxxxx
+    $: getComponentInternalInstance,
     // fixed by xxxxxx vue-i18n 在 dev 模式，访问了 $el，故模拟一个假的
     // $el: i => i.vnode.el,
     $el: i => (i as any).__$el || ((i as any).__$el = {}),
