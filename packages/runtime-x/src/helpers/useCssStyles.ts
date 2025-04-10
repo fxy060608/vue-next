@@ -222,10 +222,7 @@ export function parseStyleSheet({
   return cache
 }
 
-export function extend<T>(
-  a: Map<string, T>,
-  b: Map<string, T>,
-): Map<string, T> {
+function extendMap<T>(a: Map<string, T>, b: Map<string, T>): Map<string, T> {
   b.forEach((value, key) => {
     a.set(key, value)
   })
@@ -237,7 +234,7 @@ export function toStyle(
   classStyle: Map<string, any>,
   classStyleWeights: Record<string, number>,
 ): Map<string, any> {
-  const res = extend<any>(new Map<string, any>(), classStyle)
+  const res = extendMap<any>(new Map<string, any>(), classStyle)
   const style = getExtraStyle(el)
   if (style != null) {
     style.forEach((value: any, key: string) => {
