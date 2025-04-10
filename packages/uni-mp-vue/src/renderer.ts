@@ -88,7 +88,9 @@ function mountComponent(
 ): ComponentPublicInstance {
   const instance: ComponentInternalInstance = (initialVNode.component =
     createComponentInstance(initialVNode, options.parentComponent, null))
-
+  // fixed by xxxxxx
+  // @ts-expect-error
+  instance.renderer = options.mpType ? options.mpType : 'component'
   if (__FEATURE_OPTIONS_API__) {
     instance.ctx.$onApplyOptions = onApplyOptions
     instance.ctx.$children = []
