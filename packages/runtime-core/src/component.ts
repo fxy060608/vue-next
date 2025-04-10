@@ -268,11 +268,6 @@ export interface ComponentInternalInstance {
   root: ComponentInternalInstance
   appContext: AppContext
   /**
-   * fixed by xxxxxx
-   * @internal
-   */
-  renderer?: 'page' | 'component' | null
-  /**
    * Vnode representing this component in its parent's vdom tree
    */
   vnode: VNode
@@ -560,6 +555,7 @@ export function createComponentInstance(
     parent,
     appContext,
     // fixed by xxxxxx
+    // @ts-expect-error
     get renderer() {
       // 目前简单的通过 $pageInstance 来判断，其他端是通过vnode传递
       // @ts-expect-error
