@@ -1,8 +1,12 @@
 import type {
-  IDocument as UniXDocument,
-  Element as UniXElement,
-  IPage as UniXPage,
+  UniDocument as IUniDocument,
+  UniElement as IUniElement,
+  UniNativePage as IUniNativePage,
 } from '@dcloudio/uni-app-x/types/native'
+
+interface IUniElementInternal extends IUniElement {
+  page: IUniNativePage
+}
 
 import type {
   ComponentPublicInstance,
@@ -21,15 +25,15 @@ import {
   setExtraParentNode,
 } from './helpers/node'
 
-let rootDocument: UniXDocument
+let rootDocument: IUniDocument
 export function getDocument() {
   return rootDocument
 }
 
-export function setDocument(document: UniXDocument) {
+export function setDocument(document: IUniDocument) {
   rootDocument = document
 }
-function updateTextNode(node: UniXElement) {
+function updateTextNode(node: IUniElement) {
   // TODO use native TextNode
   const childNode = getExtraChildNode(node)
   if (childNode !== null) {
@@ -40,7 +44,7 @@ function updateTextNode(node: UniXElement) {
 }
 
 export const nodeOps: Omit<
-  RendererOptions<UniXElement, UniXElement>,
+  RendererOptions<IUniElement, IUniElement>,
   'patchProp'
 > = {
   insert: (el, parent, anchor) => {
@@ -85,16 +89,16 @@ export const nodeOps: Omit<
       parent.removeChild(child)
     }
   },
-  createElement: (tag, container: UniXElement): UniXElement => {
+  createElement: (tag, container: IUniElementInternal): IUniElement => {
     if (!container) {
       return getDocument().createElement(tag)
     } else {
-      const document = container.uniPage.document
+      const document = container.page.document
       return document.createElement(tag)
     }
   },
-  createText: (text, container: UniXElement, isAnchor) => {
-    const document = container.uniPage.document
+  createText: (text, container: IUniElementInternal, isAnchor) => {
+    const document = container.page.document
     if (isAnchor) {
       return document.createComment(text)
     }
@@ -103,8 +107,8 @@ export const nodeOps: Omit<
     setExtraIsTextNode(textNode, true)
     return textNode
   },
-  createComment: (text, container) => {
-    const document = container.uniPage.document
+  createComment: (text, container: IUniElementInternal) => {
+    const document = container.page.document
     return document.createComment(text)
   },
   setText: (node, text) => {
@@ -130,13 +134,13 @@ export const nodeOps: Omit<
     }
     el.setAttribute('value', text)
   },
-  parentNode: node => node.parentNode as UniXElement | null,
+  parentNode: node => node.parentNode as IUniElement | null,
   nextSibling: node => node.nextSibling,
   querySelector: (selector, parentComponent) => {
     const document = (
       parentComponent?.proxy as
         | (ComponentPublicInstance & {
-            $nativePage: UniXPage
+            $nativePage: IUniNativePage
           })
         | null
     )?.$nativePage?.document
@@ -148,7 +152,7 @@ export const nodeOps: Omit<
 }
 
 // patchClass 先子后父，所以插入父的时候 updateChildrenClassStyle
-function updateChildrenClassStyle(el: UniXElement | null) {
+function updateChildrenClassStyle(el: IUniElement | null) {
   if (el !== null) {
     el.childNodes.forEach(child => {
       updateClassStyles(child)

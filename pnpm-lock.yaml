@@ -18,8 +18,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(vite@5.1.6(@types/node@20.11.28)(sass@1.72.0)(terser@5.29.2))(vitest@1.3.1(@types/node@20.11.28)(jsdom@24.0.0)(sass@1.72.0)(terser@5.29.2))
       '@dcloudio/uni-app-x':
-        specifier: ^0.7.56
-        version: 0.7.56
+        specifier: ^0.7.58
+        version: 0.7.58
       '@dcloudio/uni-nvue-styler':
         specifier: 3.0.0-alpha-4040520250108001
         version: 3.0.0-alpha-4040520250108001
@@ -555,8 +555,8 @@ packages:
       vite: ^4.2.0 || ^5.0.0
       vitest: '>=1.2.2'
 
-  '@dcloudio/uni-app-x@0.7.56':
-    resolution: {integrity: sha512-xMhlc2+e4a+MF1Qo666VtziElyhkXMSWzTy0KM2dZq2MSULxlX+HTWy7wsEqrJh4mfzoT9ZChyUm8vbP8Ho/jw==}
+  '@dcloudio/uni-app-x@0.7.58':
+    resolution: {integrity: sha512-xNTr+GYBVgsJs4SzgFV+9ruRDAqJPqSoLvdaCUsK2CYverezKX0aZJkbq4L9JjXJHhT/rU8dMO8TZ3RVGGEExg==}
 
   '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
     resolution: {integrity: sha512-mM+pxIs9b/fRPNriY2/RnuOZxw7kaybHnQe6GXFGvZqfB5UMbARSeh7nScsZ9WBoiMus+WkGGVUarkjtSVTQyA==}
@@ -3810,7 +3810,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@dcloudio/uni-app-x@0.7.56': {}
+  '@dcloudio/uni-app-x@0.7.58': {}
 
   '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
     dependencies:
