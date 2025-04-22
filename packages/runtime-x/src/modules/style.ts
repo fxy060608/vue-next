@@ -69,12 +69,15 @@ export function patchStyle(
       const value = next[key]
       const prevValue = prev[key]
       if (!isSame(prevValue, value)) {
-        parseStyleDecl(camelize(key), value).forEach(
-          (value: any, key: string) => {
-            batchedStyles.set(key, value)
-            style?.set(key, value)
-          },
-        )
+        // css var start with --
+        let _key = key
+        if (!key.startsWith('--')) {
+          _key = camelize(key)
+        }
+        parseStyleDecl(_key, value).forEach((value: any, key: string) => {
+          batchedStyles.set(key, value)
+          style?.set(key, value)
+        })
       }
     }
   } else {

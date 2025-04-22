@@ -21,8 +21,8 @@ importers:
         specifier: ^0.7.58
         version: 0.7.58
       '@dcloudio/uni-nvue-styler':
-        specifier: 3.0.0-alpha-4040520250108001
-        version: 3.0.0-alpha-4040520250108001
+        specifier: 3.0.0-alpha-4060120250422001
+        version: 3.0.0-alpha-4060120250422001
       '@rollup/plugin-alias':
         specifier: ^5.1.0
         version: 5.1.0(rollup@4.13.0)
@@ -558,8 +558,8 @@ packages:
   '@dcloudio/uni-app-x@0.7.58':
     resolution: {integrity: sha512-xNTr+GYBVgsJs4SzgFV+9ruRDAqJPqSoLvdaCUsK2CYverezKX0aZJkbq4L9JjXJHhT/rU8dMO8TZ3RVGGEExg==}
 
-  '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
-    resolution: {integrity: sha512-mM+pxIs9b/fRPNriY2/RnuOZxw7kaybHnQe6GXFGvZqfB5UMbARSeh7nScsZ9WBoiMus+WkGGVUarkjtSVTQyA==}
+  '@dcloudio/uni-nvue-styler@3.0.0-alpha-4060120250422001':
+    resolution: {integrity: sha512-glj8mrmvaKmWcvm0nwum14iRD5FQds+drWZE/YkaE4HI36PLHqbj8xrYgepe10TxuBswO7G7v49hB9vSYUyDVw==}
 
   '@dcloudio/uni-shared@3.0.0-alpha-4010320240417001':
     resolution: {integrity: sha512-RFREx8S6HWQzqN3Dqd/iOgSzNRMr6lsV6amKQdqpihxwSW39le2cF9W/qc+LDZmcYyELKAmdk8eeI1V9xGAFog==}
@@ -3812,7 +3812,7 @@ snapshots:
 
   '@dcloudio/uni-app-x@0.7.58': {}
 
-  '@dcloudio/uni-nvue-styler@3.0.0-alpha-4040520250108001':
+  '@dcloudio/uni-nvue-styler@3.0.0-alpha-4060120250422001':
     dependencies:
       parse-css-font: 4.0.0
       postcss: 8.4.35
