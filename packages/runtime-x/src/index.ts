@@ -34,10 +34,14 @@ export const render = ((...args) => {
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 
-  const { mount } = app
+  const { mount, unmount } = app
   app.mount = (container: UniXDocument): any => {
     setDocument(container)
     return mount(container.body)
+  }
+  app.unmount = (): void => {
+    setDocument(undefined)
+    unmount()
   }
 
   return app

@@ -25,12 +25,12 @@ import {
   setExtraParentNode,
 } from './helpers/node'
 
-let rootDocument: IUniDocument
+let rootDocument: IUniDocument | undefined
 export function getDocument() {
   return rootDocument
 }
 
-export function setDocument(document: IUniDocument) {
+export function setDocument(document: IUniDocument | undefined) {
   rootDocument = document
 }
 function updateTextNode(node: IUniElement) {
@@ -91,7 +91,11 @@ export const nodeOps: Omit<
   },
   createElement: (tag, container: IUniElementInternal): IUniElement => {
     if (!container) {
-      return getDocument().createElement(tag)
+      const document = getDocument()
+      if (!document) {
+        throw new Error('document is not defined')
+      }
+      return document.createElement(tag)
     } else {
       const document = container.page.document
       return document.createElement(tag)
