@@ -42,6 +42,8 @@ export const createApp = ((...args) => {
   app.unmount = (): void => {
     setDocument(undefined)
     unmount()
+    app._container = null
+    app._context.reload = () => {}
   }
 
   return app
