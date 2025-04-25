@@ -46,9 +46,10 @@ export function patchStyle(
     const style = getExtraStyle(el)
     // 修改 prev
     for (const key in prev) {
-      const _key = camelize(key)
       // 如果 next 不存在当前 key，场景：样式被移除
       if (next[key] == null) {
+        const _key = key.startsWith('--') ? key : camelize(key)
+
         // 尝试从 class 读取，读取不到回填为空字符串
         const value =
           classStyle != null && classStyle.has(_key)
@@ -70,10 +71,7 @@ export function patchStyle(
       const prevValue = prev[key]
       if (!isSame(prevValue, value)) {
         // css var start with --
-        let _key = key
-        if (!key.startsWith('--')) {
-          _key = camelize(key)
-        }
+        const _key = key.startsWith('--') ? key : camelize(key)
         parseStyleDecl(_key, value).forEach((value: any, key: string) => {
           batchedStyles.set(key, value)
           style?.set(key, value)
@@ -83,7 +81,8 @@ export function patchStyle(
   } else {
     for (const key in next) {
       const value = next[key]
-      setBatchedStyles(batchedStyles, camelize(key), value)
+      const _key = key.startsWith('--') ? key : camelize(key)
+      setBatchedStyles(batchedStyles, _key, value)
     }
     setExtraStyle(el, batchedStyles)
   }
