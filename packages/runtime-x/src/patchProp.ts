@@ -37,7 +37,7 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     }
   } else if (
     key === 'modelValue' &&
-    vModelTags.includes(el.tagName.toLocaleLowerCase())
+    vModelTags.includes(el.tagName.toLowerCase())
   ) {
     // v-model 时，原生 input 和 textarea 接收的是 value
     el.setAnyAttribute('modelValue', nextValue)
