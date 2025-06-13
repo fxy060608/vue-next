@@ -28,8 +28,12 @@ export function patchClass(
   el.classList = classList
   setExtraStyles(el, parseStyleSheet(instance))
   // 如果当前元素是组件根节点(非页面)
-  // todo 和安卓有差异 el === instance.subTree.el
-  if (instance.parent != null && instance !== instance.root) {
+  // 有父组件、不是根组件、当前元素是组件根元素
+  if (
+    instance.parent != null &&
+    instance !== instance.root &&
+    el === instance.subTree.el
+  ) {
     setExtraParentStyles(
       el,
       (instance.parent!.type as any).styles as NVueStyle[],
