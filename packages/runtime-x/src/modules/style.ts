@@ -11,6 +11,7 @@ import {
   getExtraStyle,
   setExtraStyle,
 } from '../helpers/node'
+import type { Declaration } from './style/parser'
 import { parseStyleDecl } from './style/parser'
 import type { VShowElement } from '../directives/vShow'
 
@@ -57,10 +58,10 @@ export function patchStyle(
             : ''
 
         // 传递简写 css kye value => Map [[key, value]]
-        parseStyleDecl(_key, value).forEach((value: any, key: string) => {
-          batchedStyles.set(key, value)
+        parseStyleDecl(_key, value).forEach((item: Declaration) => {
+          batchedStyles.set(item.prop, item.value)
           // 把style中的样式移除掉，否则style的优先级始终比class高
-          style?.delete(key)
+          style?.delete(item.prop)
         })
 
         // batchedStyles.set(camelize(key), '')
@@ -72,9 +73,9 @@ export function patchStyle(
       if (!isSame(prevValue, value)) {
         // css var start with --
         const _key = key.startsWith('--') ? key : camelize(key)
-        parseStyleDecl(_key, value).forEach((value: any, key: string) => {
-          batchedStyles.set(key, value)
-          style?.set(key, value)
+        parseStyleDecl(_key, value).forEach((item: Declaration) => {
+          batchedStyles.set(item.prop, item.value)
+          style?.set(item.prop, item.value)
         })
       }
     }
@@ -109,7 +110,7 @@ function setBatchedStyles(
   key: string,
   value: any | null,
 ) {
-  parseStyleDecl(key, value).forEach((value: any, key: string) => {
-    batchedStyles.set(key, value)
+  parseStyleDecl(key, value).forEach((item: Declaration) => {
+    batchedStyles.set(item.prop, item.value)
   })
 }

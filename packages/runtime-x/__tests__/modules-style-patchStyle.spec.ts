@@ -91,7 +91,14 @@ describe('modules style.ts', () => {
     )
     expect(el.updateStyle).toBeCalled()
 
-    expect(el.updateStyle).toBeCalledWith(new Map([['borderColor', 'red']]))
+    expect(el.updateStyle).toBeCalledWith(
+      new Map([
+        ['borderTopColor', 'red'],
+        ['borderRightColor', 'red'],
+        ['borderBottomColor', 'red'],
+        ['borderLeftColor', 'red'],
+      ]),
+    )
   })
   it('值移除', async () => {
     patchStyle(
@@ -101,6 +108,13 @@ describe('modules style.ts', () => {
     )
     expect(el.updateStyle).toBeCalled()
 
-    expect(el.updateStyle).toBeCalledWith(new Map([['borderColor', '']]))
+    expect(el.updateStyle).toBeCalledWith(
+      new Map([
+        ['borderTopColor', ''],
+        ['borderRightColor', ''],
+        ['borderBottomColor', ''],
+        ['borderLeftColor', ''],
+      ]),
+    )
   })
 })
