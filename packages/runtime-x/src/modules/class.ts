@@ -27,8 +27,11 @@ export function patchClass(
   const classList = next ? next.split(' ') : []
   el.classList = classList
   setExtraStyles(el, parseStyleSheet(instance))
-  // 如果当前元素是组件根节点(非页面)
-  // 有父组件、不是根组件、当前元素是组件根元素
+  // 如果当前元素是组件根节点(非页面)，重要：仅限根元素。
+  // 组件根元素需要存储父组件的样式表，当解析根元素样式时，需要读取父组件的样式表，确保父组件给子组件根元素加的class生效
+  // https://github.com/fxy060608/vue-next/blob/1f3b2b8397b2a6439d9ad00b7551ad42fb4b9c3e/packages/runtime-x/src/helpers/useCssStyles.ts#L162
+  // 即：<template><child class="class-in-parent"></template><style>.class-in-parent { color: red; }</style>
+  // 此时 class-in-parent 的样式需要确保应用到 child 的根节点上
   if (
     instance.parent != null &&
     instance !== instance.root &&
