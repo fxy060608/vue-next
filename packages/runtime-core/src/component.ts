@@ -557,13 +557,17 @@ export function createComponentInstance(
     // fixed by xxxxxx
     // @ts-expect-error
     get renderer() {
+      // @ts-expect-error
+      if (type.mpType === 'app') {
+        return 'app'
+      }
       // 目前简单的通过 $pageInstance 来判断，其他端是通过vnode传递
       // @ts-expect-error
       if (this.$pageInstance) {
         // @ts-expect-error
         return this.$pageInstance == instance ? 'page' : 'component'
       }
-      return
+      return 'component'
     },
     root: null!, // to be immediately set
     next: null,
