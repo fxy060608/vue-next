@@ -2,10 +2,14 @@ import type { UniNode } from '@dcloudio/uni-shared'
 
 import {
   type App,
+  type AppContext,
+  type ComponentPublicInstance,
   type CreateAppFunction,
   type Renderer,
   type RootRenderFunction,
   createRenderer,
+  createVNode,
+  type defineComponent,
   version,
 } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
@@ -58,6 +62,35 @@ export const createApp = ((...args) => {
 }) as CreateAppFunction<UniNode>
 
 export const createSSRApp = createApp
+
+export function createMountPage(appContext: AppContext) {
+  return function mountPage(
+    pageComponent: ReturnType<typeof defineComponent>,
+    pageProps: Record<string, any>,
+    pageContainer: UniNode,
+  ): ComponentPublicInstance {
+    const vnode = createVNode(pageComponent, pageProps)
+    // store app context on the root VNode.
+    // this will be set on the root instance on initial mount.
+    vnode.appContext = appContext
+    ;(vnode as any).__page_container__ = pageContainer
+    render(vnode, pageContainer)
+    const publicThis = vnode.component!.proxy!
+    ;(publicThis as any).__page_container__ = pageContainer
+    return publicThis
+  }
+}
+
+export function unmountPage(pageInstance: ComponentPublicInstance): void {
+  const { __page_container__ } = pageInstance as any
+  if (__page_container__) {
+    __page_container__.isUnmounted = true
+    render(null, __page_container__)
+    delete (pageInstance as any).__page_container__
+    const vnode = pageInstance.$.vnode
+    delete (vnode as any).__page_container__
+  }
+}
 
 function injectNativeTagCheck(app: App) {
   // Inject `isNativeTag`
