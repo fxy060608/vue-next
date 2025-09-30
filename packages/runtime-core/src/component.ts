@@ -538,7 +538,7 @@ export interface ComponentInternalInstance {
     classAttr: string | undefined
     styleAttr: string | undefined
     keys: string[]
-    reactiveComputedStyle: Record<string, unknown>
+    reactiveComputedStyle: Map<string, unknown>
     classStyles?: Map<string, unknown>
     classStylesWeight?: Record<string, number>
     styles?: Map<string, unknown>

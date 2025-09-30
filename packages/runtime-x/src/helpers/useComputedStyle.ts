@@ -4,7 +4,7 @@ import {
   getCurrentInstance,
   warn,
 } from '@vue/runtime-core'
-import { EMPTY_ARR } from '@vue/shared'
+import { EMPTY_ARR, camelize, hyphenate } from '@vue/shared'
 
 export function useComputedStyle(
   keys: string[],
@@ -14,7 +14,7 @@ export function useComputedStyle(
   } = {},
 ) {
   const i = getCurrentInstance()
-  const r = reactive({} as Record<string, unknown>)
+  const r = reactive(new Map<string, unknown>())
   if (i) {
     if (keys.length === 0) {
       return r
@@ -64,14 +64,18 @@ export function triggerComputedStyleUpdate(
       // 前置步骤已经按照权重合并了classStyles和styles
       const styles = interceptor.styles
       for (const key in r) {
-        if (!styles || !styles.has(key)) {
-          r[key] = ''
+        const isCSSVar = key.startsWith('--')
+        const camelizedKey = isCSSVar ? key : camelize(key)
+        if (!styles || !styles.has(camelizedKey)) {
+          r.set(key, '')
         } else {
-          r[key] = styles.get(key)
+          r.set(key, styles.get(camelizedKey))
         }
       }
       styles?.forEach((value, key) => {
-        r[key] = value
+        const isCSSVar = key.startsWith('--')
+        const hyphenatedKey = isCSSVar ? key : hyphenate(key)
+        r.set(hyphenatedKey, value)
       })
     })
   }
