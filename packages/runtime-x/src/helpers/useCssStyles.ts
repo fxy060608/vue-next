@@ -1,7 +1,12 @@
 import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
-import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
+import {
+  getExtraParentStyles,
+  getExtraStyle,
+  getExtraStyles,
+  getRootElementInstance,
+} from './node'
 
 export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
@@ -90,10 +95,29 @@ function isMatchParentSelector(parentSelector: string, el: UniXElement | null) {
 const WEIGHT_IMPORTANT = 1000
 
 function parseClassName(
-  { styles, weights }: ParseStyleContext,
+  {
+    styles,
+    weights,
+    vueComputedStyles,
+    vueComputedStyleWeights,
+  }: ParseStyleContext,
   parentStyles: Record<string, Record<string, unknown>>,
   el: UniXElement | null,
+  instance: ComponentInternalInstance | null = null,
+  isParentStyles: boolean = false,
 ) {
+  let computedStyleInterceptors:
+    | ComponentInternalInstance['computedStyleInterceptors']
+    | undefined = undefined
+  if (isParentStyles && instance) {
+    computedStyleInterceptors = instance.computedStyleInterceptors?.filter(
+      interceptor => interceptor.classAttr === 'class',
+    )
+    computedStyleInterceptors?.forEach(interceptor => {
+      interceptor.classStyles = interceptor.classStyles || new Map()
+      interceptor.classStyles.clear()
+    })
+  }
   each(parentStyles).forEach(parentSelector => {
     if (parentSelector && el) {
       if (!isMatchParentSelector(parentSelector, el)) {
@@ -108,11 +132,26 @@ function parseClassName(
       if (isImportant) {
         name = name.slice(1)
       }
-      const oldWeight = weights[name] || 0
       const weight = classWeight + (isImportant ? WEIGHT_IMPORTANT : 0)
-      if (weight >= oldWeight) {
-        weights[name] = weight
-        styles.set(name, value)
+      let filteredByComputedStyle = false
+      if (computedStyleInterceptors) {
+        const interceptors = computedStyleInterceptors.filter(
+          interceptor => interceptor.keys.indexOf(name) !== -1,
+        )
+        filteredByComputedStyle = interceptors.length > 0
+      }
+      if (filteredByComputedStyle) {
+        const oldWeight = vueComputedStyleWeights[name] || 0
+        if (weight >= oldWeight) {
+          vueComputedStyleWeights[name] = weight
+          vueComputedStyles.set(name, value)
+        }
+      } else {
+        const oldWeight = weights[name] || 0
+        if (weight >= oldWeight) {
+          weights[name] = weight
+          styles.set(name, value)
+        }
       }
     })
   })
@@ -122,9 +161,15 @@ class ParseStyleContext {
   styles: Map<string, unknown>
   weights: Record<string, number>
 
+  // for useComputedStyle
+  vueComputedStyles: Map<string, unknown>
+  vueComputedStyleWeights: Record<string, number>
+
   constructor() {
     this.styles = new Map()
     this.weights = {}
+    this.vueComputedStyles = new Map()
+    this.vueComputedStyleWeights = {}
   }
 }
 
@@ -150,7 +195,13 @@ function parseClassListWithStyleSheet(
         style => style[className] !== null,
       )?.[className]
       if (parentStyles != null) {
-        parseClassName(context, parentStyles!, el)
+        parseClassName(
+          context,
+          parentStyles!,
+          el,
+          el ? getRootElementInstance(el) : null,
+          true,
+        )
       }
     })
   }
@@ -163,7 +214,6 @@ export function parseClassStyles(el: UniXElement) {
   if ((styles == null && parentStyles == null) || el.classList.length == 0) {
     return new ParseStyleContext()
   }
-
   return parseClassListWithStyleSheet(el.classList, styles, parentStyles, el)
 }
 
@@ -234,8 +284,28 @@ export function toStyle(
   classStyle: Map<string, any>,
   classStyleWeights: Record<string, number>,
 ): Map<string, any> {
-  const res = extendMap<any>(new Map<string, any>(), classStyle)
+  // const res = extendMap<any>(new Map<string, any>(), classStyle)
   const style = getExtraStyle(el)
+  // if (style != null) {
+  //   style.forEach((value: any, key: string) => {
+  //     const weight = classStyleWeights[key]
+  //     // TODO: 目前只计算了 class 中 important 的权重，会存在 style class 同时设置 important 时，class 优先级更高的问题
+  //     if (weight == null || weight < WEIGHT_IMPORTANT) {
+  //       res.set(key, value)
+  //     }
+  //   })
+  // }
+
+  // return res
+  return mergeClassStyles(classStyle, classStyleWeights, style)
+}
+
+export function mergeClassStyles(
+  classStyle: Map<string, any>,
+  classStyleWeights: Record<string, number>,
+  style: Map<string, any> | null | undefined,
+) {
+  const res = extendMap<any>(new Map<string, any>(), classStyle)
   if (style != null) {
     style.forEach((value: any, key: string) => {
       const weight = classStyleWeights[key]
@@ -245,6 +315,5 @@ export function toStyle(
       }
     })
   }
-
   return res
 }

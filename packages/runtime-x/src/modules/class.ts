@@ -2,18 +2,25 @@ import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
   type NVueStyle,
+  mergeClassStyles,
   parseClassStyles,
   parseStyleSheet,
   toStyle,
 } from '../helpers/useCssStyles'
 import {
   getExtraClassStyle,
+  getRootElementInstance,
   isCommentNode,
   setExtraClassStyle,
   setExtraParentStyles,
   setExtraStyles,
+  setRootElementInstance,
 } from '../helpers/node'
 import type { VShowElement } from '../directives/vShow'
+import {
+  collectClassStyles,
+  triggerComputedStyleUpdate,
+} from '../helpers/useComputedStyle'
 
 export function patchClass(
   el: UniXElement,
@@ -41,6 +48,7 @@ export function patchClass(
       el,
       (instance.parent!.type as any).styles as NVueStyle[],
     )
+    setRootElementInstance(el, instance)
   }
   updateClassStyles(el)
 }
@@ -61,6 +69,28 @@ export function updateClassStyles(el: UniXElement) {
   parseClassStylesResult.styles.forEach((value: any, key: string) => {
     oldClassStyle.set(key, value)
   })
+  const instance = getRootElementInstance(el)
+  if (instance && instance.computedStyleInterceptors) {
+    collectClassStyles(
+      instance,
+      parseClassStylesResult.vueComputedStyles,
+      parseClassStylesResult.vueComputedStyleWeights,
+    )
+    instance.computedStyleInterceptors.forEach(interceptor => {
+      if (
+        interceptor.classAttr === 'class' &&
+        interceptor.classStyles &&
+        interceptor.classStylesWeight
+      ) {
+        interceptor.styles = mergeClassStyles(
+          interceptor.classStyles,
+          interceptor.classStylesWeight,
+          interceptor.styles,
+        )
+      }
+    })
+    triggerComputedStyleUpdate(instance)
+  }
   const styles = toStyle(el, oldClassStyle, parseClassStylesResult.weights)
   if (styles.size == 0) {
     return

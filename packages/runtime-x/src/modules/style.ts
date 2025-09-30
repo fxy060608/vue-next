@@ -9,11 +9,13 @@ import {
 import {
   getExtraClassStyle,
   getExtraStyle,
+  getRootElementInstance,
   setExtraStyle,
 } from '../helpers/node'
 import type { Declaration } from './style/parser'
 import { parseStyleDecl } from './style/parser'
 import type { VShowElement } from '../directives/vShow'
+import { triggerComputedStyleUpdate } from '../helpers/useComputedStyle'
 
 function isSame(a: any | null, b: any | null): boolean {
   return (isString(a) && isString(b)) ||
@@ -95,6 +97,10 @@ export function patchStyle(
   // validateStyles(el, batchedStyles)
   if ((el as VShowElement)._vsh) {
     batchedStyles.set('display', 'none')
+  }
+  const instance = getRootElementInstance(el)
+  if (instance && instance.computedStyleInterceptors) {
+    triggerComputedStyleUpdate(instance)
   }
   el.updateStyle(batchedStyles)
 }

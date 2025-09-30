@@ -85,6 +85,7 @@ export function unmountPage(pageInstance: ComponentPublicInstance): void {
 // SFC CSS utilities
 export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
+export { useComputedStyle } from './helpers/useComputedStyle'
 export {
   useCssStyles,
   parseClassStyles,

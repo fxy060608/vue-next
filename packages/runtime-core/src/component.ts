@@ -530,6 +530,19 @@ export interface ComponentInternalInstance {
    * @internal
    */
   $waitNativeRender: (fn: () => void) => void
+  /**
+   * fixed by xxxxxx
+   * @internal
+   */
+  computedStyleInterceptors?: {
+    classAttr: string | undefined
+    styleAttr: string | undefined
+    keys: string[]
+    reactiveComputedStyle: Record<string, unknown>
+    classStyles?: Map<string, unknown>
+    classStylesWeight?: Record<string, number>
+    styles?: Map<string, unknown>
+  }[]
 }
 
 const emptyAppContext = createAppContext()

@@ -1,5 +1,6 @@
 import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { NVueStyle } from './useCssStyles'
+import type { ComponentInternalInstance } from '@vue/runtime-core'
 // 样式相关
 const NODE_EXT_STYLES = 'styles' // node 中存储的可用样式表
 const NODE_EXT_PARENT_STYLES = 'parentStyles' // node 中存储的父组件可用样式表
@@ -11,9 +12,26 @@ const NODE_EXT_IS_TEXT_NODE = 'isTextNode'
 const NODE_EXT_CHILD_NODE = 'childNode'
 const NODE_EXT_PARENT_NODE = 'parentNode'
 const NODE_EXT_CHILD_NODES = 'childNodes'
+const RootElementInstanceMap = new WeakMap<
+  UniXElement,
+  ComponentInternalInstance
+>()
 
 function setNodeExtraData(el: UniXElement, name: string, value: any | null) {
   el.ext.set(name, value)
+}
+
+export function setRootElementInstance(
+  el: UniXElement,
+  instance: ComponentInternalInstance,
+) {
+  RootElementInstanceMap.set(el, instance)
+}
+
+export function getRootElementInstance(
+  el: UniXElement,
+): ComponentInternalInstance | null {
+  return RootElementInstanceMap.get(el) || null
 }
 
 export function getNodeExtraData(el: UniXElement, name: string): any | null {
