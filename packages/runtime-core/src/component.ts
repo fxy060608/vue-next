@@ -537,7 +537,8 @@ export interface ComponentInternalInstance {
   computedStyleInterceptors?: {
     classAttr: string | undefined
     styleAttr: string | undefined
-    keys: string[]
+    properties: string[] | undefined
+    filterProperties: boolean
     reactiveComputedStyle: Map<string, unknown>
     classStyles?: Map<string, unknown>
     classStylesWeight?: Record<string, number>

@@ -7,20 +7,19 @@ import {
 import { EMPTY_ARR, camelize, hyphenate } from '@vue/shared'
 
 export function useComputedStyle(
-  keys: string[],
   options: {
     classAttr?: string // 允许和 styleAttr 同时存在
     styleAttr?: string
+    properties?: string[]
+    filterProperties?: boolean
   } = {},
 ) {
   const i = getCurrentInstance()
   const r = reactive(new Map<string, unknown>())
   if (i) {
-    if (keys.length === 0) {
-      return r
-    }
     const propsDef = i.propsOptions === EMPTY_ARR ? {} : i.propsOptions[0]!
-    let { classAttr, styleAttr } = options
+    let { classAttr, styleAttr, properties } = options
+    let filterProperties = options.filterProperties ?? true
     if (classAttr || styleAttr) {
       if (classAttr && classAttr in propsDef) {
         classAttr = undefined
@@ -35,8 +34,9 @@ export function useComputedStyle(
     const computedStyleInterceptor = {
       classAttr,
       styleAttr,
-      keys,
+      properties,
       reactiveComputedStyle: r,
+      filterProperties,
     }
     i.computedStyleInterceptors = i.computedStyleInterceptors || []
     i.computedStyleInterceptors.push(computedStyleInterceptor)
@@ -95,7 +95,10 @@ export function collectClassStyles(
       interceptor.classStyles.clear()
       interceptor.classStylesWeight = {}
       styles.forEach((value, key) => {
-        if (interceptor.keys.indexOf(key) !== -1) {
+        if (
+          !interceptor.properties ||
+          interceptor.properties.indexOf(key) !== -1
+        ) {
           interceptor.classStyles!.set(key, value)
           interceptor.classStylesWeight![key] = weight[key]
         }

@@ -134,19 +134,26 @@ function parseClassName(
       }
       const weight = classWeight + (isImportant ? WEIGHT_IMPORTANT : 0)
       let filteredByComputedStyle = false
+      let usedByComputedStyle = false
       if (computedStyleInterceptors) {
         const interceptors = computedStyleInterceptors.filter(
-          interceptor => interceptor.keys.indexOf(name) !== -1,
+          interceptor =>
+            !interceptor.properties ||
+            interceptor.properties.indexOf(name) !== -1,
         )
-        filteredByComputedStyle = interceptors.length > 0
+        usedByComputedStyle = interceptors.length > 0
+        filteredByComputedStyle = interceptors.some(
+          interceptor => interceptor.filterProperties,
+        )
       }
-      if (filteredByComputedStyle) {
+      if (usedByComputedStyle) {
         const oldWeight = vueComputedStyleWeights[name] || 0
         if (weight >= oldWeight) {
           vueComputedStyleWeights[name] = weight
           vueComputedStyles.set(name, value)
         }
-      } else {
+      }
+      if (!filteredByComputedStyle) {
         const oldWeight = weights[name] || 0
         if (weight >= oldWeight) {
           weights[name] = weight

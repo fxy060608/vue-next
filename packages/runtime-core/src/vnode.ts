@@ -876,18 +876,36 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
               if (!toMergeStyle) {
                 interceptor.styles = new Map()
               } else {
-                const keys = interceptor.keys
-                keys.forEach(key => {
-                  // 环境变量在useComputedStyle的keys内有何意义
-                  let isCSSVar = key.startsWith('--')
-                  const camelizedKey = isCSSVar ? key : camelize(key)
-                  const hyphenatedKey = isCSSVar ? key : hyphenate(camelizedKey)
-                  if (hyphenatedKey in toMergeStyle!) {
-                    const value = toMergeStyle![hyphenatedKey]
-                    delete toMergeStyle![hyphenatedKey]
+                const properties = interceptor.properties
+                if (properties) {
+                  properties.forEach(property => {
+                    // 环境变量在useComputedStyle的properties内有何意义?
+                    let isCSSVar = property.startsWith('--')
+                    const camelizedKey = isCSSVar
+                      ? property
+                      : camelize(property)
+                    const hyphenatedKey = isCSSVar
+                      ? property
+                      : hyphenate(camelizedKey)
+                    if (hyphenatedKey in toMergeStyle!) {
+                      const value = toMergeStyle![hyphenatedKey]
+                      if (interceptor.filterProperties) {
+                        delete toMergeStyle![hyphenatedKey]
+                      }
+                      interceptor.styles!.set(camelizedKey, value)
+                    }
+                  })
+                } else {
+                  for (const key in toMergeStyle) {
+                    const value = toMergeStyle[key]
+                    let isCSSVar = key.startsWith('--')
+                    const camelizedKey = isCSSVar ? key : camelize(key)
                     interceptor.styles!.set(camelizedKey, value)
                   }
-                })
+                  if (interceptor.filterProperties) {
+                    toMergeStyle = {}
+                  }
+                }
               }
             })
           }
