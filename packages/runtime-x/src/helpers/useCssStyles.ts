@@ -190,7 +190,13 @@ function parseClassListWithStyleSheet(
   classList.forEach(className => {
     const parentStyles = stylesheet && stylesheet[className]
     if (parentStyles) {
-      parseClassName(context, parentStyles, el)
+      parseClassName(
+        context,
+        parentStyles,
+        el,
+        el ? getRootElementInstance(el) : null,
+        true,
+      )
     }
   })
 
