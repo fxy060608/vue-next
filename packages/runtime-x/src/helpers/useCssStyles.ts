@@ -190,6 +190,7 @@ function parseClassListWithStyleSheet(
   classList.forEach(className => {
     const parentStyles = stylesheet && stylesheet[className]
     if (parentStyles) {
+      // TODO 待确认。自定义组件根节点也可以通过此分支访问父组件的样式？
       parseClassName(
         context,
         parentStyles,
