@@ -2,7 +2,6 @@ import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
   type NVueStyle,
-  mergeClassStyles,
   parseClassStyles,
   parseStyleSheet,
   toStyle,
@@ -76,19 +75,6 @@ export function updateClassStyles(el: UniXElement) {
       parseClassStylesResult.vueComputedStyles,
       parseClassStylesResult.vueComputedStyleWeights,
     )
-    instance.computedStyleInterceptors.forEach(interceptor => {
-      if (
-        interceptor.classAttr === 'class' &&
-        interceptor.classStyles &&
-        interceptor.classStylesWeight
-      ) {
-        interceptor.styles = mergeClassStyles(
-          interceptor.classStyles,
-          interceptor.classStylesWeight,
-          interceptor.styles,
-        )
-      }
-    })
     triggerComputedStyleUpdate(instance)
   }
   const styles = toStyle(el, oldClassStyle, parseClassStylesResult.weights)

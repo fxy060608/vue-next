@@ -5,6 +5,7 @@ import {
   warn,
 } from '@vue/runtime-core'
 import { EMPTY_ARR, camelize, hyphenate } from '@vue/shared'
+import { mergeClassStyles } from './useCssStyles'
 
 export function useComputedStyle(
   options: {
@@ -60,6 +61,19 @@ export function triggerComputedStyleUpdate(
       ) {
         return
       }
+
+      if (
+        interceptor.classAttr === 'class' &&
+        interceptor.classStyles &&
+        interceptor.classStylesWeight
+      ) {
+        interceptor.styles = mergeClassStyles(
+          interceptor.classStyles,
+          interceptor.classStylesWeight,
+          interceptor.styles,
+        )
+      }
+
       const r = interceptor.reactiveComputedStyle
       // 前置步骤已经按照权重合并了classStyles和styles
       const styles = interceptor.styles
@@ -95,9 +109,11 @@ export function collectClassStyles(
       interceptor.classStyles.clear()
       interceptor.classStylesWeight = {}
       styles.forEach((value, key) => {
+        const isCSSVar = key.startsWith('--')
+        const hyphenatedKey = isCSSVar ? key : hyphenate(key)
         if (
           !interceptor.properties ||
-          interceptor.properties.indexOf(key) !== -1
+          interceptor.properties.indexOf(hyphenatedKey) !== -1
         ) {
           interceptor.classStyles!.set(key, value)
           interceptor.classStylesWeight![key] = weight[key]

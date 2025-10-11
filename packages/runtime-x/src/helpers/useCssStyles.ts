@@ -1,6 +1,6 @@
 import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
-import { hasOwn, isArray } from '@vue/shared'
+import { hasOwn, hyphenate, isArray } from '@vue/shared'
 import {
   getExtraParentStyles,
   getExtraStyle,
@@ -116,6 +116,7 @@ function parseClassName(
     computedStyleInterceptors?.forEach(interceptor => {
       interceptor.classStyles = interceptor.classStyles || new Map()
       interceptor.classStyles.clear()
+      interceptor.classStylesWeight = {}
     })
   }
   each(parentStyles).forEach(parentSelector => {
@@ -136,10 +137,12 @@ function parseClassName(
       let filteredByComputedStyle = false
       let usedByComputedStyle = false
       if (computedStyleInterceptors) {
+        const isCSSVar = name.startsWith('--')
+        const hyphenatedKey = isCSSVar ? name : hyphenate(name)
         const interceptors = computedStyleInterceptors.filter(
           interceptor =>
             !interceptor.properties ||
-            interceptor.properties.indexOf(name) !== -1,
+            interceptor.properties.indexOf(hyphenatedKey) !== -1,
         )
         usedByComputedStyle = interceptors.length > 0
         filteredByComputedStyle = interceptors.some(
