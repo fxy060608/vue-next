@@ -91,16 +91,16 @@ export function patchStyle(
   }
   // TODO validateStyles(el, batchedStyles)
 
+  const instance = getRootElementInstance(el)
+  if (instance && instance.computedStyleInterceptors) {
+    triggerComputedStyleUpdate(instance)
+  }
   if (batchedStyles.size == 0) {
     return
   }
   // validateStyles(el, batchedStyles)
   if ((el as VShowElement)._vsh) {
     batchedStyles.set('display', 'none')
-  }
-  const instance = getRootElementInstance(el)
-  if (instance && instance.computedStyleInterceptors) {
-    triggerComputedStyleUpdate(instance)
   }
   el.updateStyle(batchedStyles)
 }
