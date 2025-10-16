@@ -1,14 +1,18 @@
 import {
+  type AppContext,
+  type ComponentPublicInstance,
+  type CreateAppFunction,
+  type Renderer,
+  type RootRenderFunction,
   createRenderer,
-  RootRenderFunction,
-  CreateAppFunction,
-  Renderer
+  createVNode,
+  type defineComponent,
 } from '@vue/runtime-core'
 import { nodeOps } from './nodeOps'
 import { patchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
 import { extend } from '@vue/shared'
-import { NVueElement } from '@dcloudio/uni-shared'
+import type { NVueElement } from '@dcloudio/uni-shared'
 
 const rendererOptions = extend({ patchProp }, nodeOps)
 
@@ -39,13 +43,42 @@ export const createApp = ((...args) => {
   return app
 }) as CreateAppFunction<NVueElement>
 
+export function createMountPage(appContext: AppContext) {
+  return function mountPage(
+    pageComponent: ReturnType<typeof defineComponent>,
+    pageProps: Record<string, any>,
+    pageContainer: NVueElement,
+  ): ComponentPublicInstance {
+    const vnode = createVNode(pageComponent, pageProps)
+    // store app context on the root VNode.
+    // this will be set on the root instance on initial mount.
+    vnode.appContext = appContext
+    ;(vnode as any).__page_container__ = pageContainer
+    render(vnode, pageContainer)
+    const publicThis = vnode.component!.proxy!
+    ;(publicThis as any).__page_container__ = pageContainer
+    return publicThis
+  }
+}
+
+export function unmountPage(pageInstance: ComponentPublicInstance): void {
+  const { __page_container__ } = pageInstance as any
+  if (__page_container__) {
+    __page_container__.isUnmounted = true
+    render(null, __page_container__)
+    delete (pageInstance as any).__page_container__
+    const vnode = pageInstance.$.vnode
+    delete (vnode as any).__page_container__
+  }
+}
+
 // SFC CSS utilities
 export { useCssModule } from './helpers/useCssModule'
 export { useCssVars } from './helpers/useCssVars'
 export {
   useCssStyles,
   parseClassStyles,
-  parseClassList
+  parseClassList,
 } from './helpers/useCssStyles'
 // **Internal** DOM-only runtime directive helpers
 // export { vModelText } from './directives/vModel'
