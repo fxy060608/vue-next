@@ -2,6 +2,7 @@ import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import {
   type NVueStyle,
+  ParseStyleContext,
   parseClassStyles,
   parseStyleSheet,
   toStyle,
@@ -20,6 +21,21 @@ import {
   collectClassStyles,
   triggerComputedStyleUpdate,
 } from '../helpers/useComputedStyle'
+import { getPartElementContext } from './part'
+
+const ElementClassContextMap = new WeakMap<UniXElement, ParseStyleContext>()
+export function setElementClassContext(
+  el: UniXElement,
+  context: ParseStyleContext,
+) {
+  ElementClassContextMap.set(el, context)
+}
+
+export function getElementClassContext(
+  el: UniXElement,
+): ParseStyleContext | null {
+  return ElementClassContextMap.get(el) || null
+}
 
 export function patchClass(
   el: UniXElement,
@@ -53,6 +69,12 @@ export function patchClass(
 }
 
 export function updateClassStyles(el: UniXElement) {
+  const parseClassStylesResult = parseClassStyles(el)
+  setElementClassContext(el, parseClassStylesResult)
+  mergeAndUpdateClassStyles(el)
+}
+
+export function mergeAndUpdateClassStyles(el: UniXElement) {
   if (el.parentNode == null || isCommentNode(el)) {
     return
   }
@@ -64,20 +86,46 @@ export function updateClassStyles(el: UniXElement) {
   oldClassStyle.forEach((_value: any, key: string) => {
     oldClassStyle.set(key, '')
   })
-  const parseClassStylesResult = parseClassStyles(el)
-  parseClassStylesResult.styles.forEach((value: any, key: string) => {
+  const elementClassContext = getElementClassContext(el)
+  const partStyleContext = getPartElementContext(el)
+  let mergedStyleContext: ParseStyleContext | null = null
+  if (elementClassContext && partStyleContext) {
+    mergedStyleContext = new ParseStyleContext()
+    // 合并 styles 和 weights
+    elementClassContext.styles.forEach((value: any, key: string) => {
+      mergedStyleContext!.styles.set(key, value)
+      mergedStyleContext!.weights[key] = elementClassContext.weights[key]
+    })
+    partStyleContext.styles.forEach((value: any, key: string) => {
+      const weight = partStyleContext.weights[key]
+      const oldWeight = mergedStyleContext!.weights[key] ?? 0
+      // 同权重时组件内部样式优先级更高
+      if (weight > oldWeight) {
+        mergedStyleContext!.weights[key] = weight
+        mergedStyleContext!.styles.set(key, partStyleContext.styles.get(key)!)
+      }
+    })
+  } else if (elementClassContext) {
+    mergedStyleContext = elementClassContext
+  } else if (partStyleContext) {
+    mergedStyleContext = partStyleContext
+  }
+  if (mergedStyleContext == null) {
+    return
+  }
+  mergedStyleContext.styles.forEach((value: any, key: string) => {
     oldClassStyle.set(key, value)
   })
   const instance = getRootElementInstance(el)
   if (instance && instance.computedStyleInterceptors) {
     collectClassStyles(
       instance,
-      parseClassStylesResult.vueComputedStyles,
-      parseClassStylesResult.vueComputedStyleWeights,
+      mergedStyleContext!.vueComputedStyles,
+      mergedStyleContext!.vueComputedStyleWeights,
     )
     triggerComputedStyleUpdate(instance)
   }
-  const styles = toStyle(el, oldClassStyle, parseClassStylesResult.weights)
+  const styles = toStyle(el, oldClassStyle, mergedStyleContext.weights)
   if (styles.size == 0) {
     return
   }

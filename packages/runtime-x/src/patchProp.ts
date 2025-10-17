@@ -6,6 +6,8 @@ import { patchAttr } from './modules/attrs'
 import { patchClass } from './modules/class'
 import { patchEvent } from './modules/events'
 import { patchStyle } from './modules/style'
+import { patchPart } from './modules/part'
+// import { patchState } from './modules/state'
 
 type DOMRendererOptions = RendererOptions<UniXElement, UniXElement>
 
@@ -30,7 +32,13 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     patchClass(el, prevValue, nextValue, hostInstance || parentComponent)
   } else if (key === 'style') {
     patchStyle(el, prevValue, nextValue)
-  } else if (isOn(key)) {
+  } else if (key === 'part') {
+    patchPart(el, prevValue, nextValue, hostInstance || parentComponent)
+  }
+  // else if (key === 'active') {
+  //   patchState(el, key, nextValue, hostInstance || parentComponent)
+  // }
+  else if (isOn(key)) {
     // ignore v-model listeners
     if (!isModelListener(key)) {
       patchEvent(el, key, prevValue, nextValue, parentComponent)

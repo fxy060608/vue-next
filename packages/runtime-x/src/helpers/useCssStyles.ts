@@ -60,7 +60,10 @@ function hasClass(calssName: string, el: UniXElement | null) {
 const TYPE_RE = /[+~> ]$/
 const PROPERTY_PARENT_NODE = 'parentNode'
 const PROPERTY_PREVIOUS_SIBLING = 'previousSibling'
-function isMatchParentSelector(parentSelector: string, el: UniXElement | null) {
+export function isMatchParentSelector(
+  parentSelector: string,
+  el: UniXElement | null,
+) {
   const classArray = parentSelector.split('.')
   for (let i = classArray.length - 1; i > 0; i--) {
     const item = classArray[i]
@@ -167,7 +170,7 @@ function parseClassName(
   })
 }
 
-class ParseStyleContext {
+export class ParseStyleContext {
   styles: Map<string, unknown>
   weights: Record<string, number>
 
