@@ -7,6 +7,7 @@ import {
   getExtraStyles,
   getRootElementInstance,
 } from './node'
+import { getPartElementInstance } from './node'
 
 export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
@@ -52,9 +53,30 @@ export function useCssStyles(componentStyles: NVueStyle[]) {
   return normalized
 }
 
-function hasClass(calssName: string, el: UniXElement | null) {
-  const classList = el && el.classList
-  return classList && classList.includes(calssName)
+function hasClass(className: string, el: UniXElement | null) {
+  if (!className.endsWith(')')) {
+    const classList = el && el.classList
+    return classList && classList.includes(className)
+  }
+
+  // ::part(xxx)
+  // TODO part作为父选择器存在和class一样的问题，动态变化时不会影响子
+  if (!el) {
+    return false
+  }
+  const partStart = className.indexOf('::part(')
+  const partName = className.slice(partStart + 7, className.length - 1)
+  const part = el.getAnyAttribute('part')
+  if (part == null || !part.split(' ').includes(partName)) {
+    return false
+  }
+  const realClassName = className.slice(0, partStart).replace(TYPE_RE, '')
+  const partInstance = getPartElementInstance(el)
+  const rootEl = partInstance?.subTree.el as UniXElement | null
+  if (rootEl == null || !hasClass(realClassName, rootEl)) {
+    return false
+  }
+  return true
 }
 
 const TYPE_RE = /[+~> ]$/
