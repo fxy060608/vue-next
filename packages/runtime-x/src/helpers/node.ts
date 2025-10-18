@@ -16,10 +16,6 @@ const RootElementInstanceMap = new WeakMap<
   UniXElement,
   ComponentInternalInstance
 >()
-const PartElementInstanceMap = new WeakMap<
-  UniXElement,
-  ComponentInternalInstance
->()
 
 function setNodeExtraData(el: UniXElement, name: string, value: any | null) {
   el.ext.set(name, value)
@@ -36,19 +32,6 @@ export function getRootElementInstance(
   el: UniXElement,
 ): ComponentInternalInstance | null {
   return RootElementInstanceMap.get(el) || null
-}
-
-export function getPartElementInstance(
-  el: UniXElement,
-): ComponentInternalInstance | null {
-  return PartElementInstanceMap.get(el) || null
-}
-
-export function setPartElementInstance(
-  el: UniXElement,
-  instance: ComponentInternalInstance,
-) {
-  PartElementInstanceMap.set(el, instance)
 }
 
 export function getNodeExtraData(el: UniXElement, name: string): any | null {

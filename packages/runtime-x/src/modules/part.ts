@@ -6,7 +6,6 @@ import {
   ParseStyleContext,
   isMatchParentSelector,
 } from '../helpers/useCssStyles'
-import { getPartElementInstance, setPartElementInstance } from '../helpers/node'
 import { mergeAndUpdateClassStyles } from './class'
 
 const PartElementContextMap = new WeakMap<UniXElement, ParseStyleContext>()
@@ -25,40 +24,27 @@ export function getPartElementContext(
 
 export function patchPart(
   el: UniXElement,
-  pre: string | null,
-  next: string | null,
+  part: string | null,
   instance: ComponentInternalInstance | null = null,
 ) {
+  el.setAnyAttribute('part', part)
   if (instance == null) {
     return
   }
-  const parentComponent = instance.parent
-  if (parentComponent == null) {
-    return
-  }
-  setPartElementInstance(el, instance)
-  el.setAnyAttribute('part', next)
-  updatePartStyles(el)
-}
-
-export function updatePartStyles(el: UniXElement) {
-  const part = el.getAnyAttribute('part')
   if (!isString(part) || !part) {
-    return
-  }
-  const instance = getPartElementInstance(el)
-  if (instance == null) {
-    return
-  }
-  const parentComponent = instance.parent
-  if (parentComponent == null) {
+    setPartElementContext(el, new ParseStyleContext())
+    mergeAndUpdateClassStyles(el)
     return
   }
   const hostEl = instance.subTree.el
   if (hostEl == null || hostEl.tagName == null) {
     return
   }
-  const parentStylesheet = (parentComponent.type as any).styles as NVueStyle[]
+  const ownerInstance = instance.vnode.hostInstance
+  if (ownerInstance == null) {
+    return
+  }
+  const parentStylesheet = (ownerInstance.type as any).styles as NVueStyle[]
   if (parentStylesheet == null || parentStylesheet.length === 0) {
     return
   }
