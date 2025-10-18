@@ -65,27 +65,30 @@ export function updatePartStyles(el: UniXElement) {
   const partList = part.split(' ')
   const context = new ParseStyleContext()
   let stylesUpdated = false
-  for (let i = 0; i < partList.length; i++) {
-    const partName = partList[i]
-    const partSelector = `::part(${partName})`
-    const parentStyles = (parentStylesheet ?? []).find(
-      style => style[partSelector] != null,
-    )?.[partSelector]
-    if (parentStyles == null) {
-      continue
-    }
-    for (let parentSelector in parentStyles) {
-      if (!isMatchParentSelector(parentSelector, hostEl as UniXElement)) {
-        continue
-      }
-      const style = parentStyles[parentSelector]
-      const weight = parentSelector.split('.').length + 1
-      for (let key in style) {
-        const existing = context.weights[key]
-        if (existing == null || weight >= existing) {
-          context.styles.set(key, style[key])
-          context.weights[key] = weight
-          stylesUpdated = true
+  const partSelectors = partList.map(partName => `::part(${partName})`)
+  const parentStyles = (parentStylesheet ?? []).filter(style =>
+    partSelectors.some(partSelector => style[partSelector] != null),
+  )
+  for (let i = 0; i < parentStyles.length; i++) {
+    const style = parentStyles[i]
+    for (let j = 0; j < partSelectors.length; j++) {
+      const partSelector = partSelectors[j]
+      if (style[partSelector] != null) {
+        const parentPartStyles = style[partSelector]
+        for (let parentSelector in parentPartStyles) {
+          if (!isMatchParentSelector(parentSelector, hostEl as UniXElement)) {
+            continue
+          }
+          const style = parentPartStyles[parentSelector]
+          const weight = parentSelector.split('.').length + 1
+          for (let key in style) {
+            const existing = context.weights[key]
+            if (existing == null || weight >= existing) {
+              context.styles.set(key, style[key])
+              context.weights[key] = weight
+              stylesUpdated = true
+            }
+          }
         }
       }
     }
