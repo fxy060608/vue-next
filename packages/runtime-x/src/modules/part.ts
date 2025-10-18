@@ -42,8 +42,8 @@ export function patchPart(
 }
 
 export function updatePartStyles(el: UniXElement) {
-  const partName = el.getAnyAttribute('part')
-  if (!isString(partName) || !partName) {
+  const part = el.getAnyAttribute('part')
+  if (!isString(part) || !part) {
     return
   }
   const instance = getPartElementInstance(el)
@@ -55,21 +55,27 @@ export function updatePartStyles(el: UniXElement) {
     return
   }
   const hostEl = instance.subTree.el
-  if (hostEl == null) {
+  if (hostEl == null || hostEl.tagName == null) {
     return
   }
   const parentStylesheet = (parentComponent.type as any).styles as NVueStyle[]
   if (parentStylesheet == null || parentStylesheet.length === 0) {
     return
   }
-  const partSelector = `:part(${partName})`
-  const parentStyles = (parentStylesheet ?? []).find(
-    style => style[partSelector] != null,
-  )?.[partSelector]
+  const partList = part.split(' ')
   const context = new ParseStyleContext()
-  if (parentStyles != null) {
+  let stylesUpdated = false
+  for (let i = 0; i < partList.length; i++) {
+    const partName = partList[i]
+    const partSelector = `::part(${partName})`
+    const parentStyles = (parentStylesheet ?? []).find(
+      style => style[partSelector] != null,
+    )?.[partSelector]
+    if (parentStyles == null) {
+      continue
+    }
     for (let parentSelector in parentStyles) {
-      if (!isMatchParentSelector(parentSelector, el)) {
+      if (!isMatchParentSelector(parentSelector, hostEl as UniXElement)) {
         continue
       }
       const style = parentStyles[parentSelector]
@@ -79,9 +85,13 @@ export function updatePartStyles(el: UniXElement) {
         if (existing == null || weight >= existing) {
           context.styles.set(key, style[key])
           context.weights[key] = weight
+          stylesUpdated = true
         }
       }
     }
+  }
+  if (!stylesUpdated) {
+    return
   }
   setPartElementContext(el, context)
   mergeAndUpdateClassStyles(el)
