@@ -64,16 +64,16 @@ function hasClass(className: string, el: UniXElement | null) {
   if (!el) {
     return false
   }
-  const partStart = className.indexOf('::part(')
+  const partStart = className.lastIndexOf('::part(')
   const partName = className.slice(partStart + 7, className.length - 1)
   const part = el.getAnyAttribute('part')
   if (part == null || !part.split(' ').includes(partName)) {
     return false
   }
-  const realClassName = className.slice(0, partStart).replace(TYPE_RE, '')
+  const baseClassName = className.slice(0, partStart)
   const partInstance = getPartElementInstance(el)
-  const rootEl = partInstance?.subTree.el as UniXElement | null
-  if (rootEl == null || !hasClass(realClassName, rootEl)) {
+  const hostEl = partInstance?.subTree.el as UniXElement | null
+  if (hostEl == null || !hasClass(baseClassName, hostEl)) {
     return false
   }
   return true
