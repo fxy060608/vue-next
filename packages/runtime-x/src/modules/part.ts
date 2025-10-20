@@ -7,7 +7,7 @@ import {
   isMatchParentSelector,
 } from '../helpers/useCssStyles'
 import { mergeAndUpdateClassStyles } from './class'
-import { setPartElementInstance } from '../helpers/node'
+import { getPartElementInstance, setPartElementInstance } from '../helpers/node'
 
 const PartElementContextMap = new WeakMap<UniXElement, ParseStyleContext>()
 export function setPartElementContext(
@@ -32,12 +32,21 @@ export function patchPart(
   if (instance == null) {
     return
   }
+  setPartElementInstance(el, instance)
+  updatePartStyles(el)
+}
+
+export function updatePartStyles(el: UniXElement) {
+  const part = el.getAttribute('part')
+  const instance = getPartElementInstance(el)
+  if (instance == null) {
+    return
+  }
   if (!isString(part) || !part) {
     setPartElementContext(el, new ParseStyleContext())
     mergeAndUpdateClassStyles(el)
     return
   }
-  setPartElementInstance(el, instance)
   const hostEl = instance.subTree.el
   if (hostEl == null || hostEl.tagName == null) {
     return

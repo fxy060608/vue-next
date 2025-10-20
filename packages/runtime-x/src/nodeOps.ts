@@ -13,6 +13,7 @@ import type {
   RendererOptions,
 } from '@vue/runtime-core'
 import { updateClassStyles } from './modules/class'
+import { updatePartStyles } from './modules/part'
 import {
   getExtraChildNode,
   getExtraChildNodes,
@@ -71,6 +72,7 @@ export const nodeOps: Omit<
     // 判断是不是首次被完整插入DOM树中
     // vue 插入节点的顺序是，先子后父，所以等待父真正被完整插入document时，再遍历一遍子节点校正父子选择器样式
     if (parent.isConnected) {
+      updatePartStyles(el)
       updateClassStyles(el)
       updateChildrenClassStyle(el)
     }
@@ -159,6 +161,7 @@ export const nodeOps: Omit<
 function updateChildrenClassStyle(el: IUniElement | null) {
   if (el !== null) {
     el.childNodes.forEach(child => {
+      updatePartStyles(child)
       updateClassStyles(child)
       updateChildrenClassStyle(child)
     })
