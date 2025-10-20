@@ -53,30 +53,38 @@ export function useCssStyles(componentStyles: NVueStyle[]) {
   return normalized
 }
 
-function hasClass(className: string, el: UniXElement | null) {
+function hasClass(
+  className: string,
+  el: UniXElement | null,
+): [boolean, UniXElement | null] {
+  if (!el) {
+    return [false, null]
+  }
   if (!className.endsWith(')')) {
     const classList = el && el.classList
-    return classList && classList.includes(className)
+    return [!!classList && classList.includes(className), el]
   }
 
   // ::part(xxx)
   // TODO part作为父选择器存在和class一样的问题，动态变化时不会影响子
-  if (!el) {
-    return false
-  }
+  // TODO 返回最左选择器匹配到的元素的方式需要调整
   const partStart = className.lastIndexOf('::part(')
   const partName = className.slice(partStart + 7, className.length - 1)
   const part = el.getAnyAttribute('part')
   if (part == null || !part.split(' ').includes(partName)) {
-    return false
+    return [false, null]
   }
   const baseClassName = className.slice(0, partStart)
   const partInstance = getPartElementInstance(el)
-  const hostEl = partInstance?.subTree.el as UniXElement | null
-  if (hostEl == null || !hasClass(baseClassName, hostEl)) {
-    return false
+  let hostEl = partInstance?.subTree.el as UniXElement | null
+  if (hostEl == null) {
+    return [false, null]
   }
-  return true
+  const [matched, curEl] = hasClass(baseClassName, hostEl)
+  if (!matched) {
+    return [false, null]
+  }
+  return [true, curEl]
 }
 
 const TYPE_RE = /[+~> ]$/
@@ -96,7 +104,9 @@ export function isMatchParentSelector(
         type === '~' ? PROPERTY_PREVIOUS_SIBLING : PROPERTY_PARENT_NODE
       while (el) {
         el = el[property]
-        if (hasClass(className, el)) {
+        const [matched, curEl] = hasClass(className, el)
+        if (matched) {
+          el = curEl
           break
         }
       }
@@ -109,9 +119,11 @@ export function isMatchParentSelector(
       } else if (type === '+') {
         el = el && el[PROPERTY_PREVIOUS_SIBLING]
       }
-      if (!hasClass(className, el)) {
+      const [matched, curEl] = hasClass(className, el)
+      if (!matched) {
         return false
       }
+      el = curEl
     }
   }
   return true
