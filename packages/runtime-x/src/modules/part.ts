@@ -37,11 +37,11 @@ export function patchPart(
 }
 
 export function updatePartStyles(el: UniXElement) {
-  const part = el.getAttribute('part')
   const instance = getPartElementInstance(el)
   if (instance == null) {
     return
   }
+  const part = el.getAttribute('part')
   if (!isString(part) || !part) {
     setPartElementContext(el, new ParseStyleContext())
     mergeAndUpdateClassStyles(el)

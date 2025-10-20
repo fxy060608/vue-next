@@ -81,7 +81,7 @@ export function triggerComputedStyleUpdate(
         const isCSSVar = key.startsWith('--')
         const camelizedKey = isCSSVar ? key : camelize(key)
         if (!styles || !styles.has(camelizedKey)) {
-          r.set(key, '')
+          r.delete(key)
         } else {
           r.set(key, styles.get(camelizedKey))
         }
@@ -89,7 +89,11 @@ export function triggerComputedStyleUpdate(
       styles?.forEach((value, key) => {
         const isCSSVar = key.startsWith('--')
         const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-        r.set(hyphenatedKey, value)
+        if (value === '' || value == null) {
+          r.delete(hyphenatedKey)
+        } else {
+          r.set(hyphenatedKey, value)
+        }
       })
     })
   }
