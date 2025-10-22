@@ -869,7 +869,7 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
           )
           if (matchedInterceptors.length > 0) {
             toMergeStyle = normalizeStyle(toMerge.style) as NormalizedStyle
-
+            let toMergeStyleResult = extend({}, toMergeStyle) as NormalizedStyle
             matchedInterceptors.forEach(interceptor => {
               interceptor.styles = interceptor.styles || new Map()
               interceptor.styles.clear()
@@ -878,7 +878,6 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
               } else {
                 const properties = interceptor.properties
                 if (properties) {
-                  const toMergeStyleResult = {} as NormalizedStyle
                   for (const key in toMergeStyle!) {
                     const value = toMergeStyle![key]
                     const isCSSVar = key.startsWith('--')
@@ -886,14 +885,11 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
                     if (properties.includes(hyphenatedKey)) {
                       const camelizedKey = isCSSVar ? key : camelize(key)
                       interceptor.styles!.set(camelizedKey, value)
-                      if (!interceptor.filterProperties) {
-                        toMergeStyleResult[key] = value
+                      if (interceptor.filterProperties) {
+                        delete toMergeStyleResult[key]
                       }
-                    } else {
-                      toMergeStyleResult[key] = value
                     }
                   }
-                  toMergeStyle = toMergeStyleResult
                 } else {
                   for (const key in toMergeStyle) {
                     const value = toMergeStyle[key]
@@ -902,11 +898,12 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
                     interceptor.styles!.set(camelizedKey, value)
                   }
                   if (interceptor.filterProperties) {
-                    toMergeStyle = {}
+                    toMergeStyleResult = {}
                   }
                 }
               }
             })
+            toMergeStyle = toMergeStyleResult
           }
         }
         if (toMergeStyle) {
