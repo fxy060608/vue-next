@@ -878,23 +878,22 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
               } else {
                 const properties = interceptor.properties
                 if (properties) {
-                  properties.forEach(property => {
-                    // 环境变量在useComputedStyle的properties内有何意义?
-                    let isCSSVar = property.startsWith('--')
-                    const camelizedKey = isCSSVar
-                      ? property
-                      : camelize(property)
-                    const hyphenatedKey = isCSSVar
-                      ? property
-                      : hyphenate(camelizedKey)
-                    if (hyphenatedKey in toMergeStyle!) {
-                      const value = toMergeStyle![hyphenatedKey]
-                      if (interceptor.filterProperties) {
-                        delete toMergeStyle![hyphenatedKey]
-                      }
+                  const toMergeStyleResult = {} as NormalizedStyle
+                  for (const key in toMergeStyle!) {
+                    const value = toMergeStyle![key]
+                    const isCSSVar = key.startsWith('--')
+                    const hyphenatedKey = isCSSVar ? key : hyphenate(key)
+                    if (properties.includes(hyphenatedKey)) {
+                      const camelizedKey = isCSSVar ? key : camelize(key)
                       interceptor.styles!.set(camelizedKey, value)
+                      if (!interceptor.filterProperties) {
+                        toMergeStyleResult[key] = value
+                      }
+                    } else {
+                      toMergeStyleResult[key] = value
                     }
-                  })
+                  }
+                  toMergeStyle = toMergeStyleResult
                 } else {
                   for (const key in toMergeStyle) {
                     const value = toMergeStyle[key]
