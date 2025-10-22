@@ -31,7 +31,7 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
   if (key === 'class') {
     patchClass(el, prevValue, nextValue, hostInstance || parentComponent)
   } else if (key === 'style') {
-    patchStyle(el, prevValue, nextValue)
+    patchStyle(el, prevValue, nextValue, hostInstance || parentComponent)
   } else if (key === 'part') {
     patchPart(el, nextValue, parentComponent)
   }

@@ -9,13 +9,14 @@ import {
 import {
   getExtraClassStyle,
   getExtraStyle,
-  getRootElementInstance,
   setExtraStyle,
+  setRootElementInstance,
 } from '../helpers/node'
 import type { Declaration } from './style/parser'
 import { parseStyleDecl } from './style/parser'
 import type { VShowElement } from '../directives/vShow'
 import { triggerComputedStyleUpdate } from '../helpers/useComputedStyle'
+import type { ComponentInternalInstance } from '@vue/runtime-core'
 
 function isSame(a: any | null, b: any | null): boolean {
   return (isString(a) && isString(b)) ||
@@ -28,6 +29,7 @@ export function patchStyle(
   el: UniXElement,
   prev: NormalizedStyle | string,
   next: NormalizedStyle | string,
+  instance: ComponentInternalInstance | null = null,
 ) {
   if (!next) {
     // TODO remove styles
@@ -91,9 +93,16 @@ export function patchStyle(
   }
   // TODO validateStyles(el, batchedStyles)
 
-  const instance = getRootElementInstance(el)
-  if (instance && instance.computedStyleInterceptors) {
-    triggerComputedStyleUpdate(instance)
+  if (
+    instance &&
+    instance.parent != null &&
+    instance !== instance.root &&
+    el === instance.subTree.el
+  ) {
+    setRootElementInstance(el, instance)
+    if (instance.computedStyleInterceptors) {
+      triggerComputedStyleUpdate(instance)
+    }
   }
   if (batchedStyles.size == 0) {
     return
