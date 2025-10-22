@@ -62,12 +62,13 @@ export function triggerComputedStyleUpdate(
         return
       }
 
+      let styles = interceptor.styles
       if (
         interceptor.classAttr === 'class' &&
         interceptor.classStyles &&
         interceptor.classStylesWeight
       ) {
-        interceptor.styles = mergeClassStyles(
+        styles = mergeClassStyles(
           interceptor.classStyles,
           interceptor.classStylesWeight,
           interceptor.styles,
@@ -75,8 +76,6 @@ export function triggerComputedStyleUpdate(
       }
 
       const r = interceptor.reactiveComputedStyle
-      // 前置步骤已经按照权重合并了classStyles和styles
-      const styles = interceptor.styles
       for (const key in r) {
         const isCSSVar = key.startsWith('--')
         const camelizedKey = isCSSVar ? key : camelize(key)
