@@ -1,12 +1,9 @@
 import {
   EMPTY_ARR,
-  type NormalizedStyle,
   PatchFlags,
   ShapeFlags,
   SlotFlags,
-  camelize,
   extend,
-  hyphenate,
   isArray,
   isFunction,
   isObject,
@@ -858,59 +855,7 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
           ret.class = normalizeClass([ret.class, toMerge.class])
         }
       } else if (key === 'style') {
-        // fixed by xxxxxx useComputedStyle
-        const computedStyleInterceptors =
-          currentRenderingInstance?.computedStyleInterceptors
-        let toMergeStyle: NormalizedStyle | undefined = undefined
-
-        if (computedStyleInterceptors?.length) {
-          const matchedInterceptors = computedStyleInterceptors.filter(
-            interceptor => interceptor.styleAttr === 'style',
-          )
-          if (matchedInterceptors.length > 0) {
-            toMergeStyle = normalizeStyle(toMerge.style) as NormalizedStyle
-            let toMergeStyleResult = extend({}, toMergeStyle) as NormalizedStyle
-            matchedInterceptors.forEach(interceptor => {
-              interceptor.styles = interceptor.styles || new Map()
-              interceptor.styles.clear()
-              if (!toMergeStyle) {
-                interceptor.styles = new Map()
-              } else {
-                const properties = interceptor.properties
-                if (properties) {
-                  for (const key in toMergeStyle!) {
-                    const value = toMergeStyle![key]
-                    const isCSSVar = key.startsWith('--')
-                    const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-                    if (properties.includes(hyphenatedKey)) {
-                      const camelizedKey = isCSSVar ? key : camelize(key)
-                      interceptor.styles!.set(camelizedKey, value)
-                      if (interceptor.filterProperties) {
-                        delete toMergeStyleResult[key]
-                      }
-                    }
-                  }
-                } else {
-                  for (const key in toMergeStyle) {
-                    const value = toMergeStyle[key]
-                    let isCSSVar = key.startsWith('--')
-                    const camelizedKey = isCSSVar ? key : camelize(key)
-                    interceptor.styles!.set(camelizedKey, value)
-                  }
-                  if (interceptor.filterProperties) {
-                    toMergeStyleResult = {}
-                  }
-                }
-              }
-            })
-            toMergeStyle = toMergeStyleResult
-          }
-        }
-        if (toMergeStyle) {
-          ret.style = normalizeStyle([ret.style, toMergeStyle])
-        } else {
-          ret.style = normalizeStyle([ret.style, toMerge.style])
-        }
+        ret.style = normalizeStyle([ret.style, toMerge.style])
       } else if (isOn(key)) {
         const existing = ret[key]
         const incoming = toMerge[key]

@@ -3,6 +3,7 @@ import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import {
   type NormalizedStyle,
   camelize,
+  hyphenate,
   isString,
   parseStringStyle,
 } from '@vue/shared'
@@ -100,10 +101,48 @@ export function patchStyle(
     el === instance.subTree.el
   ) {
     setRootElementInstance(el, instance)
-    if (instance.computedStyleInterceptors) {
+    const computedStyleInterceptors = instance?.computedStyleInterceptors
+    if (computedStyleInterceptors) {
+      const matchedInterceptors = computedStyleInterceptors.filter(
+        interceptor => interceptor.styleAttr === 'style',
+      )
+      let filteredKeys = new Set<string>()
+      let clearStyles = false
+      matchedInterceptors.forEach(interceptor => {
+        interceptor.styles = interceptor.styles || new Map()
+        interceptor.styles.clear()
+        const properties = interceptor.properties
+        if (properties) {
+          batchedStyles.forEach((value, key) => {
+            const isCSSVar = key.startsWith('--')
+            const hyphenatedKey = isCSSVar ? key : hyphenate(key)
+            if (properties.includes(hyphenatedKey)) {
+              const camelizedKey = isCSSVar ? key : camelize(key)
+              interceptor.styles!.set(camelizedKey, value)
+              if (interceptor.filterProperties) {
+                filteredKeys.add(key)
+              }
+            }
+          })
+        } else {
+          batchedStyles.forEach((value, key) => {
+            interceptor.styles!.set(key, value)
+          })
+          clearStyles = true
+        }
+      })
+      if (clearStyles) {
+        batchedStyles.clear()
+      } else if (filteredKeys.size > 0) {
+        filteredKeys.forEach(key => {
+          batchedStyles.delete(key)
+        })
+      }
+
       triggerComputedStyleUpdate(instance)
     }
   }
+
   if (batchedStyles.size == 0) {
     return
   }
