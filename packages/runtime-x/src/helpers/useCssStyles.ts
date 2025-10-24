@@ -2,7 +2,7 @@ import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
 import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
-import { getPartElementInstance } from './node'
+import { getPartElementInstance, isCommentNode } from './node'
 
 export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 
@@ -74,6 +74,17 @@ function hasClass(
   let hostEl = partInstance?.subTree.el as UniXElement | null
   if (hostEl == null) {
     return [false, null]
+  }
+  if (isCommentNode(hostEl)) {
+    const instanceClass = partInstance?.attrs.class
+    if (!instanceClass || typeof instanceClass !== 'string') {
+      return [false, null]
+    }
+    const classList = (instanceClass as string).split(' ')
+    if (!classList.includes(baseClassName)) {
+      return [false, null]
+    }
+    return [true, hostEl]
   }
   const [matched, curEl] = hasClass(baseClassName, hostEl)
   if (!matched) {

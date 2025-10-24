@@ -7,7 +7,11 @@ import {
   isMatchParentSelector,
 } from '../helpers/useCssStyles'
 import { mergeAndUpdateClassStyles } from './class'
-import { getPartElementInstance, setPartElementInstance } from '../helpers/node'
+import {
+  getPartElementInstance,
+  isCommentNode,
+  setPartElementInstance,
+} from '../helpers/node'
 
 const PartElementContextMap = new WeakMap<UniXElement, ParseStyleContext>()
 export function setPartElementContext(
@@ -47,7 +51,7 @@ export function updatePartStyles(el: UniXElement) {
     mergeAndUpdateClassStyles(el)
     return
   }
-  const hostEl = instance.subTree.el
+  const hostEl = instance.subTree.el as UniXElement | null
   if (hostEl == null || hostEl.tagName == null) {
     return
   }
@@ -66,6 +70,13 @@ export function updatePartStyles(el: UniXElement) {
   const parentStyles = (parentStylesheet ?? []).filter(style =>
     partSelectors.some(partSelector => style[partSelector] != null),
   )
+  if (isCommentNode(hostEl)) {
+    // TODO 优化此处逻辑，目前仅用于判断instance在多根节点模式下是否能匹配选择器
+    const instanceClass = instance.attrs.class
+    if (typeof instanceClass === 'string') {
+      hostEl.classList = instanceClass.split(' ')
+    }
+  }
   for (let i = 0; i < parentStyles.length; i++) {
     const style = parentStyles[i]
     for (let j = 0; j < partSelectors.length; j++) {
