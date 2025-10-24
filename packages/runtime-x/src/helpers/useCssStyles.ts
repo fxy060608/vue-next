@@ -1,12 +1,7 @@
 import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
-import { hasOwn, hyphenate, isArray } from '@vue/shared'
-import {
-  getExtraParentStyles,
-  getExtraStyle,
-  getExtraStyles,
-  getRootElementInstance,
-} from './node'
+import { hasOwn, isArray } from '@vue/shared'
+import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
 import { getPartElementInstance } from './node'
 
 export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
@@ -132,30 +127,10 @@ export function isMatchParentSelector(
 const WEIGHT_IMPORTANT = 1000
 
 function parseClassName(
-  {
-    styles,
-    weights,
-    vueComputedStyles,
-    vueComputedStyleWeights,
-  }: ParseStyleContext,
+  { styles, weights }: ParseStyleContext,
   parentStyles: Record<string, Record<string, unknown>>,
   el: UniXElement | null,
-  instance: ComponentInternalInstance | null = null,
-  isParentStyles: boolean = false,
 ) {
-  let computedStyleInterceptors:
-    | ComponentInternalInstance['computedStyleInterceptors']
-    | undefined = undefined
-  if (isParentStyles && instance) {
-    computedStyleInterceptors = instance.computedStyleInterceptors?.filter(
-      interceptor => interceptor.classAttr === 'class',
-    )
-    computedStyleInterceptors?.forEach(interceptor => {
-      interceptor.classStyles = interceptor.classStyles || new Map()
-      interceptor.classStyles.clear()
-      interceptor.classStylesWeight = {}
-    })
-  }
   each(parentStyles).forEach(parentSelector => {
     if (parentSelector && el) {
       if (!isMatchParentSelector(parentSelector, el)) {
@@ -171,34 +146,10 @@ function parseClassName(
         name = name.slice(1)
       }
       const weight = classWeight + (isImportant ? WEIGHT_IMPORTANT : 0)
-      let filteredByComputedStyle = false
-      let usedByComputedStyle = false
-      if (computedStyleInterceptors) {
-        const isCSSVar = name.startsWith('--')
-        const hyphenatedKey = isCSSVar ? name : hyphenate(name)
-        const interceptors = computedStyleInterceptors.filter(
-          interceptor =>
-            !interceptor.properties ||
-            interceptor.properties.indexOf(hyphenatedKey) !== -1,
-        )
-        usedByComputedStyle = interceptors.length > 0
-        filteredByComputedStyle = interceptors.some(
-          interceptor => interceptor.filterProperties,
-        )
-      }
-      if (usedByComputedStyle) {
-        const oldWeight = vueComputedStyleWeights[name] || 0
-        if (weight >= oldWeight) {
-          vueComputedStyleWeights[name] = weight
-          vueComputedStyles.set(name, value)
-        }
-      }
-      if (!filteredByComputedStyle) {
-        const oldWeight = weights[name] || 0
-        if (weight >= oldWeight) {
-          weights[name] = weight
-          styles.set(name, value)
-        }
+      const oldWeight = weights[name] || 0
+      if (weight >= oldWeight) {
+        weights[name] = weight
+        styles.set(name, value)
       }
     })
   })
@@ -208,15 +159,9 @@ export class ParseStyleContext {
   styles: Map<string, unknown>
   weights: Record<string, number>
 
-  // for useComputedStyle
-  vueComputedStyles: Map<string, unknown>
-  vueComputedStyleWeights: Record<string, number>
-
   constructor() {
     this.styles = new Map()
     this.weights = {}
-    this.vueComputedStyles = new Map()
-    this.vueComputedStyleWeights = {}
   }
 }
 
@@ -231,13 +176,7 @@ function parseClassListWithStyleSheet(
     const parentStyles = stylesheet && stylesheet[className]
     if (parentStyles) {
       // TODO 待确认。自定义组件根节点也可以通过此分支访问父组件的样式？
-      parseClassName(
-        context,
-        parentStyles,
-        el,
-        el ? getRootElementInstance(el) : null,
-        true,
-      )
+      parseClassName(context, parentStyles, el)
     }
   })
 
@@ -249,13 +188,7 @@ function parseClassListWithStyleSheet(
         style => style[className] !== null,
       )?.[className]
       if (parentStyles != null) {
-        parseClassName(
-          context,
-          parentStyles!,
-          el,
-          el ? getRootElementInstance(el) : null,
-          true,
-        )
+        parseClassName(context, parentStyles!, el)
       }
     })
   }

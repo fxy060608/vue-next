@@ -4,8 +4,7 @@ import {
   getCurrentInstance,
   warn,
 } from '@vue/runtime-core'
-import { EMPTY_ARR, camelize, hyphenate } from '@vue/shared'
-import { mergeClassStyles } from './useCssStyles'
+import { EMPTY_ARR, hyphenate } from '@vue/shared'
 
 export function useComputedStyle(
   options: {
@@ -52,76 +51,48 @@ export function useComputedStyle(
 
 export function triggerComputedStyleUpdate(
   instance: ComponentInternalInstance,
-) {
-  if (instance.computedStyleInterceptors) {
-    instance.computedStyleInterceptors.forEach(interceptor => {
-      if (
-        interceptor.classAttr !== 'class' ||
-        interceptor.styleAttr !== 'style'
-      ) {
-        return
-      }
-
-      let styles = interceptor.styles
-      if (
-        interceptor.classAttr === 'class' &&
-        interceptor.classStyles &&
-        interceptor.classStylesWeight
-      ) {
-        styles = mergeClassStyles(
-          interceptor.classStyles,
-          interceptor.classStylesWeight,
-          interceptor.styles,
-        )
-      }
-
-      const r = interceptor.reactiveComputedStyle
-      for (const key in r) {
-        const isCSSVar = key.startsWith('--')
-        const camelizedKey = isCSSVar ? key : camelize(key)
-        if (!styles || !styles.has(camelizedKey)) {
-          r.delete(key)
-        } else {
-          r.set(key, styles.get(camelizedKey))
-        }
-      }
-      styles?.forEach((value, key) => {
-        const isCSSVar = key.startsWith('--')
-        const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-        if (value === '' || value == null) {
-          r.delete(hyphenatedKey)
-        } else {
-          r.set(hyphenatedKey, value)
-        }
-      })
-    })
-  }
-}
-
-export function collectClassStyles(
-  instance: ComponentInternalInstance,
   styles: Map<string, any>,
-  weight: Record<string, number>,
 ) {
   if (instance.computedStyleInterceptors) {
+    const keysToDelete = new Set<string>()
+    let clearStyles = false
     instance.computedStyleInterceptors.forEach(interceptor => {
-      if (interceptor.classAttr !== 'class') {
-        return
+      const r = interceptor.reactiveComputedStyle
+      const properties = interceptor.properties
+      if (properties) {
+        styles.forEach((value, key) => {
+          const isCSSVar = key.startsWith('--')
+          const hyphenatedKey = isCSSVar ? key : hyphenate(key)
+          if (properties.includes(hyphenatedKey)) {
+            if (value === '' || value == null) {
+              r.delete(hyphenatedKey)
+            } else {
+              r.set(hyphenatedKey, value)
+            }
+            if (interceptor.filterProperties) {
+              keysToDelete.add(key)
+            }
+          }
+        })
+      } else {
+        styles.forEach((value, key) => {
+          const isCSSVar = key.startsWith('--')
+          const hyphenatedKey = isCSSVar ? key : hyphenate(key)
+          if (value === '' || value == null) {
+            r.delete(hyphenatedKey)
+          } else {
+            r.set(hyphenatedKey, value)
+          }
+        })
+        clearStyles = true
       }
-      interceptor.classStyles = interceptor.classStyles || new Map()
-      interceptor.classStyles.clear()
-      interceptor.classStylesWeight = {}
-      styles.forEach((value, key) => {
-        const isCSSVar = key.startsWith('--')
-        const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-        if (
-          !interceptor.properties ||
-          interceptor.properties.indexOf(hyphenatedKey) !== -1
-        ) {
-          interceptor.classStyles!.set(key, value)
-          interceptor.classStylesWeight![key] = weight[key]
-        }
-      })
     })
+    if (clearStyles) {
+      styles.clear()
+    } else if (keysToDelete.size > 0) {
+      keysToDelete.forEach(key => {
+        styles.delete(key)
+      })
+    }
   }
 }

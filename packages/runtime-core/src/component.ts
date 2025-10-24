@@ -535,14 +535,9 @@ export interface ComponentInternalInstance {
    * @internal
    */
   computedStyleInterceptors?: {
-    classAttr: string | undefined
-    styleAttr: string | undefined
     properties: string[] | undefined
     filterProperties: boolean
     reactiveComputedStyle: Map<string, unknown>
-    classStyles?: Map<string, unknown>
-    classStylesWeight?: Record<string, number>
-    styles?: Map<string, unknown>
   }[]
 }
 

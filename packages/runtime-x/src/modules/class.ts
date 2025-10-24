@@ -17,10 +17,7 @@ import {
   setRootElementInstance,
 } from '../helpers/node'
 import type { VShowElement } from '../directives/vShow'
-import {
-  collectClassStyles,
-  triggerComputedStyleUpdate,
-} from '../helpers/useComputedStyle'
+import { triggerComputedStyleUpdate } from '../helpers/useComputedStyle'
 import { getPartElementContext } from './part'
 
 const ElementClassContextMap = new WeakMap<UniXElement, ParseStyleContext>()
@@ -116,16 +113,11 @@ export function mergeAndUpdateClassStyles(el: UniXElement) {
   mergedStyleContext.styles.forEach((value: any, key: string) => {
     oldClassStyle.set(key, value)
   })
+  const styles = toStyle(el, oldClassStyle, mergedStyleContext.weights)
   const instance = getRootElementInstance(el)
   if (instance && instance.computedStyleInterceptors) {
-    collectClassStyles(
-      instance,
-      mergedStyleContext!.vueComputedStyles,
-      mergedStyleContext!.vueComputedStyleWeights,
-    )
-    triggerComputedStyleUpdate(instance)
+    triggerComputedStyleUpdate(instance, styles)
   }
-  const styles = toStyle(el, oldClassStyle, mergedStyleContext.weights)
   if (styles.size == 0) {
     return
   }
