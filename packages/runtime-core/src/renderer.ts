@@ -741,18 +741,6 @@ function baseCreateRenderer(
     slotScopeIds: string[] | null,
     parentComponent: ComponentInternalInstance | null,
   ) => {
-    // 为内置组件标签添加所属页面的scopeId，确保页面样式可以作用于自定义组件
-    if (
-      parentComponent &&
-      (parentComponent as any).$pageInstance &&
-      el.__isUniElement
-    ) {
-      const pageScopeId = (parentComponent as any).$pageInstance.type.__scopeId
-      if (!scopeId || scopeId !== pageScopeId) {
-        hostSetScopeId(el, pageScopeId)
-      }
-    }
-
     if (scopeId) {
       hostSetScopeId(el, scopeId)
     }
