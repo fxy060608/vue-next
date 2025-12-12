@@ -385,7 +385,7 @@ const _ssrUtils = {
 
 // fixed by xxxxxx
 export { injectHook } from './apiLifecycle'
-export { isInSSRComponentSetup } from './component'
+export { isInSSRComponentSetup, getExposeProxy } from './component'
 export { logError } from './errorHandling'
 
 /**
