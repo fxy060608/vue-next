@@ -389,6 +389,11 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
       // user may set custom properties to `this` that start with `$`
       accessCache![key] = AccessTypes.CONTEXT
       return ctx[key]
+    } else if (instance.exposed && hasOwn(instance.exposed, key)) {
+      // 重要：支持通过 expose 暴露的属性，理论上不应该这么干，但是框架有很多代码直接使用的是proxy对象，比如UniApp和UniPage的vm对象
+      // 如果把vm对象调整成getExposeProxy(instance)，会导致大量代码不兼容，比如web平台内部使用vm.$router访问不到
+      // invokeHook 传入的是vm对象，也会出问题。为了减少兼容性，只能在这里兜底支持expose，让开发者可以通过vm对象访问到expose的属性
+      return instance.exposed[key]
     } else if (
       // global properties
       ((globalProperties = appContext.config.globalProperties),
