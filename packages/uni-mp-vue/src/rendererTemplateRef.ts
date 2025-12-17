@@ -42,17 +42,16 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
     $templateUniElementRefs,
     ctx: { $scope, $mpPlatform },
   } = instance as TemplateRefsComponentInternalInstance
-  if ($mpPlatform === 'mp-alipay') {
-    return
-  }
   if (!$scope || (!$templateRefs && !$templateUniElementRefs)) {
     return
   }
   if (isUnmount) {
-    $templateRefs &&
-      $templateRefs.forEach(templateRef =>
-        setTemplateRef(templateRef, null, setupState),
-      )
+    if ($mpPlatform !== 'mp-alipay') {
+      $templateRefs &&
+        $templateRefs.forEach(templateRef =>
+          setTemplateRef(templateRef, null, setupState),
+        )
+    }
     $templateUniElementRefs &&
       $templateUniElementRefs.forEach(templateRef =>
         setTemplateRef(templateRef, null, setupState),
@@ -106,7 +105,9 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
       })
     })
   }
-
+  if ($mpPlatform === 'mp-alipay') {
+    return
+  }
   if ($scope._$setRef) {
     $scope._$setRef(doSet)
   } else {
