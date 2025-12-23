@@ -342,6 +342,7 @@ export const publicPropertiesMap: PublicPropertiesMap =
 
 // fixed by xxxxxx
 if (__X__) {
+  publicPropertiesMap.$page = i => (i as any).page
   publicPropertiesMap.$callMethod = i => {
     return (methodName: string, ...args: any[]) => {
       const proxy = (getExposeProxy(i) || i.proxy) as Record<string, any>

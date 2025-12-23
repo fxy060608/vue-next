@@ -652,6 +652,13 @@ export function createComponentInstance(
   instance.emit = emit.bind(null, instance)
   // fixed by xxxxxx
   ;(instance as any).$pageInstance = parent && (parent as any).$pageInstance
+  if (__X__) {
+    // fixed by xxxxxx
+    if (parent) {
+      // @ts-expect-error
+      instance.page = parent.$pageInstance?.page
+    }
+  }
 
   // apply custom element special handling
   if (vnode.ce) {
