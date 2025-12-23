@@ -665,6 +665,12 @@ export function createComponentInstance(
   instance.root = parent ? parent.root : instance
   instance.emit = emit.bind(null, instance)
 
+  // fixed by xxxxxx
+  if (parent) {
+    // @ts-expect-error
+    instance.page = parent.root.page
+  }
+
   // apply custom element special handling
   if (vnode.ce) {
     vnode.ce(instance)

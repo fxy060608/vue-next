@@ -271,6 +271,8 @@ export const publicPropertiesMap: PublicPropertiesMap =
     $refs: i => (__DEV__ ? shallowReadonly(i.refs) : i.refs),
     $parent: i => getPublicInstance(i.parent),
     $root: i => getPublicInstance(i.root),
+    // fixed by xxxxxx
+    $page: i => (i as any).page,
     $emit: i => i.emit,
     $options: i => (__FEATURE_OPTIONS_API__ ? resolveMergedOptions(i) : i.type),
     $forceUpdate: i =>
