@@ -774,6 +774,24 @@ function baseCreateRenderer(
         )
       }
     }
+    // fixed by xxxxxx 根据样式隔离规则 app-shared，设置全局 scopeId
+    if (__X_VAPOR__ && vnode.ctx) {
+      const ctx = vnode.ctx
+      const styleIsolation = (ctx?.type as ComponentOptions).styleIsolation
+      if (styleIsolation === 'app-shared') {
+        const appScopeId = resolveAppScopeId(ctx)
+        appScopeId && hostSetScopeId(el, appScopeId)
+      }
+    }
+  }
+  // fixed by xxxxxx 获取应用的 scopeId
+  let appScopeId: string | undefined = undefined
+  function resolveAppScopeId(ctx: ComponentInternalInstance) {
+    if (appScopeId) {
+      return appScopeId
+    }
+    appScopeId = ctx.appContext.app._component.__scopeId
+    return appScopeId
   }
 
   const mountChildren: MountChildrenFn = (

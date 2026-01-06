@@ -142,6 +142,10 @@ export interface ComponentOptionsBase<
    * fixed by xxxxxx
    */
   externalClasses?: string[]
+  /**
+   * fixed by xxxxxx
+   */
+  styleIsolation?: 'isolated' | 'app-shared'
   inheritAttrs?: boolean
   emits?: (E | EE[]) & ThisType<void>
   slots?: S
