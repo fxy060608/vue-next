@@ -24,6 +24,7 @@ import {
 import {
   type ComponentPropsOptions,
   type NormalizedPropsOptions,
+  initExternalClassesOptions,
   initProps,
   normalizePropsOptions,
 } from './componentProps'
@@ -160,6 +161,11 @@ export interface ComponentInternalOptions {
    * name inferred from filename
    */
   __name?: string
+  /**
+   * fixed by xxxxxx
+   * Cached external classes options.
+   */
+  __externalClassesOptions?: string[]
 }
 
 export interface FunctionalComponent<
@@ -544,6 +550,10 @@ export function createComponentInstance(
   suspense: SuspenseBoundary | null,
 ) {
   const type = vnode.type as ConcreteComponent
+  // fixed by xxxxxx
+  if (__X_VAPOR__) {
+    initExternalClassesOptions(type as ComponentOptions)
+  }
   // inherit parent app context - or - if root, adopt from root vnode
   const appContext =
     (parent ? parent.appContext : vnode.appContext) || emptyAppContext

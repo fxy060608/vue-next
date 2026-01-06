@@ -666,6 +666,10 @@ function baseCreateRenderer(
     }
     // scopeId
     setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent)
+    // fixed by xxxxxx 存储 vnode.ctx 供 patchClass 使用
+    if (__X_VAPOR__) {
+      ;(el as any).__vueVNodeCtx = vnode.ctx
+    }
     // props
     if (props) {
       for (const key in props) {

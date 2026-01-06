@@ -10,7 +10,9 @@
   "buildOptions": {
     "formats": [
       "esm-bundler-vue",
-      "cjs-bundler-vue"
+      "cjs-bundler-vue",
+      "esm-bundler-vue-vapor",
+      "cjs-bundler-vue-vapor"
     ]
   },
   "sideEffects": false,

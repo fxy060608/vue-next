@@ -85,6 +85,16 @@ const outputConfigs = {
     file: resolve(`dist/vue.runtime.cjs.js`),
     format: `cjs`,
   },
+  'esm-bundler-vue-vapor': {
+    // fixed by xxxxxx
+    file: resolve(`dist-vapor/vue.runtime.esm.js`),
+    format: `es`,
+  },
+  'cjs-bundler-vue-vapor': {
+    // fixed by xxxxxx
+    file: resolve(`dist-vapor/vue.runtime.cjs.js`),
+    format: `cjs`,
+  },
 }
 
 /** @type {ReadonlyArray<PackageFormat>} */
@@ -178,6 +188,8 @@ function createConfig(format, output, plugins = []) {
     const replacements = {
       // fixed by xxxxxx
       __X__: `${process.env.TARGET?.includes('uni-x-')}`,
+      // fixed by xxxxxx
+      __X_VAPOR__: `${format.includes('-vapor')}`,
       __COMMIT__: `"${process.env.COMMIT}"`,
       __VERSION__: `"${masterVersion}"`,
       // this is only used during Vue's internal tests
