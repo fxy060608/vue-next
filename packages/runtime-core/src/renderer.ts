@@ -667,7 +667,7 @@ function baseCreateRenderer(
     // scopeId
     setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent)
     // fixed by xxxxxx 存储 vnode.ctx 供 patchClass 使用
-    if (__X_VAPOR__) {
+    if (__X__ && __X_STYLE_ISOLATION__) {
       ;(el as any).__vueVNodeCtx = vnode.ctx
     }
     // props
@@ -775,7 +775,7 @@ function baseCreateRenderer(
       }
     }
     // fixed by xxxxxx 根据样式隔离规则 app-shared，设置全局 scopeId
-    if (__X_VAPOR__ && vnode.ctx) {
+    if (__X__ && __X_STYLE_ISOLATION__ && vnode.ctx) {
       const ctx = vnode.ctx
       const styleIsolation = (ctx?.type as ComponentOptions).styleIsolation
       if (styleIsolation === 'app-shared') {

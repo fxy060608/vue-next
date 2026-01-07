@@ -34,7 +34,7 @@ export function patchClass(el: Element, value: string | null, isSVG: boolean) {
     el.setAttribute('class', value)
   } else {
     // fixed by xxxxxx
-    if (__X_VAPOR__) {
+    if (__X__ && __X_STYLE_ISOLATION__) {
       el.className = processParentScopedClass(el, value)
     } else {
       el.className = value

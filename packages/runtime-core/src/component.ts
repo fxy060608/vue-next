@@ -551,7 +551,7 @@ export function createComponentInstance(
 ) {
   const type = vnode.type as ConcreteComponent
   // fixed by xxxxxx
-  if (__X_VAPOR__) {
+  if (__X__ && __X_STYLE_ISOLATION__) {
     initExternalClassesOptions(type as ComponentOptions)
   }
   // inherit parent app context - or - if root, adopt from root vnode

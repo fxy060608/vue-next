@@ -410,7 +410,7 @@ function setFullProps(
       if (options && hasOwn(options, (camelKey = camelize(key)))) {
         if (!needCastKeys || !needCastKeys.includes(camelKey)) {
           // fixed by xxxxxx
-          if (__X_VAPOR__) {
+          if (__X__ && __X_STYLE_ISOLATION__) {
             props[camelKey] = resolveExternalClassesPropValue(
               camelKey,
               value,
@@ -504,7 +504,7 @@ function resolvePropValue(
     instance,
     isAbsent,
   )
-  if (__X_VAPOR__) {
+  if (__X__ && __X_STYLE_ISOLATION__) {
     return resolveExternalClassesPropValue(key, result, options, isAbsent)
   }
   return result
@@ -651,7 +651,8 @@ export function normalizePropsOptions(
             stringIndex < 0 || booleanIndex < stringIndex
           // fixed by xxxxxx
           if (
-            __X_VAPOR__ &&
+            __X__ &&
+            __X_STYLE_ISOLATION__ &&
             comp.__externalClassesOptions &&
             comp.__externalClassesOptions.includes(key as string)
           ) {
