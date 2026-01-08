@@ -280,7 +280,8 @@ export function updateProps(
           // in this code path, so just check if attrs have it.
           if (hasOwn(attrs, key)) {
             if (value !== attrs[key]) {
-              attrs[key] = value
+              // fixed by xxxxxx
+              attrs[key] = normalizeInheritAttrsValue(key, value)
               hasAttrsChanged = true
             }
           } else {
@@ -303,7 +304,8 @@ export function updateProps(
             }
           }
           if (value !== attrs[key]) {
-            attrs[key] = value
+            // fixed by xxxxxx
+            attrs[key] = normalizeInheritAttrsValue(key, value)
             hasAttrsChanged = true
           }
         }
@@ -435,7 +437,8 @@ function setFullProps(
           }
         }
         if (!(key in attrs) || value !== attrs[key]) {
-          attrs[key] = value
+          // fixed by xxxxxx
+          attrs[key] = normalizeInheritAttrsValue(key, value)
           hasAttrsChanged = true
         }
       }
@@ -461,10 +464,23 @@ function setFullProps(
   return hasAttrsChanged
 }
 
+//fixed by xxxxxx
+function toExternalClasses(classes: string): string[] {
+  return classes.split(/\s+/g).map(item => '^' + item)
+}
 // fixed by xxxxxx
 function normalizeExternalClasses(classes: unknown): string[] {
-  const clz = normalizeClass(classes)
-  return clz.split(/\s+/g).map(item => '^' + item)
+  return toExternalClasses(normalizeClass(classes))
+}
+
+// fixed by xxxxxx
+function normalizeInheritAttrsValue(key: string, value: unknown): unknown {
+  if (__X__ && __X_STYLE_ISOLATION__) {
+    if (key === 'class') {
+      return toExternalClasses(value as string).join(' ')
+    }
+  }
+  return value
 }
 
 // fixed by xxxxxx
