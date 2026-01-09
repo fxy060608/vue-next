@@ -184,25 +184,22 @@ function parseClassListWithStyleSheet(
 ): ParseStyleContext {
   const context: ParseStyleContext = new ParseStyleContext()
   classList.forEach(className => {
-    const parentStyles = stylesheet && stylesheet[className]
-    if (parentStyles) {
+    const style = stylesheet && stylesheet[className]
+    if (style) {
       // TODO 待确认。自定义组件根节点也可以通过此分支访问父组件的样式？
-      parseClassName(context, parentStyles, el)
+      parseClassName(context, style, el)
+    }
+
+    // 自定义组件根节点class需要访问父组件的样式
+    if (parentStylesheet != null) {
+      parentStylesheet.forEach(style => {
+        const parentStyle = style[className]
+        if (parentStyle != null) {
+          parseClassName(context, parentStyle, el)
+        }
+      })
     }
   })
-
-  // 自定义组件根节点class需要访问父组件的样式
-  if (parentStylesheet != null) {
-    classList.forEach(className => {
-      // 和 android 是 map，ios 是 array []
-      const parentStyles = (parentStylesheet ?? []).find(
-        style => style[className] !== null,
-      )?.[className]
-      if (parentStyles != null) {
-        parseClassName(context, parentStyles!, el)
-      }
-    })
-  }
   return context
 }
 
