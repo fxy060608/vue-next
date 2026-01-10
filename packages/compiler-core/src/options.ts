@@ -240,6 +240,12 @@ export interface TransformOptions
    */
   isCustomElement?: (tag: string) => boolean | void
   /**
+   * fixed by xxxxxx 识别 easycom 组件
+   * @param tag
+   * @returns
+   */
+  isEasyComponent?: (tag: string) => boolean | void
+  /**
    * Transform expressions like {{ foo }} to `_ctx.foo`.
    * If this option is false, the generated code will be wrapped in a
    * `with (this) { ... }` block.

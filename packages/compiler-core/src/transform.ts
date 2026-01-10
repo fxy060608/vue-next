@@ -134,6 +134,8 @@ export function createTransformContext(
     transformHoist = null,
     isBuiltInComponent = NOOP,
     isCustomElement = NOOP,
+    // fixed by xxxxxx
+    isEasyComponent = NOOP,
     expressionPlugins = [],
     scopeId = null,
     slotted = true,
@@ -162,6 +164,8 @@ export function createTransformContext(
     transformHoist,
     isBuiltInComponent,
     isCustomElement,
+    // fixed by xxxxxx
+    isEasyComponent,
     expressionPlugins,
     scopeId,
     slotted,
