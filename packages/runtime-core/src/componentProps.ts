@@ -281,7 +281,7 @@ export function updateProps(
           if (hasOwn(attrs, key)) {
             if (value !== attrs[key]) {
               // fixed by xxxxxx
-              attrs[key] = normalizeInheritAttrsValue(key, value)
+              attrs[key] = normalizeInheritAttrsValue(instance, key, value)
               hasAttrsChanged = true
             }
           } else {
@@ -305,7 +305,7 @@ export function updateProps(
           }
           if (value !== attrs[key]) {
             // fixed by xxxxxx
-            attrs[key] = normalizeInheritAttrsValue(key, value)
+            attrs[key] = normalizeInheritAttrsValue(instance, key, value)
             hasAttrsChanged = true
           }
         }
@@ -438,7 +438,7 @@ function setFullProps(
         }
         if (!(key in attrs) || value !== attrs[key]) {
           // fixed by xxxxxx
-          attrs[key] = normalizeInheritAttrsValue(key, value)
+          attrs[key] = normalizeInheritAttrsValue(instance, key, value)
           hasAttrsChanged = true
         }
       }
@@ -474,8 +474,13 @@ function normalizeExternalClasses(classes: unknown): string[] {
 }
 
 // fixed by xxxxxx
-function normalizeInheritAttrsValue(key: string, value: unknown): unknown {
-  if (__X__ && __X_STYLE_ISOLATION__) {
+function normalizeInheritAttrsValue(
+  instance: ComponentInternalInstance,
+  key: string,
+  value: unknown,
+): unknown {
+  // 内置组件不处理
+  if (__X__ && __X_STYLE_ISOLATION__ && !(instance.type as any).__reserved) {
     if (key === 'class') {
       return toExternalClasses(value as string).join(' ')
     }

@@ -781,6 +781,12 @@ function baseCreateRenderer(
       if (styleIsolation === 'app-shared') {
         const appScopeId = resolveAppScopeId(ctx)
         appScopeId && hostSetScopeId(el, appScopeId)
+      } else if (styleIsolation === 'apply-shared') {
+        // TODO 是否需要判断页面styleIsolation是否配置成了isolated？
+        const appScopeId = resolveAppScopeId(ctx)
+        appScopeId && hostSetScopeId(el, appScopeId)
+        const pageScopeId = resolvePageScopId(ctx)
+        pageScopeId && hostSetScopeId(el, pageScopeId)
       }
     }
   }
@@ -792,6 +798,13 @@ function baseCreateRenderer(
     }
     appScopeId = ctx.appContext.app._component.__scopeId
     return appScopeId
+  }
+
+  function resolvePageScopId(ctx: ComponentInternalInstance) {
+    const pageInstance = (ctx as any).$pageInstance as
+      | ComponentInternalInstance
+      | undefined
+    return pageInstance && pageInstance.type.__scopeId
   }
 
   const mountChildren: MountChildrenFn = (
