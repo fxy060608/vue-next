@@ -778,11 +778,10 @@ function baseCreateRenderer(
     if (__X__ && __X_STYLE_ISOLATION__ && vnode.ctx) {
       const ctx = vnode.ctx
       const styleIsolation = (ctx?.type as ComponentOptions).styleIsolation
-      if (styleIsolation === 'app-shared') {
+      if (styleIsolation === 'app' || styleIsolation === 'app-shared') {
         const appScopeId = resolveAppScopeId(ctx)
         appScopeId && hostSetScopeId(el, appScopeId)
-      } else if (styleIsolation === 'apply-shared') {
-        // TODO 是否需要判断页面styleIsolation是否配置成了isolated？
+      } else if (styleIsolation === 'app-and-page') {
         const appScopeId = resolveAppScopeId(ctx)
         appScopeId && hostSetScopeId(el, appScopeId)
         const pageScopeId = resolvePageScopId(ctx)
