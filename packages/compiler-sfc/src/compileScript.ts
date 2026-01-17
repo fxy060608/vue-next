@@ -5,6 +5,7 @@ import {
   unwrapTSNode,
   walkIdentifiers,
 } from '@vue/compiler-dom'
+import { dirname, resolve } from 'path'
 import {
   DEFAULT_FILENAME,
   type SFCDescriptor,
@@ -714,6 +715,17 @@ export function compileScript(
       source === 'vue'
         ? BindingTypes.SETUP_CONST
         : BindingTypes.SETUP_MAYBE_REF
+
+    // fixed by xxxxxx dom2-mp下import组件支持externalClasses
+    let resolvedSource = source
+    if (filename) {
+      try {
+        resolvedSource = resolve(dirname(filename), source)
+      } catch {
+        // keep original source if resolve fails
+      }
+    }
+    ;(ctx.bindingMetadata.__importSources ??= {})[key] = resolvedSource
   }
   for (const key in scriptBindings) {
     ctx.bindingMetadata[key] = scriptBindings[key]

@@ -31,7 +31,7 @@ import {
   isCompatEnabled,
   warnDeprecation,
 } from './compat/compatConfig'
-import { NO, extend } from '@vue/shared'
+import { NO, camelize, capitalize, extend } from '@vue/shared'
 import {
   ErrorCodes,
   createCompilerError,
@@ -57,6 +57,7 @@ type OptionalOptions =
   | 'isNativeTag'
   | 'isBuiltInComponent'
   | 'expressionPlugins'
+  | 'bindingMetadata'
   | keyof CompilerCompatOptions
 
 export type MergedParserOptions = Omit<
@@ -638,6 +639,15 @@ function onCloseTag(el: ElementNode, end: number, isImplied = false) {
       el.tagType = ElementTypes.TEMPLATE
     } else if (isComponent(el)) {
       el.tagType = ElementTypes.COMPONENT
+      // fixed by xxxxxx dom2-mp下import组件支持externalClasses
+      const importSources = currentOptions.bindingMetadata?.__importSources
+      if (importSources) {
+        const source =
+          importSources[tag] || importSources[capitalize(camelize(tag))]
+        if (source) {
+          ;(el as any).importSource = source
+        }
+      }
     }
   }
 

@@ -20,8 +20,7 @@ export interface ErrorHandlingOptions {
 }
 
 export interface ParserOptions
-  extends ErrorHandlingOptions,
-    CompilerCompatOptions {
+  extends ErrorHandlingOptions, CompilerCompatOptions {
   /**
    * Base mode is platform agnostic and only parses HTML-like template syntax,
    * treating all tags the same way. Specific tag parsing behavior can be
@@ -97,6 +96,10 @@ export interface ParserOptions
    * https://babeljs.io/docs/en/next/babel-parser#plugins
    */
   expressionPlugins?: ParserPlugin[]
+  /**
+   * fixed by xxxxxx dom2-mp下import组件支持externalClasses
+   */
+  bindingMetadata?: BindingMetadata
 }
 
 export type HoistTransform = (
@@ -156,6 +159,7 @@ export type BindingMetadata = {
 } & {
   __isScriptSetup?: boolean
   __propsAliases?: Record<string, string>
+  __importSources?: Record<string, string>
 }
 
 interface SharedTransformCodegenOptions {
@@ -211,7 +215,8 @@ interface SharedTransformCodegenOptions {
 }
 
 export interface TransformOptions
-  extends SharedTransformCodegenOptions,
+  extends
+    SharedTransformCodegenOptions,
     ErrorHandlingOptions,
     CompilerCompatOptions {
   /**
