@@ -1,5 +1,9 @@
 import type { UniElement as UniXElement } from '@dcloudio/uni-app-x/types/native'
-import type { ComponentInternalInstance } from '@vue/runtime-core'
+import {
+  type ComponentInternalInstance,
+  UniSharedDataComponentStyleIsolation,
+  __X_STYLE_ISOLATION__,
+} from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
 import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
 import { getPartElementInstance, isCommentNode } from './node'
@@ -9,6 +13,7 @@ export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 interface NVueComponent {
   mpType: 'page' | 'app'
   styles: NVueStyle[]
+  styleIsolation?: UniSharedDataComponentStyleIsolation
 }
 
 function each(obj: Record<string, unknown>) {
@@ -244,19 +249,47 @@ export function parseStyleSheet({
     if (appContext && isArray(__globalStyles)) {
       appContext.provides.__globalStyles = useCssStyles(__globalStyles)
     }
-    const styles: NVueStyle[] = []
-    if (appContext && __globalStyles) {
-      // 全局样式，包括 app.css 以及 page.css
-      const globalStyles = isArray(__globalStyles)
-        ? __globalStyles
-        : [__globalStyles]
-      styles.push(...globalStyles)
-    }
-    // 合并页面样式
-    // TODO 添加额外缓存
     const page = root.type as NVueComponent
-    if (component !== page && isArray(page.styles)) {
-      styles.push(...page.styles)
+    const isPage = component === page
+    const styles: NVueStyle[] = []
+
+    function addAppStyles() {
+      if (appContext && __globalStyles) {
+        // 全局样式，包括 app.css 以及 page.css
+        const globalStyles = isArray(__globalStyles)
+          ? __globalStyles
+          : [__globalStyles]
+        styles.push(...globalStyles)
+      }
+    }
+    function addPageStyles() {
+      if (!isPage && isArray(page.styles)) {
+        styles.push(...page.styles)
+      }
+    }
+    if (__X_STYLE_ISOLATION__) {
+      let styleIsolation = component.styleIsolation
+      if (!styleIsolation) {
+        styleIsolation = isPage
+          ? UniSharedDataComponentStyleIsolation.App
+          : UniSharedDataComponentStyleIsolation.Isolated
+      }
+      switch (styleIsolation) {
+        case UniSharedDataComponentStyleIsolation.Isolated:
+          // 不继承任何样式
+          break
+        case UniSharedDataComponentStyleIsolation.App:
+          addAppStyles()
+          break
+        case UniSharedDataComponentStyleIsolation.AppAndPage:
+          addAppStyles()
+          addPageStyles()
+          break
+      }
+    } else {
+      addAppStyles()
+      // 合并页面样式
+      addPageStyles()
     }
     if (isArray(component.styles)) {
       styles.push(...component.styles)

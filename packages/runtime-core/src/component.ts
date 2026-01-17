@@ -85,6 +85,8 @@ import {
 import type { SchedulerJob } from './scheduler'
 import type { LifecycleHooks } from './enums'
 import type { IPage as UniXPage } from '@dcloudio/uni-app-x/types/native'
+// fixed by xxxxxx
+import type { UniSharedDataComponentStyleIsolation } from './styleIsolation'
 export type Data = Record<string, unknown>
 
 /**
@@ -351,6 +353,11 @@ export interface ComponentInternalInstance {
    * @internal
    */
   inheritAttrs?: boolean
+  /**
+   * @fixed by xxxxxx
+   * @internal
+   */
+  styleIsolation?: UniSharedDataComponentStyleIsolation
   /**
    * is custom element?
    * @internal

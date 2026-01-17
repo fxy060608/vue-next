@@ -366,6 +366,11 @@ export { transformVNodeArgs } from './vnode'
 export { injectHook } from './apiLifecycle'
 export { isInSSRComponentSetup } from './component'
 export { logError } from './errorHandling'
+export {
+  __X_STYLE_ISOLATION__,
+  UniSharedDataComponentStyleIsolation,
+  enableStyleIsolation,
+} from './styleIsolation'
 
 // SSR -------------------------------------------------------------------------
 
