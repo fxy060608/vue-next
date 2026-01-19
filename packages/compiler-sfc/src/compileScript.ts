@@ -954,6 +954,32 @@ export function compileScript(
     definedOptions = scriptSetup.content
       .slice(ctx.optionsRuntimeDecl.start!, ctx.optionsRuntimeDecl.end!)
       .trim()
+
+    // 检查 styleIsolation: "app"，自动给 style 添加 scoped
+    let platform = process.env.UNI_PLATFORM || ''
+    // @ts-expect-error
+    if (
+      options.__isPage &&
+      process.env.UNI_APP_STYLE_ISOLATION_VERSION === '2' &&
+      process.env.UNI_APP_X === 'true' &&
+      ['mp-weixin', 'mp-alipay'].includes(platform) &&
+      ctx.optionsRuntimeDecl.type === 'ObjectExpression'
+    ) {
+      for (const prop of ctx.optionsRuntimeDecl.properties) {
+        if (
+          prop.type === 'ObjectProperty' &&
+          prop.key.type === 'Identifier' &&
+          prop.key.name === 'styleIsolation' &&
+          prop.value.type === 'StringLiteral' &&
+          prop.value.value === 'app'
+        ) {
+          sfc.styles.forEach(s => {
+            s.scoped = true
+          })
+          break
+        }
+      }
+    }
   }
 
   // <script setup> components are closed by default. If the user did not
