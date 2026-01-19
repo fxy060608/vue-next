@@ -77,6 +77,7 @@ import type { OptionMergeFunction } from './apiCreateApp'
 import { LifecycleHooks } from './enums'
 import type { SlotsType } from './componentSlots'
 import { normalizePropsOrEmits } from './apiSetupHelpers'
+import type { UniSharedDataComponentStyleIsolation } from './styleIsolation'
 
 /**
  * Interface for declaring custom options.
@@ -199,6 +200,17 @@ export interface ComponentOptionsBase<
   __isSuspense?: never
 
   __defaults?: Defaults
+
+  /**
+   * @fixed by xxxxxx
+   * @internal
+   */
+  styleIsolation?: UniSharedDataComponentStyleIsolation
+  /**
+   * @fixed by xxxxxx
+   * @internal
+   */
+  externalClasses?: string[]
 }
 
 /**

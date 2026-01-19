@@ -5,7 +5,12 @@ import {
   __X_STYLE_ISOLATION__,
 } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
-import { getExtraParentStyles, getExtraStyle, getExtraStyles } from './node'
+import {
+  getExtraInstance,
+  getExtraParentStyles,
+  getExtraStyle,
+  getExtraStyles,
+} from './node'
 import { getPartElementInstance, isCommentNode } from './node'
 
 export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
@@ -13,7 +18,7 @@ export type NVueStyle = Record<string, Record<string, Record<string, unknown>>>
 interface NVueComponent {
   mpType: 'page' | 'app'
   styles: NVueStyle[]
-  styleIsolation?: UniSharedDataComponentStyleIsolation
+  styleIsolation?: 'isolated' | 'app' | 'app-shared' | 'app-and-page'
 }
 
 function each(obj: Record<string, unknown>) {
@@ -209,6 +214,9 @@ function parseClassListWithStyleSheet(
 }
 
 export function parseClassStyles(el: UniXElement) {
+  if (__X_STYLE_ISOLATION__) {
+    return parseClassListWithCtx(el.classList, getExtraInstance(el), el)
+  }
   const styles = getExtraStyles(el)
   const parentStyles = getExtraParentStyles(el)
   if ((styles == null && parentStyles == null) || el.classList.length == 0) {
@@ -268,12 +276,24 @@ export function parseStyleSheet({
       }
     }
     if (__X_STYLE_ISOLATION__) {
-      let styleIsolation = component.styleIsolation
-      if (!styleIsolation) {
-        styleIsolation = isPage
-          ? UniSharedDataComponentStyleIsolation.App
-          : UniSharedDataComponentStyleIsolation.Isolated
+      let styleIsolation = isPage
+        ? UniSharedDataComponentStyleIsolation.App
+        : UniSharedDataComponentStyleIsolation.Isolated
+      // 如果指定了正确的 styleIsolation，则覆盖默认值
+      const styleIsolationStr = component.styleIsolation
+      if (styleIsolationStr) {
+        if (styleIsolationStr === 'isolated') {
+          styleIsolation = UniSharedDataComponentStyleIsolation.Isolated
+        } else if (
+          styleIsolationStr === 'app' ||
+          styleIsolationStr === 'app-shared'
+        ) {
+          styleIsolation = UniSharedDataComponentStyleIsolation.App
+        } else if (styleIsolationStr === 'app-and-page') {
+          styleIsolation = UniSharedDataComponentStyleIsolation.AppAndPage
+        }
       }
+
       switch (styleIsolation) {
         case UniSharedDataComponentStyleIsolation.Isolated:
           // 不继承任何样式
@@ -344,4 +364,68 @@ export function mergeClassStyles(
     })
   }
   return res
+}
+
+/**
+ * 根据当前组件实例解析 class 列表
+ * @param classList
+ * @param ctx
+ * @param el
+ * @returns
+ */
+export function parseClassListWithCtx(
+  classList: string[],
+  ctx: ComponentInternalInstance | null,
+  el: UniXElement,
+): ParseStyleContext {
+  const context = new ParseStyleContext()
+  if (classList.length == 0) {
+    return context
+  }
+  if (ctx == null) {
+    console.warn('parseClass context is null')
+    return context
+  }
+  classList.forEach(className => {
+    if (className.length == 0) {
+      return
+    }
+    let currentCtx: ComponentInternalInstance | null = null
+    if (className.charAt(0) != '^') {
+      currentCtx = ctx
+    } else {
+      currentCtx = ctx.hostInstance
+      if (currentCtx != null) {
+        let parentLevel = 0
+        while (className.charAt(parentLevel) == '^') {
+          parentLevel++
+        }
+        if (parentLevel > 0) {
+          className = className.slice(parentLevel)
+          if (className.length == 0) {
+            if (__DEV__) {
+              console.warn(`Invalid class name: only contains '^' characters`)
+            }
+            return
+          }
+
+          for (let i = 1; i < parentLevel; i++) {
+            if (currentCtx == null) {
+              break
+            }
+            currentCtx =
+              currentCtx.hostInstance as ComponentInternalInstance | null
+          }
+        }
+      }
+    }
+
+    if (currentCtx != null) {
+      const parentStyles = parseStyleSheet(currentCtx!)[className]
+      if (parentStyles != null) {
+        parseClassName(context, parentStyles, el)
+      }
+    }
+  })
+  return context
 }

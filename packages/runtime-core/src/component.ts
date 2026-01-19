@@ -24,6 +24,7 @@ import {
 import {
   type ComponentPropsOptions,
   type NormalizedPropsOptions,
+  initExternalClassesOptions,
   initProps,
   normalizePropsOptions,
 } from './componentProps'
@@ -85,8 +86,7 @@ import {
 import type { SchedulerJob } from './scheduler'
 import type { LifecycleHooks } from './enums'
 import type { IPage as UniXPage } from '@dcloudio/uni-app-x/types/native'
-// fixed by xxxxxx
-import type { UniSharedDataComponentStyleIsolation } from './styleIsolation'
+import { __X_STYLE_ISOLATION__ } from './styleIsolation'
 export type Data = Record<string, unknown>
 
 /**
@@ -162,6 +162,11 @@ export interface ComponentInternalOptions {
    * name inferred from filename
    */
   __name?: string
+  /**
+   * fixed by xxxxxx
+   * Cached external classes options.
+   */
+  __externalClassesOptions?: string[]
 }
 
 export interface FunctionalComponent<
@@ -354,11 +359,6 @@ export interface ComponentInternalInstance {
    */
   inheritAttrs?: boolean
   /**
-   * @fixed by xxxxxx
-   * @internal
-   */
-  styleIsolation?: UniSharedDataComponentStyleIsolation
-  /**
    * is custom element?
    * @internal
    */
@@ -546,6 +546,20 @@ export interface ComponentInternalInstance {
     filterProperties: boolean
     reactiveComputedStyle: Map<string, unknown>
   }[]
+
+  /**
+   * fixed by xxxxxx
+   * 指向的是当前组件是在哪个vue文件中被使用的
+   * 比如 页面Index.vue
+   * <Parent>
+   *   <Child>
+   *     <GrandChild>11111111</GrandChild>
+   *   </Child>
+   * </Parent>
+   * 这里的 Parent、Child、GrandChild 组件的 hostInstance 应该都指向 Index.vue 这个组件实例
+   * @internal
+   */
+  hostInstance: ComponentInternalInstance | null
 }
 
 const emptyAppContext = createAppContext()
@@ -558,6 +572,10 @@ export function createComponentInstance(
   suspense: SuspenseBoundary | null,
 ) {
   const type = vnode.type as ConcreteComponent
+  // fixed by xxxxxx
+  if (__X_STYLE_ISOLATION__) {
+    initExternalClassesOptions(type as ComponentOptions)
+  }
   // inherit parent app context - or - if root, adopt from root vnode
   const appContext =
     (parent ? parent.appContext : vnode.appContext) || emptyAppContext
@@ -671,6 +689,11 @@ export function createComponentInstance(
   }
   instance.root = parent ? parent.root : instance
   instance.emit = emit.bind(null, instance)
+
+  // fixed by xxxxxx
+  if (__X_STYLE_ISOLATION__) {
+    instance.hostInstance = vnode.hostInstance
+  }
 
   // fixed by xxxxxx
   if (parent) {

@@ -1,5 +1,8 @@
 import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
-import type { ComponentInternalInstance } from '@vue/runtime-core'
+import {
+  type ComponentInternalInstance,
+  __X_STYLE_ISOLATION__,
+} from '@vue/runtime-core'
 import {
   type NVueStyle,
   ParseStyleContext,
@@ -12,6 +15,7 @@ import {
   getRootElementInstance,
   isCommentNode,
   setExtraClassStyle,
+  setExtraInstance,
   setExtraParentStyles,
   setExtraStyles,
   setRootElementInstance,
@@ -45,22 +49,26 @@ export function patchClass(
   }
   const classList = next ? next.split(' ') : []
   el.classList = classList
-  setExtraStyles(el, parseStyleSheet(instance))
-  // 如果当前元素是组件根节点(非页面)，重要：仅限根元素。
-  // 组件根元素需要存储父组件的样式表，当解析根元素样式时，需要读取父组件的样式表，确保父组件给子组件根元素加的class生效
-  // https://github.com/fxy060608/vue-next/blob/1f3b2b8397b2a6439d9ad00b7551ad42fb4b9c3e/packages/runtime-x/src/helpers/useCssStyles.ts#L162
-  // 即：<template><child class="class-in-parent"></template><style>.class-in-parent { color: red; }</style>
-  // 此时 class-in-parent 的样式需要确保应用到 child 的根节点上
-  if (
-    instance.parent != null &&
-    instance !== instance.root &&
-    el === instance.subTree.el
-  ) {
-    setExtraParentStyles(
-      el,
-      (instance.parent!.type as any).styles as NVueStyle[],
-    )
-    setRootElementInstance(el, instance)
+  if (__X_STYLE_ISOLATION__) {
+    setExtraInstance(el, instance)
+  } else {
+    setExtraStyles(el, parseStyleSheet(instance))
+    // 如果当前元素是组件根节点(非页面)，重要：仅限根元素。
+    // 组件根元素需要存储父组件的样式表，当解析根元素样式时，需要读取父组件的样式表，确保父组件给子组件根元素加的class生效
+    // https://github.com/fxy060608/vue-next/blob/1f3b2b8397b2a6439d9ad00b7551ad42fb4b9c3e/packages/runtime-x/src/helpers/useCssStyles.ts#L162
+    // 即：<template><child class="class-in-parent"></template><style>.class-in-parent { color: red; }</style>
+    // 此时 class-in-parent 的样式需要确保应用到 child 的根节点上
+    if (
+      instance.parent != null &&
+      instance !== instance.root &&
+      el === instance.subTree.el
+    ) {
+      setExtraParentStyles(
+        el,
+        (instance.parent!.type as any).styles as NVueStyle[],
+      )
+      setRootElementInstance(el, instance)
+    }
   }
   updateClassStyles(el)
 }

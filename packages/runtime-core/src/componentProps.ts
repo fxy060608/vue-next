@@ -25,6 +25,8 @@ import {
   makeMap,
   toRawType,
 } from '@vue/shared'
+// fixed by xxxxxx
+import { normalizeClass } from '@dcloudio/uni-shared'
 import { warn } from './warning'
 import {
   type ComponentInternalInstance,
@@ -40,6 +42,7 @@ import { createPropsDefaultThis } from './compat/props'
 import { isCompatEnabled, softAssertCompatEnabled } from './compat/compatConfig'
 import { DeprecationTypes } from './compat/compatConfig'
 import { shouldSkipAttr } from './compat/attrsFallthrough'
+import { __X_STYLE_ISOLATION__ } from './styleIsolation'
 
 export type ComponentPropsOptions<P = Data> =
   | ComponentObjectPropsOptions<P>
@@ -167,6 +170,8 @@ export type ExtractPublicPropTypes<O> = {
 enum BooleanFlags {
   shouldCast,
   shouldCastTrue,
+  // fixed by xxxxxx
+  externalClasses,
 }
 
 // extract props which defined with default from prop options
@@ -180,6 +185,8 @@ type NormalizedProp =
   | (PropOptions & {
       [BooleanFlags.shouldCast]?: boolean
       [BooleanFlags.shouldCastTrue]?: boolean
+      // fixed by xxxxxx
+      [BooleanFlags.externalClasses]?: boolean
     })
 
 // normalized value is a tuple of the actual normalized options
@@ -275,7 +282,8 @@ export function updateProps(
           // in this code path, so just check if attrs have it.
           if (hasOwn(attrs, key)) {
             if (value !== attrs[key]) {
-              attrs[key] = value
+              // fixed by xxxxxx
+              attrs[key] = normalizeInheritAttrsValue(instance, key, value)
               hasAttrsChanged = true
             }
           } else {
@@ -298,7 +306,8 @@ export function updateProps(
             }
           }
           if (value !== attrs[key]) {
-            attrs[key] = value
+            // fixed by xxxxxx
+            attrs[key] = normalizeInheritAttrsValue(instance, key, value)
             hasAttrsChanged = true
           }
         }
@@ -404,7 +413,17 @@ function setFullProps(
       let camelKey
       if (options && hasOwn(options, (camelKey = camelize(key)))) {
         if (!needCastKeys || !needCastKeys.includes(camelKey)) {
-          props[camelKey] = value
+          // fixed by xxxxxx
+          if (__X_STYLE_ISOLATION__) {
+            props[camelKey] = resolveExternalClassesPropValue(
+              camelKey,
+              value,
+              options,
+              false,
+            )
+          } else {
+            props[camelKey] = value
+          }
         } else {
           ;(rawCastValues || (rawCastValues = {}))[camelKey] = value
         }
@@ -420,7 +439,8 @@ function setFullProps(
           }
         }
         if (!(key in attrs) || value !== attrs[key]) {
-          attrs[key] = value
+          // fixed by xxxxxx
+          attrs[key] = normalizeInheritAttrsValue(instance, key, value)
           hasAttrsChanged = true
         }
       }
@@ -446,7 +466,75 @@ function setFullProps(
   return hasAttrsChanged
 }
 
+//fixed by xxxxxx
+function toExternalClasses(classes: string): string[] {
+  return classes.split(/\s+/g).map(item => '^' + item)
+}
+// fixed by xxxxxx
+function normalizeExternalClasses(classes: unknown): string[] {
+  return toExternalClasses(normalizeClass(classes))
+}
+
+// fixed by xxxxxx
+function normalizeInheritAttrsValue(
+  instance: ComponentInternalInstance,
+  key: string,
+  value: unknown,
+): unknown {
+  // 内置组件不处理
+  if (__X_STYLE_ISOLATION__ && !(instance.type as any).__reserved) {
+    if (key === 'class') {
+      return toExternalClasses(value as string).join(' ')
+    }
+  }
+  return value
+}
+
+// fixed by xxxxxx
+function resolveExternalClassesPropValue(
+  key: string,
+  value: unknown,
+  options: NormalizedProps,
+  isAbsent: boolean,
+) {
+  if (
+    // 只有外部传入的 externalClasses 才走这里，没有传入，但有默认值的不应该处理，比如button组件内部hover-class有默认值button-hover
+    !isAbsent
+  ) {
+    const opt = options[key]
+    if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
+      return normalizeExternalClasses(value)
+    }
+  }
+  return value
+}
+
+// fixed by xxxxxx
+// 定制化 resolvePropValue 逻辑，处理 externalClasses 的 props 选项
 function resolvePropValue(
+  options: NormalizedProps,
+  props: Data,
+  key: string,
+  value: unknown,
+  instance: ComponentInternalInstance,
+  isAbsent: boolean,
+) {
+  const result = _resolvePropValue(
+    options,
+    props,
+    key,
+    value,
+    instance,
+    isAbsent,
+  )
+  if (__X_STYLE_ISOLATION__) {
+    return resolveExternalClassesPropValue(key, result, options, isAbsent)
+  }
+  return result
+}
+
+// fixed by xxxxxx
+function _resolvePropValue(
   options: NormalizedProps,
   props: Data,
   key: string,
@@ -496,6 +584,21 @@ function resolvePropValue(
     }
   }
   return value
+}
+
+/**
+ * fixed by xxxxxx
+ * @param comp
+ */
+export function initExternalClassesOptions(comp: ComponentOptions): void {
+  if (isArray(comp.externalClasses)) {
+    const cached = comp.__externalClassesOptions
+    if (!cached) {
+      comp.__externalClassesOptions = comp.externalClasses.map(className =>
+        camelize(className),
+      )
+    }
+  }
 }
 
 export function normalizePropsOptions(
@@ -569,6 +672,16 @@ export function normalizePropsOptions(
           prop[BooleanFlags.shouldCast] = booleanIndex > -1
           prop[BooleanFlags.shouldCastTrue] =
             stringIndex < 0 || booleanIndex < stringIndex
+          // fixed by xxxxxx
+          if (
+            __X_STYLE_ISOLATION__ &&
+            comp.__externalClassesOptions &&
+            comp.__externalClassesOptions.includes(key as string)
+          ) {
+            prop[BooleanFlags.externalClasses] = true
+            // 跳过类型检查，因为传入的是始终是个string[]，而开发者可能定义的是 string
+            prop.skipCheck = true
+          }
           // if the prop needs boolean casting or default value
           if (booleanIndex > -1 || hasOwn(prop, 'default')) {
             needCastKeys.push(normalizedKey)
