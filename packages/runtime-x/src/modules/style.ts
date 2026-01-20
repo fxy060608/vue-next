@@ -53,19 +53,17 @@ export function patchStyle(
     for (const key in prev) {
       // 如果 next 不存在当前 key，场景：样式被移除
       if (next[key] == null) {
-        const _key = key.startsWith('--') ? key : camelize(key)
-
-        // 尝试从 class 读取，读取不到回填为空字符串
-        const value =
-          classStyle != null && classStyle.has(_key)
-            ? classStyle!.get(_key)
-            : ''
-
         // 传递简写 css kye value => Map [[key, value]]
-        parseStyleDecl(_key, value).forEach((item: Declaration) => {
-          batchedStyles.set(item.prop, item.value)
+        parseStyleDecl(
+          key.startsWith('--') ? key : camelize(key),
+          prev[key],
+        ).forEach((item: Declaration) => {
+          const key = item.prop
+          // 尝试从 class 读取，读取不到回填为空字符串
+          const value = classStyle?.has(key) == true ? classStyle!.get(key) : ''
+          batchedStyles.set(key, value)
           // 把style中的样式移除掉，否则style的优先级始终比class高
-          style?.delete(item.prop)
+          style?.delete(key)
         })
 
         // batchedStyles.set(camelize(key), '')
