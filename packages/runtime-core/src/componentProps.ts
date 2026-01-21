@@ -482,7 +482,7 @@ function normalizeInheritAttrsValue(
   value: unknown,
 ): unknown {
   // 内置组件不处理
-  if (__X_STYLE_ISOLATION__ && !(instance.type as any).__reserved) {
+  if (__X_STYLE_ISOLATION__) {
     if (key === 'class') {
       return toExternalClasses(value as string).join(' ')
     }
