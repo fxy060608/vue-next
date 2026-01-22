@@ -468,7 +468,8 @@ function setFullProps(
 
 //fixed by xxxxxx
 function toExternalClasses(classes: string): string[] {
-  return classes.split(/\s+/g).map(item => '^' + item)
+  const trimmed = classes.trim()
+  return trimmed ? trimmed.split(/\s+/).map(item => '^' + item) : []
 }
 // fixed by xxxxxx
 function normalizeExternalClasses(classes: unknown): string[] {
