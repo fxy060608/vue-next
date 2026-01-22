@@ -15,7 +15,7 @@ export function useComputedStyle(
   } = {},
 ) {
   const i = getCurrentInstance()
-  const r = reactive(new Map<string, unknown>())
+  const r = reactive(new Map<string, string>())
   if (i) {
     const propsDef = i.propsOptions === EMPTY_ARR ? {} : i.propsOptions[0]!
     let { classAttr, styleAttr, properties } = options
@@ -49,6 +49,30 @@ export function useComputedStyle(
   return r
 }
 
+const excludedPxKeys = new Set<string>([
+  'z-index',
+  'opacity',
+  'font-weight',
+  'line-height',
+  'flex-grow',
+  'flex-shrink',
+  'flex',
+])
+
+function formatValue(key: string, value: number | string): string {
+  if (typeof value != 'number') {
+    return value
+  }
+  if (isPxKey(key)) {
+    return `${value}px`
+  }
+  return `${value}`
+}
+
+function isPxKey(key: string): boolean {
+  return !excludedPxKeys.has(key)
+}
+
 export function triggerComputedStyleUpdate(
   instance: ComponentInternalInstance,
   styles: Map<string, any>,
@@ -67,7 +91,7 @@ export function triggerComputedStyleUpdate(
             if (value === '' || value == null) {
               r.delete(hyphenatedKey)
             } else {
-              r.set(hyphenatedKey, value)
+              r.set(hyphenatedKey, formatValue(hyphenatedKey, value))
             }
             if (interceptor.filterProperties) {
               keysToDelete.add(key)
@@ -81,7 +105,7 @@ export function triggerComputedStyleUpdate(
           if (value === '' || value == null) {
             r.delete(hyphenatedKey)
           } else {
-            r.set(hyphenatedKey, value)
+            r.set(hyphenatedKey, formatValue(hyphenatedKey, value))
           }
         })
         clearStyles = true

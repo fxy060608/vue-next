@@ -544,7 +544,7 @@ export interface ComponentInternalInstance {
   computedStyleInterceptors?: {
     properties: string[] | undefined
     filterProperties: boolean
-    reactiveComputedStyle: Map<string, unknown>
+    reactiveComputedStyle: Map<string, string>
   }[]
 
   /**
