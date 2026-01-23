@@ -223,6 +223,7 @@ function createConfig(format, output, plugins = []) {
     if (!isBundlerESMBuild) {
       // hard coded dev/prod builds
       replacements.__DEV__ = String(!isProductionBuild)
+      replacements.__X_STYLE_ISOLATION__ = `process.env.UNI_APP_X_NEW_STYLE_ISOLATION` // fixed by xxxxxx
     }
 
     // allow inline overrides like
@@ -255,6 +256,7 @@ function createConfig(format, output, plugins = []) {
       Object.assign(replacements, {
         // preserve to be handled by bundlers
         __DEV__: `!!(process.env.NODE_ENV !== 'production')`,
+        __X_STYLE_ISOLATION__: `process.env.UNI_APP_X_NEW_STYLE_ISOLATION`, // fixed by xxxxxx
       })
     }
 

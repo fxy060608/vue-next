@@ -4097,8 +4097,8 @@ function injectToKeepAliveRoot(hook, type, target, keepAliveRoot) {
   }, target);
 }
 function resetShapeFlag(vnode) {
-  vnode.shapeFlag &= ~256;
-  vnode.shapeFlag &= ~512;
+  vnode.shapeFlag &= -257;
+  vnode.shapeFlag &= -513;
 }
 function getInnerChild(vnode) {
   return isSuspense(vnode.type) ? vnode.ssContent : vnode;
@@ -5511,7 +5511,7 @@ function setFullProps(instance, rawProps, props, attrs) {
       let camelKey;
       if (options && shared.hasOwn(options, camelKey = shared.camelize(key))) {
         if (!needCastKeys || !needCastKeys.includes(camelKey)) {
-          if (__X_STYLE_ISOLATION__) {
+          if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
             props[camelKey] = resolveExternalClassesPropValue(
               camelKey,
               value,
@@ -5550,13 +5550,18 @@ function setFullProps(instance, rawProps, props, attrs) {
   return hasAttrsChanged;
 }
 function toExternalClasses(classes) {
-  return classes.split(/\s+/g).map((item) => "^" + item);
+  const trimmed = classes.trim();
+  return trimmed ? trimmed.split(/\s+/).map((item) => "^" + item) : [];
 }
 function normalizeExternalClasses(classes) {
-  return toExternalClasses(uniShared.normalizeClass(classes));
+  const res = toExternalClasses(uniShared.normalizeClass(classes));
+  if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
+    return res.flatMap((item) => [item, item + "-external"]);
+  }
+  return res;
 }
 function normalizeInheritAttrsValue(instance, key, value) {
-  if (__X_STYLE_ISOLATION__ && !instance.type.__reserved) {
+  if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION && !instance.type.__reserved) {
     if (key === "class") {
       return toExternalClasses(value).join(" ");
     }
@@ -5587,7 +5592,7 @@ function resolvePropValue(options, props, key, value, instance, isAbsent) {
     instance,
     isAbsent
   );
-  if (__X_STYLE_ISOLATION__) {
+  if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
     return resolveExternalClassesPropValue(key, result, options, isAbsent);
   }
   return result;
@@ -5692,7 +5697,7 @@ function normalizePropsOptions(comp, appContext, asMixin = false) {
           const stringIndex = getTypeIndex(String, prop.type);
           prop[0 /* shouldCast */] = booleanIndex > -1;
           prop[1 /* shouldCastTrue */] = stringIndex < 0 || booleanIndex < stringIndex;
-          if (__X_STYLE_ISOLATION__ && comp.__externalClassesOptions && comp.__externalClassesOptions.includes(key)) {
+          if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION && comp.__externalClassesOptions && comp.__externalClassesOptions.includes(key)) {
             prop[2 /* externalClasses */] = true;
             prop.skipCheck = true;
           }
@@ -6905,7 +6910,7 @@ function baseCreateRenderer(options, createHydrationFns) {
       invokeDirectiveHook(vnode, null, parentComponent, "created");
     }
     setScopeId(el, vnode, vnode.scopeId, slotScopeIds, parentComponent);
-    if (__X_STYLE_ISOLATION__) {
+    if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
       el.__vueVNodeCtx = vnode.ctx;
     }
     if (props) {
@@ -6982,7 +6987,7 @@ function baseCreateRenderer(options, createHydrationFns) {
         );
       }
     }
-    if (__X_STYLE_ISOLATION__ && vnode.ctx) {
+    if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION && vnode.ctx) {
       const ctx = vnode.ctx;
       const styleIsolation = (ctx == null ? void 0 : ctx.type).styleIsolation;
       if (styleIsolation === "app" || styleIsolation === "app-shared") {
@@ -8530,8 +8535,8 @@ function isVNode(value) {
 }
 function isSameVNodeType(n1, n2) {
   if (n2.shapeFlag & 6 && hmrDirtyComponents.has(n2.type)) {
-    n1.shapeFlag &= ~256;
-    n2.shapeFlag &= ~512;
+    n1.shapeFlag &= -257;
+    n2.shapeFlag &= -513;
     return false;
   }
   return n1.type === n2.type && n1.key === n2.key;
@@ -8845,7 +8850,7 @@ let uid = 0;
 function createComponentInstance(vnode, parent, suspense) {
   var _a;
   const type = vnode.type;
-  if (__X_STYLE_ISOLATION__) {
+  if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
     initExternalClassesOptions(type);
   }
   const appContext = (parent ? parent.appContext : vnode.appContext) || emptyAppContext;
@@ -9927,7 +9932,7 @@ function patchClass(el, value, isSVG) {
   } else if (isSVG) {
     el.setAttribute("class", value);
   } else {
-    if (__X_STYLE_ISOLATION__) {
+    if (process.env.UNI_APP_X_NEW_STYLE_ISOLATION) {
       el.className = processParentScopedClass(el, value);
     } else {
       el.className = value;
