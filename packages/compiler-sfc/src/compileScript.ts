@@ -957,8 +957,8 @@ export function compileScript(
 
     // 检查 styleIsolation: "app"，自动给 style 添加 scoped
     let platform = process.env.UNI_PLATFORM || ''
-    // @ts-expect-error
     if (
+      // @ts-expect-error
       options.__isPage &&
       process.env.UNI_APP_STYLE_ISOLATION_VERSION === '2' &&
       process.env.UNI_APP_X === 'true' &&
