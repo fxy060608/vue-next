@@ -955,6 +955,7 @@ export function compileScript(
       .slice(ctx.optionsRuntimeDecl.start!, ctx.optionsRuntimeDecl.end!)
       .trim()
 
+    // fixed by xxxxxx
     // 检查 styleIsolation: "app"，自动给 style 添加 scoped
     let platform = process.env.UNI_PLATFORM || ''
     if (
