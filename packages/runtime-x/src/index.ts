@@ -9,7 +9,7 @@ import {
   type defineComponent,
 } from '@vue/runtime-core'
 import { nodeOps, setDocument } from './nodeOps'
-import { patchProp } from './patchProp'
+import { forcePatchProp, patchProp } from './patchProp'
 // Importing from the compiler, will be tree-shaken in prod
 import { extend } from '@vue/shared'
 import type {
@@ -17,7 +17,7 @@ import type {
   Element as UniXElement,
 } from '@dcloudio/uni-app-x/types/native'
 
-const rendererOptions = extend({ patchProp }, nodeOps)
+const rendererOptions = extend({ patchProp, forcePatchProp }, nodeOps)
 
 // lazy create the renderer - this makes core renderer logic tree-shakable
 // in case the user only imports reactivity utilities from Vue.
