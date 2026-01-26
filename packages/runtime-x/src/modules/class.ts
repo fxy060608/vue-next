@@ -73,7 +73,7 @@ export function patchClass(
     instance !== instance.root &&
     el === instance.subTree.el
   ) {
-    if (__X_STYLE_ISOLATION__) {
+    if (!__X_STYLE_ISOLATION__) {
       setExtraParentStyles(
         el,
         (instance.parent!.type as any).styles as NVueStyle[],
