@@ -6,6 +6,7 @@ import {
 } from '@vue/runtime-core'
 import { hasOwn, isArray } from '@vue/shared'
 import {
+  getExtraClassList,
   getExtraInstance,
   getExtraParentStyles,
   getExtraStyle,
@@ -215,7 +216,11 @@ function parseClassListWithStyleSheet(
 
 export function parseClassStyles(el: UniXElement) {
   if (__X_STYLE_ISOLATION__) {
-    return parseClassListWithCtx(el.classList, getExtraInstance(el), el)
+    return parseClassListWithCtx(
+      getExtraClassList(el) ?? el.classList,
+      getExtraInstance(el),
+      el,
+    )
   }
   const styles = getExtraStyles(el)
   const parentStyles = getExtraParentStyles(el)

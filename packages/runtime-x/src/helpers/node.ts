@@ -2,6 +2,7 @@ import type { Element as UniXElement } from '@dcloudio/uni-app-x/types/native'
 import type { NVueStyle } from './useCssStyles'
 import type { ComponentInternalInstance } from '@vue/runtime-core'
 // 样式相关
+const NODE_EXT_CLASS_LIST = 'classList' // node 中存储的未处理的 classList（可能包含^标记）
 const NODE_EXT_INSTANCE = 'instance' // node 中存储的可用样式表
 const NODE_EXT_STYLES = 'styles' // node 中存储的可用样式表
 const NODE_EXT_PARENT_STYLES = 'parentStyles' // node 中存储的父组件可用样式表
@@ -54,6 +55,14 @@ export function setPartElementInstance(
 
 export function getNodeExtraData(el: UniXElement, name: string): any | null {
   return el.ext.get(name)
+}
+
+export function getExtraClassList(el: UniXElement): Array<string> | null {
+  return getNodeExtraData(el, NODE_EXT_CLASS_LIST) as Array<string> | null
+}
+
+export function setExtraClassList(el: UniXElement, classList: Array<string>) {
+  setNodeExtraData(el, NODE_EXT_CLASS_LIST, classList)
 }
 
 export function getExtraInstance(
