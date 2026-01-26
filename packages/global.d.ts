@@ -1,6 +1,12 @@
 /// <reference types="vite/client" />
 
 // Global compile-time constants
+// fixed by xxxxxx
+declare var __X__: boolean
+// fixed by xxxxxx
+declare var __X_STYLE_ISOLATION__: boolean
+// fixed by xxxxxx
+declare var __X_STYLE_ISOLATION_UP_ARROW__: boolean
 declare var __DEV__: boolean
 declare var __TEST__: boolean
 declare var __BROWSER__: boolean

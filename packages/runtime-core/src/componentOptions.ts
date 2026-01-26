@@ -139,6 +139,10 @@ export interface ComponentOptionsBase<
   render?: Function
   components?: Record<string, Component>
   directives?: Record<string, Directive>
+  /**
+   * fixed by xxxxxx
+   */
+  externalClasses?: string[]
   inheritAttrs?: boolean
   emits?: (E | EE[]) & ThisType<void>
   slots?: S

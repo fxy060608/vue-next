@@ -26,7 +26,7 @@ interface TemplateRefsComponentInternalInstance
   extends ComponentInternalInstance {
   ctx: {
     $scope: MPInstance
-    $mpPlatform: 'mp-alipay'
+    $mpPlatform: 'mp-alipay' | 'mp-toutiao' | 'mp-baidu'
   }
   $templateRefs: TemplateRef[]
   $templateUniElementRefs: (TemplateRef & { v: any })[]
