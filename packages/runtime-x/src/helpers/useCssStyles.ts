@@ -302,12 +302,22 @@ export function parseStyleSheet({
       switch (styleIsolation) {
         case UniSharedDataComponentStyleIsolation.Isolated:
           // 不继承任何样式
+          if (isArray(component.styles)) {
+            styles.push(...component.styles)
+          }
           break
         case UniSharedDataComponentStyleIsolation.App:
           addAppStyles()
+          if (isArray(component.styles)) {
+            styles.push(...component.styles)
+          }
           break
         case UniSharedDataComponentStyleIsolation.AppAndPage:
+          // 合并顺序：app -> component -> page
           addAppStyles()
+          if (isArray(component.styles)) {
+            styles.push(...component.styles)
+          }
           addPageStyles()
           break
       }
@@ -315,9 +325,9 @@ export function parseStyleSheet({
       addAppStyles()
       // 合并页面样式
       addPageStyles()
-    }
-    if (isArray(component.styles)) {
-      styles.push(...component.styles)
+      if (isArray(component.styles)) {
+        styles.push(...component.styles)
+      }
     }
     cache = useCssStyles(styles)
     pageInstance.componentStylesCache.set(component, cache)
