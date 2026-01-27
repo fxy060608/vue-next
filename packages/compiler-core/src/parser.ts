@@ -643,7 +643,10 @@ function onCloseTag(el: ElementNode, end: number, isImplied = false) {
       const importSources = currentOptions.bindingMetadata?.__importSources
       if (importSources) {
         const source =
-          importSources[tag] || importSources[capitalize(camelize(tag))]
+          importSources[tag] ||
+          importSources[capitalize(camelize(tag))] ||
+          importSources[camelize(tag)] ||
+          importSources[capitalize(tag)]
         if (source) {
           ;(el as any).importSource = source
         }
