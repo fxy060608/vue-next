@@ -91,9 +91,20 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
       }
     }
   }
-  // 不需要通过_$setRef设置，直接异步设置，因为setRef可能会使用nextSetDataTick机制s
+  if ($mpPlatform !== 'mp-alipay') {
+    if ($scope._$setRef) {
+      $scope._$setRef(doSet)
+    } else {
+      nextTick(instance, doSet)
+    }
+  }
+  // 不需要通过_$setRef设置，直接异步设置，因为setRef可能会使用nextTick机制
   if ($templateUniElementRefs && $templateUniElementRefs.length) {
     nextTick(instance, () => {
+      /**
+       * 如下逻辑必须在doSet之后执行，否则doSet会覆盖ref值
+       * 此调整用于解决<loading :ref="loadingRef"></loading>场景下，loadingRef获取不到Element问题
+       */
       $templateUniElementRefs.forEach(templateRef => {
         if (isArray(templateRef.v)) {
           templateRef.v.forEach(v => {
@@ -104,14 +115,6 @@ export function setRef(instance: ComponentInternalInstance, isUnmount = false) {
         }
       })
     })
-  }
-  if ($mpPlatform === 'mp-alipay') {
-    return
-  }
-  if ($scope._$setRef) {
-    $scope._$setRef(doSet)
-  } else {
-    nextTick(instance, doSet)
   }
 }
 
