@@ -489,7 +489,7 @@ function normalizeInheritAttrsValue(
     !(instance.type as any).__reserved
   ) {
     if (key === 'class') {
-      return toExternalClasses(value as string).join(' ')
+      return toExternalClasses(normalizeClass(value)).join(' ')
     }
   }
   return value
