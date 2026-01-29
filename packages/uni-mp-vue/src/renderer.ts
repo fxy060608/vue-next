@@ -144,6 +144,27 @@ const getFunctionalFallthrough = (attrs: Data): Data | undefined => {
   return res
 }
 
+// TODO 目前loading-element、cloud-db-element内置组件依赖子组件设置ref，renderComponentRoot清理后无法恢复
+// 需要在合适的时机清理templateRefs
+function clearTemplateRefs<T extends TemplateRef | (TemplateRef & { v: any })>(
+  templateRefs: T[] | undefined,
+): T[] {
+  if (!templateRefs) {
+    return []
+  }
+  return templateRefs.filter(templateRef => {
+    const v = (templateRef as unknown as { v: any }).v
+    if (
+      v &&
+      typeof v === 'object' &&
+      ['UNI-LOADING-ELEMENT', 'UNI-CLOUD-DB-ELEMENT'].includes(v.nodeName)
+    ) {
+      return true
+    }
+    return false
+  })
+}
+
 function renderComponentRoot(instance: ComponentInternalInstance): Data {
   const {
     type: Component,
@@ -177,12 +198,22 @@ function renderComponentRoot(instance: ComponentInternalInstance): Data {
     }
   ).$uniElementIds = new Map()
   // template refs
-  ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs = []
+  ;(instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs =
+    clearTemplateRefs(
+      (instance as unknown as { $templateRefs: TemplateRef[] }).$templateRefs ||
+        [],
+    )
   ;(
     instance as unknown as {
       $templateUniElementRefs: (TemplateRef & { v: any })[]
     }
-  ).$templateUniElementRefs = []
+  ).$templateUniElementRefs = clearTemplateRefs(
+    (
+      instance as unknown as {
+        $templateUniElementRefs: (TemplateRef & { v: any })[]
+      }
+    ).$templateUniElementRefs || [],
+  )
   // template element styles
   ;(
     instance as unknown as {
