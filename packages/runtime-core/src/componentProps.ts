@@ -482,9 +482,9 @@ function normalizeInheritAttrsValue(
   key: string,
   value: unknown,
 ): unknown {
-  // 内置组件不处理
   if (__X_STYLE_ISOLATION__) {
-    if (key === 'class') {
+    // 硬编码处理组件的 class、hover-class、placeholder-class
+    if (key == 'class' || key == 'hover-class' || key == 'placeholder-class') {
       return toExternalClasses(value as string).join(' ')
     }
   }
