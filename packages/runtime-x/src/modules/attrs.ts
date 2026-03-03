@@ -71,7 +71,11 @@ function transformAttr(
   if (opts) {
     const camelized = camelize(key)
     if (opts['class'].indexOf(camelized) > -1) {
-      const classStyle = parseClassList([value as string], instance, el)
+      const classStyle = parseClassList(
+        Array.isArray(value) ? (value as string[]) : [value as string],
+        instance,
+        el,
+      )
       // 同步微信效果
       // button 的 hoverClass = 'none'，忽略用户设定的.none css
       // button 的 hoverClass = 'button-hover',并且没有设置对应样式，应当默认

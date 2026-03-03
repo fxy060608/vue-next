@@ -51,6 +51,11 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     el.setAnyAttribute('modelValue', nextValue)
     el.setAnyAttribute('value', nextValue)
   } else {
-    patchAttr(el, key, nextValue, parentComponent)
+    patchAttr(
+      el,
+      key,
+      nextValue,
+      hostInstance !== null ? hostInstance : parentComponent,
+    )
   }
 }

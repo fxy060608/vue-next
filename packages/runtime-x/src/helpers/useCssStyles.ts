@@ -235,6 +235,9 @@ export function parseClassList(
   instance: ComponentInternalInstance,
   el: UniXElement | null = null,
 ) {
+  if (__X_STYLE_ISOLATION__ && el) {
+    return parseClassListWithCtx(classList, instance, el).styles
+  }
   return parseClassListWithStyleSheet(
     classList,
     parseStyleSheet(instance),
