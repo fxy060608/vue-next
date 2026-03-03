@@ -295,7 +295,9 @@ export function parseStyleSheet({
         ) {
           styleIsolation = UniSharedDataComponentStyleIsolation.App
         } else if (styleIsolationStr === 'app-and-page') {
-          styleIsolation = UniSharedDataComponentStyleIsolation.AppAndPage
+          styleIsolation = isPage
+            ? UniSharedDataComponentStyleIsolation.App
+            : UniSharedDataComponentStyleIsolation.AppAndPage
         }
       }
 
