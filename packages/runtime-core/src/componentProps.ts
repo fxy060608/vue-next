@@ -471,11 +471,7 @@ function toExternalClasses(classes: string): string[] {
 }
 // fixed by xxxxxx
 function normalizeExternalClasses(classes: unknown): string[] {
-  const res = toExternalClasses(normalizeClass(classes))
-  if (__X__ && __X_STYLE_ISOLATION__) {
-    return res.flatMap(item => [item, item + '-external'])
-  }
-  return res
+  return toExternalClasses(normalizeClass(classes))
 }
 
 // fixed by xxxxxx
