@@ -39,7 +39,7 @@ export function patchStyle(
   if (isString(next)) {
     next = parseStringStyle(next)
   }
-  const batchedStyles = new Map<
+  let batchedStyles = new Map<
     keyof NormalizedStyle,
     NormalizedStyle[keyof NormalizedStyle]
   >()
@@ -100,7 +100,14 @@ export function patchStyle(
     setRootElementInstance(el, instance)
     const computedStyleInterceptors = instance?.computedStyleInterceptors
     if (computedStyleInterceptors) {
-      triggerComputedStyleUpdate(instance, batchedStyles)
+      /**
+       * triggerComputedStyleUpdate内部会修改传入的styles，此处如果直接传入batchedStyles会导致setExtraStyle中的batchedStyles被修改
+       * 再后续更新时由于ExtraStyle内部分样式丢失引发class样式比style高的问题，因此这里传入一个新的Map实例，避免被修改
+       */
+      batchedStyles = triggerComputedStyleUpdate(
+        instance,
+        new Map(batchedStyles),
+      )
     }
   }
 

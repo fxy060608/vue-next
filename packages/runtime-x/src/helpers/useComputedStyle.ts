@@ -76,7 +76,7 @@ function isPxKey(key: string): boolean {
 export function triggerComputedStyleUpdate(
   instance: ComponentInternalInstance,
   styles: Map<string, any>,
-) {
+): Map<string, any> {
   if (instance.computedStyleInterceptors) {
     const keysToDelete = new Set<string>()
     let clearStyles = false
@@ -119,4 +119,5 @@ export function triggerComputedStyleUpdate(
       })
     }
   }
+  return styles
 }
