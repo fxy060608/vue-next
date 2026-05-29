@@ -96,7 +96,7 @@ export class Cache implements KeepAliveCache {
     this._max = parseInt(max as string, 10)
   }
 
-  get(key: CacheKey) {
+  get(key: CacheKey): VNode | void {
     const { _cache, _keys, _max } = this
     const cached = _cache.get(key)
     if (cached) {
@@ -108,23 +108,25 @@ export class Cache implements KeepAliveCache {
       // prune oldest entry
       if (_max && _keys.size > _max) {
         const staleKey = _keys.values().next().value
-        this.pruneCacheEntry(_cache.get(staleKey)!)
-        this.delete(staleKey)
+        if (staleKey !== undefined) {
+          this.pruneCacheEntry(_cache.get(staleKey)!)
+          this.delete(staleKey)
+        }
       }
     }
     return cached
   }
-  set(key: CacheKey, value: VNode) {
+  set(key: CacheKey, value: VNode): void {
     this._cache.set(key, value)
   }
-  delete(key: CacheKey) {
+  delete(key: CacheKey): void {
     this._cache.delete(key)
     this._keys.delete(key)
   }
   forEach(
     fn: (value: VNode, key: CacheKey, map: Map<CacheKey, VNode>) => void,
     thisArg?: any,
-  ) {
+  ): void {
     this._cache.forEach(fn.bind(thisArg))
   }
 }
@@ -440,28 +442,28 @@ function matches(pattern: MatchPattern, name: string): boolean {
 export function onBeforeActivate(
   hook: Function,
   target?: ComponentInternalInstance | null,
-) {
+): void {
   registerKeepAliveHook(hook, LifecycleHooks.BEFORE_ACTIVATE, target)
 }
 
 export function onActivated(
   hook: Function,
   target?: ComponentInternalInstance | null,
-) {
+): void {
   registerKeepAliveHook(hook, LifecycleHooks.ACTIVATED, target)
 }
 
 export function onBeforeDeactivate(
   hook: Function,
   target?: ComponentInternalInstance | null,
-) {
+): void {
   registerKeepAliveHook(hook, LifecycleHooks.BEFORE_DEACTIVATE, target)
 }
 
 export function onDeactivated(
   hook: Function,
   target?: ComponentInternalInstance | null,
-) {
+): void {
   registerKeepAliveHook(hook, LifecycleHooks.DEACTIVATED, target)
 }
 
@@ -543,7 +545,7 @@ function getMatchingName(vnode: VNode, matchBy: 'name' | 'key') {
   return String(vnode.key)
 }
 
-export function invokeKeepAliveHooks(hooks: WrappedHook[]) {
+export function invokeKeepAliveHooks(hooks: WrappedHook[]): void {
   for (let i = 0; i < hooks.length; i++) {
     const hook = hooks[i]
     if (!hook.__called) {
@@ -553,6 +555,6 @@ export function invokeKeepAliveHooks(hooks: WrappedHook[]) {
   }
 }
 
-export function resetHookState(hooks: WrappedHook[]) {
+export function resetHookState(hooks: WrappedHook[]): void {
   hooks.forEach((hook: WrappedHook) => (hook.__called = false))
 }

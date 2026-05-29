@@ -3,7 +3,7 @@
 import { createCompatVue } from './createCompatVue'
 import { warn } from '@vue/runtime-core'
 
-const Vue = createCompatVue()
+const Vue: any = createCompatVue()
 
 Vue.compile = (() => {
   if (__DEV__) {

@@ -8,22 +8,23 @@ import type { ModelDecl } from './defineModel'
 import type { BindingMetadata } from '../../../compiler-core/src'
 import MagicString from 'magic-string'
 import type { TypeScope } from './resolveType'
+import { warn } from '../warn'
+import { isJS, isTS } from './utils'
 
 export class ScriptCompileContext {
   isJS: boolean
   isTS: boolean
-  // fixed by xxxxxx
-  isUTS: boolean
   isCE = false
 
   scriptAst: Program | null
   scriptSetupAst: Program | null
 
-  source = this.descriptor.source
-  filename = this.descriptor.filename
-  s = new MagicString(this.source)
-  startOffset = this.descriptor.scriptSetup?.loc.start.offset
-  endOffset = this.descriptor.scriptSetup?.loc.end.offset
+  source: string = this.descriptor.source
+  filename: string = this.descriptor.filename
+  s: MagicString = new MagicString(this.source)
+  startOffset: number | undefined =
+    this.descriptor.scriptSetup?.loc.start.offset
+  endOffset: number | undefined = this.descriptor.scriptSetup?.loc.end.offset
 
   // import / type analysis
   scope?: TypeScope
@@ -87,18 +88,8 @@ export class ScriptCompileContext {
     const scriptLang = script && script.lang
     const scriptSetupLang = scriptSetup && scriptSetup.lang
 
-    this.isJS =
-      scriptLang === 'js' ||
-      scriptLang === 'jsx' ||
-      scriptSetupLang === 'js' ||
-      scriptSetupLang === 'jsx'
-    this.isTS =
-      scriptLang === 'ts' ||
-      scriptLang === 'tsx' ||
-      scriptSetupLang === 'ts' ||
-      scriptSetupLang === 'tsx'
-    // fixed by xxxxxx
-    this.isUTS = scriptLang === 'uts' || scriptSetupLang === 'uts'
+    this.isJS = isJS(scriptLang, scriptSetupLang)
+    this.isTS = isTS(scriptLang, scriptSetupLang)
 
     const customElement = options.customElement
     const filename = this.descriptor.filename
@@ -114,18 +105,13 @@ export class ScriptCompileContext {
       options.babelParserPlugins,
     )
 
-    function parse(input: string, offset: number, startLine?: number): Program {
-      // fixed by xxxxxx
+    function parse(input: string, offset: number): Program {
       try {
         return babelParse(input, {
           plugins,
           sourceType: 'module',
         }).program
       } catch (e: any) {
-        // fixed by xxxxxx
-        if (e.loc && startLine) {
-          e.loc.line = e.loc.line + (startLine - 1)
-        }
         e.message = `[vue/compiler-sfc] ${e.message}\n\n${
           descriptor.filename
         }\n${generateCodeFrame(
@@ -139,19 +125,11 @@ export class ScriptCompileContext {
 
     this.scriptAst =
       descriptor.script &&
-      parse(
-        descriptor.script.content,
-        descriptor.script.loc.start.offset,
-        descriptor.script.loc.start.line,
-      ) // fixed by xxxxxx
+      parse(descriptor.script.content, descriptor.script.loc.start.offset)
 
     this.scriptSetupAst =
       descriptor.scriptSetup &&
-      parse(
-        descriptor.scriptSetup!.content,
-        this.startOffset!,
-        descriptor.scriptSetup.loc.start.line,
-      ) // fixed by xxxxxx
+      parse(descriptor.scriptSetup!.content, this.startOffset!)
   }
 
   getString(node: Node, scriptSetup = true): string {
@@ -161,25 +139,36 @@ export class ScriptCompileContext {
     return block.content.slice(node.start!, node.end!)
   }
 
+  warn(msg: string, node: Node, scope?: TypeScope): void {
+    warn(generateError(msg, node, this, scope))
+  }
+
   error(msg: string, node: Node, scope?: TypeScope): never {
-    const offset = scope ? scope.offset : this.startOffset!
     throw new Error(
-      `[@vue/compiler-sfc] ${msg}\n\n${
-        (scope || this.descriptor).filename
-      }\n${generateCodeFrame(
-        (scope || this.descriptor).source,
-        node.start! + offset,
-        node.end! + offset,
-      )}`,
+      `[@vue/compiler-sfc] ${generateError(msg, node, this, scope)}`,
     )
   }
+}
+
+function generateError(
+  msg: string,
+  node: Node,
+  ctx: ScriptCompileContext,
+  scope?: TypeScope,
+) {
+  const offset = scope ? scope.offset : ctx.startOffset!
+  return `${msg}\n\n${(scope || ctx.descriptor).filename}\n${generateCodeFrame(
+    (scope || ctx.descriptor).source,
+    node.start! + offset,
+    node.end! + offset,
+  )}`
 }
 
 export function resolveParserPlugins(
   lang: string,
   userPlugins?: ParserPlugin[],
   dts = false,
-) {
+): ParserPlugin[] {
   const plugins: ParserPlugin[] = []
   if (
     !userPlugins ||
@@ -192,15 +181,20 @@ export function resolveParserPlugins(
   ) {
     plugins.push('importAttributes')
   }
-  if (lang === 'jsx' || lang === 'tsx') {
+  if (lang === 'jsx' || lang === 'tsx' || lang === 'mtsx') {
     plugins.push('jsx')
   } else if (userPlugins) {
     // If don't match the case of adding jsx
     // should remove the jsx from user options
     userPlugins = userPlugins.filter(p => p !== 'jsx')
   }
-  if (lang === 'ts' || lang === 'tsx' || lang === 'uts') {
-    // fixed by xxxxxx
+  if (
+    lang === 'ts' ||
+    lang === 'mts' ||
+    lang === 'tsx' ||
+    lang === 'cts' ||
+    lang === 'mtsx'
+  ) {
     plugins.push(['typescript', { dts }], 'explicitResourceManagement')
     if (!userPlugins || !userPlugins.includes('decorators')) {
       plugins.push('decorators-legacy')

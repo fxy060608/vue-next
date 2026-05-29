@@ -19,7 +19,7 @@ if (__DEV__) {
 
 import * as runtimeDom from '@vue/runtime-dom'
 
-function wrappedCreateApp(...args: any[]) {
+function wrappedCreateApp(...args: any[]): any {
   // @ts-expect-error
   const app = createApp(...args)
   if (compatUtils.isCompatEnabled(DeprecationTypes.RENDER_FUNCTION, null)) {
@@ -37,7 +37,7 @@ function wrappedCreateApp(...args: any[]) {
   return app
 }
 
-export function createCompatVue() {
+export function createCompatVue(): any {
   const Vue = compatUtils.createCompatVue(createApp, wrappedCreateApp)
   extend(Vue, runtimeDom)
   return Vue

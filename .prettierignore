@@ -1,5 +1,3 @@
 dist
-dist-vapor
-*.md
-*.html
 pnpm-lock.yaml
+CHANGELOG*.md

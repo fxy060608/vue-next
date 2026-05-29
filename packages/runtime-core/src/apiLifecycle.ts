@@ -51,16 +51,13 @@ export function injectHook(
     const wrappedHook =
       hook.__weh ||
       (hook.__weh = (...args: unknown[]) => {
-        if (target!.isUnmounted) {
-          return
-        }
         // disable tracking inside all lifecycle hooks
         // since they can potentially be called inside effects.
         pauseTracking()
         // Set currentInstance during hook invocation.
         // This assumes the hook does not synchronously trigger other hooks, which
         // can only be false when the user does something really funky.
-        const reset = setCurrentInstance(target!)
+        const reset = setCurrentInstance(target!) // fixed by xxxxxx
         const res = callWithAsyncErrorHandling(hook, target, type, args)
         reset()
         resetTracking()
@@ -73,9 +70,10 @@ export function injectHook(
     }
     return wrappedHook
   } else if (__DEV__) {
+    // fixed by xxxxxx
     const apiName = toHandlerKey(
       (ErrorTypeStrings[type] || type.replace(/^on/, '')).replace(/ hook$/, ''),
-    ) // fixed by xxxxxx
+    )
     warn(
       `${apiName} is called when there is no active component instance to be ` +
         `associated with. ` +
@@ -88,28 +86,44 @@ export function injectHook(
   }
 }
 
-export const createHook =
+const createHook =
   <T extends Function = () => any>(lifecycle: LifecycleHooks) =>
-  (hook: T, target: ComponentInternalInstance | null = currentInstance) =>
+  (
+    hook: T,
+    target: ComponentInternalInstance | null = currentInstance,
+  ): void => {
     // post-create lifecycle registrations are noops during SSR (except for serverPrefetch)
-    (!isInSSRComponentSetup || lifecycle === LifecycleHooks.SERVER_PREFETCH) &&
-    injectHook(lifecycle, (...args: unknown[]) => hook(...args), target)
+    if (
+      !isInSSRComponentSetup ||
+      lifecycle === LifecycleHooks.SERVER_PREFETCH
+    ) {
+      injectHook(lifecycle, (...args: unknown[]) => hook(...args), target)
+    }
+  }
+type CreateHook<T = any> = (
+  hook: T,
+  target?: ComponentInternalInstance | null,
+) => void
 
-export const onBeforeMount = createHook(LifecycleHooks.BEFORE_MOUNT)
-export const onMounted = createHook(LifecycleHooks.MOUNTED)
-export const onBeforeUpdate = createHook(LifecycleHooks.BEFORE_UPDATE)
-export const onUpdated = createHook(LifecycleHooks.UPDATED)
-export const onBeforeUnmount = createHook(LifecycleHooks.BEFORE_UNMOUNT)
-export const onUnmounted = createHook(LifecycleHooks.UNMOUNTED)
-export const onServerPrefetch = createHook(LifecycleHooks.SERVER_PREFETCH)
+export const onBeforeMount: CreateHook = createHook(LifecycleHooks.BEFORE_MOUNT)
+export const onMounted: CreateHook = createHook(LifecycleHooks.MOUNTED)
+export const onBeforeUpdate: CreateHook = createHook(
+  LifecycleHooks.BEFORE_UPDATE,
+)
+export const onUpdated: CreateHook = createHook(LifecycleHooks.UPDATED)
+export const onBeforeUnmount: CreateHook = createHook(
+  LifecycleHooks.BEFORE_UNMOUNT,
+)
+export const onUnmounted: CreateHook = createHook(LifecycleHooks.UNMOUNTED)
+export const onServerPrefetch: CreateHook = createHook(
+  LifecycleHooks.SERVER_PREFETCH,
+)
 
 export type DebuggerHook = (e: DebuggerEvent) => void
-export const onRenderTriggered = createHook<DebuggerHook>(
-  LifecycleHooks.RENDER_TRIGGERED,
-)
-export const onRenderTracked = createHook<DebuggerHook>(
-  LifecycleHooks.RENDER_TRACKED,
-)
+export const onRenderTriggered: CreateHook<DebuggerHook> =
+  createHook<DebuggerHook>(LifecycleHooks.RENDER_TRIGGERED)
+export const onRenderTracked: CreateHook<DebuggerHook> =
+  createHook<DebuggerHook>(LifecycleHooks.RENDER_TRACKED)
 
 export type ErrorCapturedHook<TError = unknown> = (
   err: TError,
@@ -120,6 +134,6 @@ export type ErrorCapturedHook<TError = unknown> = (
 export function onErrorCaptured<TError = Error>(
   hook: ErrorCapturedHook<TError>,
   target: ComponentInternalInstance | null = currentInstance,
-) {
+): void {
   injectHook(LifecycleHooks.ERROR_CAPTURED, hook, target)
 }

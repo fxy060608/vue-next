@@ -3,19 +3,15 @@ import type { ScriptCompileContext } from './context'
 import MagicString from 'magic-string'
 import { rewriteDefaultAST } from '../rewriteDefault'
 import { genNormalScriptCssVarsCode } from '../style/cssVars'
+import type { SFCScriptBlock } from '../parse'
 
 export const normalScriptDefaultVar = `__default__`
 
 export function processNormalScript(
   ctx: ScriptCompileContext,
   scopeId: string,
-) {
+): SFCScriptBlock {
   const script = ctx.descriptor.script!
-  if (script.lang && !ctx.isJS && !ctx.isTS && !ctx.isUTS) {
-    // fixed by xxxxxx
-    // do not process non js/ts script blocks
-    return script
-  }
   try {
     let content = script.content
     let map = script.map
@@ -29,7 +25,7 @@ export function processNormalScript(
       const s = new MagicString(content)
       rewriteDefaultAST(scriptAst.body, s, defaultVar)
       // fixed by xxxxxx
-      if (ctx.isUTS) {
+      if (ctx.isTS) {
         scriptAst.body.forEach(node => {
           if (node.type === 'ExportDefaultDeclaration') {
             if (node.declaration.type === 'ObjectExpression') {

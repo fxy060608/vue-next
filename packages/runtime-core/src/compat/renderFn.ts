@@ -41,7 +41,9 @@ import {
 } from './compatConfig'
 import { compatModelEventPrefix } from './componentVModel'
 
-export function convertLegacyRenderFn(instance: ComponentInternalInstance) {
+export function convertLegacyRenderFn(
+  instance: ComponentInternalInstance,
+): void {
   const Component = instance.type as ComponentOptions
   const render = Component.render as InternalRenderFunction | undefined
 
@@ -172,7 +174,7 @@ export function compatH(
   }
 }
 
-const skipLegacyRootLevelProps = /*#__PURE__*/ makeMap(
+const skipLegacyRootLevelProps = /*@__PURE__*/ makeMap(
   'staticStyle,staticClass,directives,model,hook',
 )
 
@@ -305,8 +307,8 @@ function convertLegacySlots(vnode: VNode): VNode {
   return vnode
 }
 
-export function defineLegacyVNodeProperties(vnode: VNode) {
-  /* istanbul ignore if */
+export function defineLegacyVNodeProperties(vnode: VNode): void {
+  /* v8 ignore start */
   if (
     isCompatEnabled(
       DeprecationTypes.RENDER_FUNCTION,
@@ -346,4 +348,5 @@ export function defineLegacyVNodeProperties(vnode: VNode) {
       },
     })
   }
+  /* v8 ignore stop */
 }

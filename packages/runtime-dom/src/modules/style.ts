@@ -10,9 +10,9 @@ import { CSS_VAR_TEXT } from '../helpers/useCssVars'
 
 type Style = string | Record<string, string | string[]> | null
 
-const displayRE = /(^|;)\s*display\s*:/
+const displayRE = /(?:^|;)\s*display\s*:/
 
-export function patchStyle(el: Element, prev: Style, next: Style) {
+export function patchStyle(el: Element, prev: Style, next: Style): void {
   const style = (el as HTMLElement).style
   const isCssString = isString(next)
   let hasControlledDisplay = false
@@ -37,7 +37,21 @@ export function patchStyle(el: Element, prev: Style, next: Style) {
       if (key === 'display') {
         hasControlledDisplay = true
       }
-      setStyle(style, key, next[key])
+      const value = next[key]
+      if (value != null) {
+        if (
+          !shouldPreserveTextareaResizeStyle(
+            el,
+            key,
+            !isString(prev) && prev ? prev[key] : undefined,
+            value,
+          )
+        ) {
+          setStyle(style, key, value)
+        }
+      } else {
+        setStyle(style, key, '')
+      }
     }
   } else {
     if (isCssString) {
@@ -139,10 +153,27 @@ function autoPrefix(style: CSSStyleDeclaration, rawName: string): string {
 // upx,rpx
 const { unit, unitRatio, unitPrecision } = defaultRpx2Unit
 const rpx2Unit = createRpx2Unit(unit, unitRatio, unitPrecision)
-
-export const normalizeRpx = (val: string) => {
+export const normalizeRpx = (val: string): string => {
   if (isString(val)) {
     return rpx2Unit(val)
   }
   return val
+}
+/**
+ * Browsers update textarea width/height directly during native resize.
+ * Only special-case this common textarea path for now; other resize scenarios
+ * still follow normal vnode style patching.
+ */
+function shouldPreserveTextareaResizeStyle(
+  el: Element,
+  key: string,
+  prev: string | string[] | undefined,
+  next: string | string[],
+): boolean {
+  return (
+    el.tagName === 'TEXTAREA' &&
+    (key === 'width' || key === 'height') &&
+    isString(next) &&
+    prev === next
+  )
 }

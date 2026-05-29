@@ -7,7 +7,7 @@ export function patchWxs(
   rawName: string,
   nextValue: Function | null,
   instance: ComponentInternalInstance | null = null,
-) {
+): void {
   if (!nextValue || !instance) {
     return
   }

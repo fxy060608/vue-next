@@ -3,30 +3,35 @@ import {
   Static,
   type VNode,
   getCurrentInstance,
+  onBeforeUpdate,
   onMounted,
   onUnmounted,
+  queuePostFlushCb,
   warn,
-  watchPostEffect,
+  watch,
 } from '@vue/runtime-core'
-import { ShapeFlags } from '@vue/shared'
 // fixed by xxxxxx
 import { normalizeRpx } from '../modules/style'
+import { NOOP, ShapeFlags, normalizeCssVarValue } from '@vue/shared'
 
-export const CSS_VAR_TEXT = Symbol(__DEV__ ? 'CSS_VAR_TEXT' : '')
+export const CSS_VAR_TEXT: unique symbol = Symbol(__DEV__ ? 'CSS_VAR_TEXT' : '')
 /**
  * Runtime helper for SFC's CSS variable injection feature.
  * @private
  */
-export function useCssVars(getter: (ctx: any) => Record<string, string>) {
+export function useCssVars(
+  getter: (ctx: any) => Record<string, unknown>,
+): void {
   if (!__BROWSER__ && !__TEST__) return
 
   const instance = getCurrentInstance()
-  /* istanbul ignore next */
+  /* v8 ignore start */
   if (!instance) {
     __DEV__ &&
       warn(`useCssVars is called without current active component instance.`)
     return
   }
+  /* v8 ignore stop */
 
   const updateTeleports = (instance.ut = (vars = getter(instance.proxy)) => {
     Array.from(
@@ -40,20 +45,30 @@ export function useCssVars(getter: (ctx: any) => Record<string, string>) {
 
   const setVars = () => {
     const vars = getter(instance.proxy)
-    setVarsOnVNode(instance.subTree, vars)
+    if (instance.ce) {
+      setVarsOnNode(instance.ce as any, vars)
+    } else {
+      setVarsOnVNode(instance.subTree, vars)
+    }
     updateTeleports(vars)
   }
 
-  watchPostEffect(setVars)
+  // handle cases where child component root is affected
+  // and triggers reflow in onMounted
+  onBeforeUpdate(() => {
+    queuePostFlushCb(setVars)
+  })
 
   onMounted(() => {
+    // run setVars synchronously here, but run as post-effect on changes
+    watch(setVars, NOOP, { flush: 'post' })
     const ob = new MutationObserver(setVars)
     ob.observe(instance.subTree.el!.parentNode, { childList: true })
     onUnmounted(() => ob.disconnect())
   })
 }
 
-function setVarsOnVNode(vnode: VNode, vars: Record<string, string>) {
+function setVarsOnVNode(vnode: VNode, vars: Record<string, unknown>) {
   if (__FEATURE_SUSPENSE__ && vnode.shapeFlag & ShapeFlags.SUSPENSE) {
     const suspense = vnode.suspense!
     vnode = suspense.activeBranch!
@@ -83,13 +98,13 @@ function setVarsOnVNode(vnode: VNode, vars: Record<string, string>) {
   }
 }
 
-function setVarsOnNode(el: Node, vars: Record<string, string>) {
+function setVarsOnNode(el: Node, vars: Record<string, unknown>) {
   if (el.nodeType === 1) {
     const style = (el as HTMLElement).style
     let cssText = ''
     for (const key in vars) {
       // fixed by xxxxxx
-      const value = normalizeRpx(vars[key])
+      const value = normalizeRpx(normalizeCssVarValue(vars[key]))
       style.setProperty(`--${key}`, value)
       cssText += `--${key}: ${value};`
     }
