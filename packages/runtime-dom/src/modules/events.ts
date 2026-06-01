@@ -116,28 +116,42 @@ function createInvoker(
     const proxy = instance && instance.proxy
     const normalizeNativeEvent = proxy && (proxy as any).$nne
     const { value } = invoker
-    if (normalizeNativeEvent && isArray(value)) {
-      const fns = patchStopImmediatePropagation(e, value) as Function[]
-      for (let i = 0; i < fns.length; i++) {
-        const fn = fns[i]
-        callWithAsyncErrorHandling(
-          fn,
-          instance,
-          ErrorCodes.NATIVE_EVENT_HANDLER,
-          !(fn as any).__wwe ? normalizeNativeEvent(e) : [e],
-        )
+    if (isArray(value)) {
+      const originalStop = e.stopImmediatePropagation
+      e.stopImmediatePropagation = () => {
+        originalStop.call(e)
+        ;(e as any)._stopped = true
       }
-      return
+      const handlers = value.slice()
+      const args = [e]
+      for (let i = 0; i < handlers.length; i++) {
+        if ((e as any)._stopped) {
+          break
+        }
+        const handler = handlers[i]
+        if (handler) {
+          callWithAsyncErrorHandling(
+            handler,
+            instance,
+            ErrorCodes.NATIVE_EVENT_HANDLER,
+            // fixed by xxxxxx
+            normalizeNativeEvent && !(handler as any).__wwe
+              ? normalizeNativeEvent(e)
+              : args,
+          )
+        }
+      }
+    } else {
+      callWithAsyncErrorHandling(
+        value,
+        instance,
+        ErrorCodes.NATIVE_EVENT_HANDLER,
+        // fixed by xxxxxx
+        normalizeNativeEvent && !(value as any).__wwe
+          ? normalizeNativeEvent(e, value, instance)
+          : [e],
+      )
     }
-    callWithAsyncErrorHandling(
-      patchStopImmediatePropagation(e, invoker.value),
-      instance,
-      ErrorCodes.NATIVE_EVENT_HANDLER,
-      // fixed by xxxxxx
-      normalizeNativeEvent && !(value as any).__wwe
-        ? normalizeNativeEvent(e, value, instance)
-        : [e],
-    )
   }
   invoker.value = initialValue
   invoker.attached = getNow()
@@ -153,25 +167,4 @@ function sanitizeEventValue(value: unknown, propName: string): EventValue {
       `in front of your prop?\nExpected function or array of functions, received type ${typeof value}.`,
   )
   return NOOP
-}
-
-function patchStopImmediatePropagation(
-  e: Event,
-  value: EventValue,
-): EventValue {
-  if (isArray(value)) {
-    const originalStop = e.stopImmediatePropagation
-    e.stopImmediatePropagation = () => {
-      originalStop.call(e)
-      ;(e as any)._stopped = true
-    }
-    // fixed by xxxxxx
-    return value.map(fn => {
-      const patchedFn = (e: Event) => !(e as any)._stopped && fn && fn(e)
-      patchedFn.__wwe = (fn as any).__wwe
-      return patchedFn
-    })
-  } else {
-    return value
-  }
 }
