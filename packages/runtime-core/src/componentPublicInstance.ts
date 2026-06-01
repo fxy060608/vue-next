@@ -565,6 +565,10 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
       // user may set custom properties to `this` that start with `$`
       accessCache![key] = AccessTypes.CONTEXT
       return ctx[key]
+    } else if (__X__ && instance.exposed && hasOwn(instance.exposed, key)) {
+      // 兼容 UniApp/UniPage 等框架内部直接使用 vm proxy 的场景，避免切换到
+      // getExposeProxy(instance) 后影响 vm.$router、invokeHook 等已有用法。
+      return instance.exposed[key]
     } else if (
       // global properties
       ((globalProperties = appContext.config.globalProperties),
