@@ -105,13 +105,18 @@ export class ScriptCompileContext {
       options.babelParserPlugins,
     )
 
-    function parse(input: string, offset: number): Program {
+    function parse(input: string, offset: number, startLine?: number): Program {
+      // fixed by xxxxxx
       try {
         return babelParse(input, {
           plugins,
           sourceType: 'module',
         }).program
       } catch (e: any) {
+        // fixed by xxxxxx
+        if (e.loc && startLine) {
+          e.loc.line = e.loc.line + (startLine - 1)
+        }
         e.message = `[vue/compiler-sfc] ${e.message}\n\n${
           descriptor.filename
         }\n${generateCodeFrame(
@@ -125,11 +130,19 @@ export class ScriptCompileContext {
 
     this.scriptAst =
       descriptor.script &&
-      parse(descriptor.script.content, descriptor.script.loc.start.offset)
+      parse(
+        descriptor.script.content,
+        descriptor.script.loc.start.offset,
+        descriptor.script.loc.start.line,
+      ) // fixed by xxxxxx
 
     this.scriptSetupAst =
       descriptor.scriptSetup &&
-      parse(descriptor.scriptSetup!.content, this.startOffset!)
+      parse(
+        descriptor.scriptSetup!.content,
+        this.startOffset!,
+        descriptor.scriptSetup.loc.start.line,
+      ) // fixed by xxxxxx
   }
 
   getString(node: Node, scriptSetup = true): string {
@@ -193,7 +206,8 @@ export function resolveParserPlugins(
     lang === 'mts' ||
     lang === 'tsx' ||
     lang === 'cts' ||
-    lang === 'mtsx'
+    lang === 'mtsx' ||
+    lang === 'uts' // fixed by xxxxxx
   ) {
     plugins.push(['typescript', { dts }], 'explicitResourceManagement')
     if (!userPlugins || !userPlugins.includes('decorators')) {
