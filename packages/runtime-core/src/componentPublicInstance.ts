@@ -28,7 +28,6 @@ import {
   isString,
 } from '@vue/shared'
 import {
-  EffectFlags,
   ReactiveFlags,
   type ShallowUnwrapRef,
   TrackOpTypes,
@@ -405,8 +404,8 @@ function walk(vnode: VNode, children: ComponentInternalInstance[]) {
 // fixed by xxxxxx
 const createForceUpdate = (i: ComponentInternalInstance) => {
   return function () {
+    // 3.5.35 起不再需要
     // i.effect.dirty = true
-    i.effect.flags |= EffectFlags.DIRTY
     queueJob(i.update)
     if (!__X__) {
       return
