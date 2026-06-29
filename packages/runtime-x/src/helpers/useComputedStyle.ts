@@ -4,36 +4,18 @@ import {
   getCurrentInstance,
   warn,
 } from '@vue/runtime-core'
-import { EMPTY_ARR, hyphenate } from '@vue/shared'
+import { camelize } from '@vue/shared'
 
-export function useComputedStyle(
-  options: {
-    classAttr?: string // 允许和 styleAttr 同时存在
-    styleAttr?: string
-    properties?: string[]
-    filterProperties?: boolean
-  } = {},
-) {
+export function useComputedStyle(options: {
+  properties: string[]
+  filterProperties?: boolean
+}) {
   const i = getCurrentInstance()
   const r = reactive(new Map<string, string>())
   if (i) {
-    const propsDef = i.propsOptions === EMPTY_ARR ? {} : i.propsOptions[0]!
-    let { classAttr, styleAttr, properties } = options
-    let filterProperties = options.filterProperties ?? true
-    if (classAttr || styleAttr) {
-      if (classAttr && classAttr in propsDef) {
-        classAttr = undefined
-      }
-      if (styleAttr && styleAttr in propsDef) {
-        styleAttr = undefined
-      }
-    } else if (!('class' in propsDef) && !('style' in propsDef)) {
-      classAttr = 'class'
-      styleAttr = 'style'
-    }
+    const properties = options.properties ?? []
+    const filterProperties = options.filterProperties ?? true
     const computedStyleInterceptor = {
-      classAttr,
-      styleAttr,
       properties,
       reactiveComputedStyle: r,
       filterProperties,
@@ -49,7 +31,7 @@ export function useComputedStyle(
   return r
 }
 
-const excludedPxKeys = new Set<string>([
+const notPxKeys = new Set<string>([
   'z-index',
   'opacity',
   'font-weight',
@@ -58,6 +40,25 @@ const excludedPxKeys = new Set<string>([
   'flex-shrink',
   'flex',
 ])
+
+// const colorKeys = new Set<string>([
+//   'color',
+//   'background-color',
+//   'border-color',
+//   'border-left-color',
+//   'border-right-color',
+//   'border-top-color',
+//   'border-bottom-color',
+//   'text-decoration-color',
+// ])
+
+// function isColorKey(key: string): boolean {
+//   return colorKeys.has(key)
+// }
+
+function isPxKey(key: string): boolean {
+  return !notPxKeys.has(key)
+}
 
 function formatValue(key: string, value: number | string): string {
   if (typeof value != 'number') {
@@ -69,55 +70,36 @@ function formatValue(key: string, value: number | string): string {
   return `${value}`
 }
 
-function isPxKey(key: string): boolean {
-  return !excludedPxKeys.has(key)
-}
-
 export function triggerComputedStyleUpdate(
   instance: ComponentInternalInstance,
   styles: Map<string, any>,
 ): Map<string, any> {
   if (instance.computedStyleInterceptors) {
-    const keysToDelete = new Set<string>()
-    let clearStyles = false
     instance.computedStyleInterceptors.forEach(interceptor => {
       const r = interceptor.reactiveComputedStyle
       const properties = interceptor.properties
-      if (properties) {
-        styles.forEach((value, key) => {
-          const isCSSVar = key.startsWith('--')
-          const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-          if (properties.includes(hyphenatedKey)) {
-            if (value === '' || value == null) {
-              r.delete(hyphenatedKey)
-            } else {
-              r.set(hyphenatedKey, formatValue(hyphenatedKey, value))
-            }
-            if (interceptor.filterProperties) {
-              keysToDelete.add(key)
-            }
+      for (const property of properties) {
+        const camelizedProperty = camelize(property)
+        const hasProperty = styles.has(property)
+        const hasCamelizedProperty = styles.has(camelizedProperty)
+        if (hasProperty || hasCamelizedProperty) {
+          r.set(
+            property,
+            formatValue(
+              property,
+              hasProperty
+                ? styles.get(property)
+                : styles.get(camelizedProperty),
+            ),
+          )
+          if (interceptor.filterProperties) {
+            styles.delete(property)
           }
-        })
-      } else {
-        styles.forEach((value, key) => {
-          const isCSSVar = key.startsWith('--')
-          const hyphenatedKey = isCSSVar ? key : hyphenate(key)
-          if (value === '' || value == null) {
-            r.delete(hyphenatedKey)
-          } else {
-            r.set(hyphenatedKey, formatValue(hyphenatedKey, value))
-          }
-        })
-        clearStyles = true
+        } else {
+          r.delete(property)
+        }
       }
     })
-    if (clearStyles) {
-      styles.clear()
-    } else if (keysToDelete.size > 0) {
-      keysToDelete.forEach(key => {
-        styles.delete(key)
-      })
-    }
   }
   return styles
 }
