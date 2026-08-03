@@ -42,6 +42,11 @@ import { DeprecationTypes } from './compat/compatConfig'
 import { shouldSkipAttr } from './compat/attrsFallthrough'
 import { normalizeClass } from '@dcloudio/uni-shared'
 
+// 与 renderProps 使用相同的全局 Symbol，读取发送方模板 owner。
+const EXTERNAL_CLASSES_SOURCE_PAGE = Symbol.for(
+  'uni.externalClasses.sourcePage',
+)
+
 export type ComponentPropsOptions<P = Data> =
   | ComponentObjectPropsOptions<P>
   | string[]
@@ -254,6 +259,11 @@ export function updateProps(
   } = instance
   const rawCurrentProps = toRaw(props)
   const [options] = instance.propsOptions
+  const externalClassesSourceIsPage =
+    __X__ &&
+    __X_STYLE_ISOLATION__ &&
+    __X_STYLE_ISOLATION_UP_ARROW__ &&
+    isExternalClassesSourcePage(rawProps)
   let hasAttrsChanged = false
 
   if (
@@ -282,7 +292,12 @@ export function updateProps(
           if (hasOwn(attrs, key)) {
             if (value !== attrs[key]) {
               // fixed by xxxxxx
-              attrs[key] = normalizeInheritAttrsValue(instance, key, value)
+              attrs[key] = normalizeInheritAttrsValue(
+                instance,
+                key,
+                value,
+                externalClassesSourceIsPage,
+              )
               hasAttrsChanged = true
             }
           } else {
@@ -294,6 +309,7 @@ export function updateProps(
               value,
               instance,
               false /* isAbsent */,
+              externalClassesSourceIsPage,
             )
           }
         } else {
@@ -306,7 +322,12 @@ export function updateProps(
           }
           if (value !== attrs[key]) {
             // fixed by xxxxxx
-            attrs[key] = normalizeInheritAttrsValue(instance, key, value)
+            attrs[key] = normalizeInheritAttrsValue(
+              instance,
+              key,
+              value,
+              externalClassesSourceIsPage,
+            )
             hasAttrsChanged = true
           }
         }
@@ -384,6 +405,11 @@ function setFullProps(
   attrs: Data,
 ) {
   const [options, needCastKeys] = instance.propsOptions
+  const externalClassesSourceIsPage =
+    __X__ &&
+    __X_STYLE_ISOLATION__ &&
+    __X_STYLE_ISOLATION_UP_ARROW__ &&
+    isExternalClassesSourcePage(rawProps)
   let hasAttrsChanged = false
   let rawCastValues: Data | undefined
   if (rawProps) {
@@ -419,6 +445,7 @@ function setFullProps(
               value,
               options,
               false,
+              externalClassesSourceIsPage,
             )
           } else {
             props[camelKey] = value
@@ -439,7 +466,12 @@ function setFullProps(
         }
         if (!(key in attrs) || value !== attrs[key]) {
           // fixed by xxxxxx
-          attrs[key] = normalizeInheritAttrsValue(instance, key, value)
+          attrs[key] = normalizeInheritAttrsValue(
+            instance,
+            key,
+            value,
+            externalClassesSourceIsPage,
+          )
           hasAttrsChanged = true
         }
       }
@@ -458,6 +490,7 @@ function setFullProps(
         castValues[key],
         instance,
         !hasOwn(castValues, key),
+        externalClassesSourceIsPage,
       )
     }
   }
@@ -465,14 +498,33 @@ function setFullProps(
   return hasAttrsChanged
 }
 
-//fixed by xxxxxx
-function toExternalClasses(classes: string): string[] {
+// 来源由发送方写入 rawProps，接收方无需根据组件树或插槽位置推断。
+function isExternalClassesSourcePage(rawProps: Data | null): boolean {
+  return !!(rawProps && (rawProps as any)[EXTERNAL_CLASSES_SOURCE_PAGE])
+}
+
+// ~ 是页面绝对引用，转发时保持不变；^ 是组件相对引用，每转发一层继续累加。
+export function toExternalClasses(
+  classes: string,
+  sourceIsPage: boolean,
+): string[] {
   const trimmed = classes.trim()
-  return trimmed ? trimmed.split(/\s+/).map(item => '^' + item) : []
+  return trimmed
+    ? trimmed.split(/\s+/).map(item => {
+        if (item.startsWith('~')) {
+          return item
+        }
+        // 页面来源改为绝对引用，组件来源继续保留相对层级语义。
+        return sourceIsPage ? '~' + item.replace(/^\^+/, '') : '^' + item
+      })
+    : []
 }
 // fixed by xxxxxx
-function normalizeExternalClasses(classes: unknown): string[] {
-  return toExternalClasses(normalizeClass(classes))
+function normalizeExternalClasses(
+  classes: unknown,
+  sourceIsPage: boolean,
+): string[] {
+  return toExternalClasses(normalizeClass(classes), sourceIsPage)
 }
 
 // fixed by xxxxxx
@@ -480,6 +532,7 @@ function normalizeInheritAttrsValue(
   instance: ComponentInternalInstance,
   key: string,
   value: unknown,
+  sourceIsPage: boolean,
 ): unknown {
   // 内置组件不处理
   if (
@@ -489,7 +542,7 @@ function normalizeInheritAttrsValue(
     !(instance.type as any).__reserved
   ) {
     if (key === 'class') {
-      return toExternalClasses(normalizeClass(value)).join(' ')
+      return toExternalClasses(normalizeClass(value), sourceIsPage).join(' ')
     }
   }
   return value
@@ -501,6 +554,7 @@ function resolveExternalClassesPropValue(
   value: unknown,
   options: NormalizedProps,
   isAbsent: boolean,
+  sourceIsPage: boolean,
 ) {
   if (
     // 只有外部传入的 externalClasses 才走这里，没有传入，但有默认值的不应该处理，比如button组件内部hover-class有默认值button-hover
@@ -509,7 +563,7 @@ function resolveExternalClassesPropValue(
     const opt = options[key]
     if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
       if (__X_STYLE_ISOLATION_UP_ARROW__) {
-        return normalizeExternalClasses(value)
+        return normalizeExternalClasses(value, sourceIsPage)
       }
       // hoverClass => hover-class
       // 小程序的 externalClasses 是用连字符形式的原始名称，不是传入的className
@@ -528,6 +582,7 @@ function resolvePropValue(
   value: unknown,
   instance: ComponentInternalInstance,
   isAbsent: boolean,
+  sourceIsPage = false,
 ) {
   const result = _resolvePropValue(
     options,
@@ -538,7 +593,13 @@ function resolvePropValue(
     isAbsent,
   )
   if (__X__ && __X_STYLE_ISOLATION__) {
-    return resolveExternalClassesPropValue(key, result, options, isAbsent)
+    return resolveExternalClassesPropValue(
+      key,
+      result,
+      options,
+      isAbsent,
+      sourceIsPage,
+    )
   }
   return result
 }
