@@ -95,9 +95,11 @@ export function triggerComputedStyleUpdate(
           if (interceptor.filterProperties) {
             styles.delete(property)
           }
-        } else {
-          r.delete(property)
         }
+        // styles为差量数据，如果删除了属性会主动空值
+        // else {
+        //   r.delete(property)
+        // }
       }
     })
   }
