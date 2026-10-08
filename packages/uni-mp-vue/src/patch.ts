@@ -52,6 +52,7 @@ export function patch(
   // 仅 x 有用
   data.$eS = instance.$eS || {}
   data.$eA = instance.$eA || {}
+  data.$eR = instance.$eR || {}
   const ctx = instance.ctx
   const mpType = ctx.mpType as MPType
   if (mpType === 'page' || mpType === 'component') {
