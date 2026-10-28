@@ -563,7 +563,7 @@ function resolveExternalClassesPropValue(
     const opt = options[key]
     if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
       if (__X_STYLE_ISOLATION_UP_ARROW__) {
-        return normalizeExternalClasses(value, sourceIsPage)
+        return normalizeExternalClasses(value, sourceIsPage).join(' ')
       }
       // hoverClass => hover-class
       // 小程序的 externalClasses 是用连字符形式的原始名称，不是传入的className
@@ -751,7 +751,7 @@ export function normalizePropsOptions(
             comp.__externalClassesOptions.includes(key as string)
           ) {
             prop[BooleanFlags.externalClasses] = true
-            // 跳过类型检查，因为传入的是始终是个string[]，而开发者可能定义的是 string
+            // 外部样式支持多种输入并统一规范化，保留跳过声明类型检查的行为。
             prop.skipCheck = true
           }
           // if the prop needs boolean casting or default value
