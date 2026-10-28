@@ -472,8 +472,9 @@ function toExternalClasses(classes: string): string[] {
   return trimmed ? trimmed.split(/\s+/).map(item => '^' + item) : []
 }
 // fixed by xxxxxx
-function normalizeExternalClasses(classes: unknown): string[] {
-  return toExternalClasses(normalizeClass(classes))
+function normalizeExternalClasses(classes: unknown): string {
+  const normalized = normalizeClass(classes)
+  return normalized ? '^' + normalized.replace(/\s+/g, ' ^') : ''
 }
 
 // fixed by xxxxxx
@@ -504,7 +505,7 @@ function resolveExternalClassesPropValue(
   ) {
     const opt = options[key]
     if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
-      return normalizeExternalClasses(value).join(' ')
+      return normalizeExternalClasses(value)
     }
   }
   return value

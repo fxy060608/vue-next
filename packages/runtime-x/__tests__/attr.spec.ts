@@ -87,7 +87,14 @@ describe('外部类用于原生特殊样式属性', () => {
     expect(instance.props.labelClass).toBe('^a ^b')
     const setAnyAttribute = vi.fn()
     const el = { setAnyAttribute, tagName } as unknown as UniXElement
-    for (const value of [instance.props.labelClass, ['^a', '^b'], ' ^a\t^b ']) {
+    for (const value of [
+      instance.props.labelClass,
+      ['^a', '^b'],
+      ' ^a\t^b ',
+      '^a\n^b',
+      '^a\u00a0^b',
+      '^a\u3000^b',
+    ]) {
       setAnyAttribute.mockClear()
       patchAttr(el, key, value, instance)
       expect(setAnyAttribute).toHaveBeenCalledWith(
@@ -96,6 +103,13 @@ describe('外部类用于原生特殊样式属性', () => {
           ['color', 'red'],
           ['fontSize', 12],
         ]),
+      )
+    }
+    for (const value of ['^a', '^a', ['^a']]) {
+      patchAttr(el, key, value, instance)
+      expect(setAnyAttribute).toHaveBeenLastCalledWith(
+        key,
+        new Map([['color', 'red']]),
       )
     }
     const forwarded = { labelClass: instance.props.labelClass }
