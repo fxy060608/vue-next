@@ -1,5 +1,10 @@
+import { normalizeClass } from '@dcloudio/uni-shared'
 import { createComponentInstance } from '../src/component'
-import { initProps, updateProps } from '../src/componentProps'
+import {
+  initProps,
+  toExternalClasses,
+  updateProps,
+} from '../src/componentProps'
 import { createVNode } from '../src/vnode'
 import { PatchFlags, ShapeFlags } from '@vue/shared'
 
@@ -119,6 +124,62 @@ describe('externalClasses prop 字符串', () => {
     flag => {
       vi.stubGlobal(flag, false)
       expect(create({ labelClass: 'a b' }).props.labelClass).toBe('a b')
+    },
+  )
+  test.each([false, true])(
+    '直接拼接保留来源和空白规则（页面：%s）',
+    sourceIsPage => {
+      const values = [
+        '',
+        ' \t\n\u00a0\u3000',
+        'a',
+        'a a',
+        ' a\tb\nc\u00a0d\u3000e ',
+        '^a ^^b',
+        '~a ^b ~c',
+        ['a', ['^b', { c: true }]],
+        { a: true, b: false },
+        null,
+        false,
+      ]
+      for (const value of values) {
+        const instance = create({
+          plainClass: value,
+          [Symbol.for('uni.externalClasses.sourcePage')]: sourceIsPage,
+        })
+        expect(instance.props.plainClass).toBe(
+          toExternalClasses(normalizeClass(value), sourceIsPage).join(' '),
+        )
+      }
+    },
+  )
+  test.each([false, true])(
+    '条件绑定在未传、undefined、null 和清空之间切换（优化：%s）',
+    optimized => {
+      let previous: Record<string, unknown> = {}
+      const instance = create(previous)
+      if (optimized) {
+        instance.vnode.patchFlag = PatchFlags.PROPS
+        instance.vnode.dynamicProps = ['label-class']
+      }
+      const cases: [Record<string, unknown>, string][] = [
+        [{ 'label-class': 'a b' }, '^a ^b'],
+        [{ 'label-class': undefined }, '^local'],
+        [{ 'label-class': null }, ''],
+        [{ 'label-class': ['a', 'b'] }, '^a ^b'],
+        [{ 'label-class': [] }, ''],
+        [{ 'label-class': '' }, ''],
+        [{}, 'local'],
+      ]
+      for (const [rawProps, expected] of cases) {
+        // v-bind 对象删除属性走 FULL_PROPS，固定动态属性的 PROPS 路径仍保留键。
+        if (optimized && !('label-class' in rawProps)) {
+          instance.vnode.patchFlag = PatchFlags.FULL_PROPS
+        }
+        updateProps(instance, rawProps, previous, optimized)
+        expect(instance.props.labelClass).toBe(expected)
+        previous = rawProps
+      }
     },
   )
 })

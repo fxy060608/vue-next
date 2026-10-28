@@ -523,8 +523,21 @@ export function toExternalClasses(
 function normalizeExternalClasses(
   classes: unknown,
   sourceIsPage: boolean,
-): string[] {
-  return toExternalClasses(normalizeClass(classes), sourceIsPage)
+): string {
+  const normalized = normalizeClass(classes)
+  if (!normalized) return ''
+  const names = normalized.split(/\s+/)
+  let result = ''
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]
+    if (i) result += ' '
+    result += name.startsWith('~')
+      ? name
+      : sourceIsPage
+        ? '~' + name.replace(/^\^+/, '')
+        : '^' + name
+  }
+  return result
 }
 
 // fixed by xxxxxx
@@ -563,7 +576,7 @@ function resolveExternalClassesPropValue(
     const opt = options[key]
     if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
       if (__X_STYLE_ISOLATION_UP_ARROW__) {
-        return normalizeExternalClasses(value, sourceIsPage).join(' ')
+        return normalizeExternalClasses(value, sourceIsPage)
       }
       // hoverClass => hover-class
       // 小程序的 externalClasses 是用连字符形式的原始名称，不是传入的className
