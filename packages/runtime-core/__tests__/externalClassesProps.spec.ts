@@ -79,6 +79,8 @@ describe('externalClasses prop 字符串', () => {
     ['', ''],
     [' \t\n\u00a0\u3000', ''],
     ['a', '^a'],
+    ['a-external', '^a-external'],
+    ['^a-external ^^b-external', '^^a-external ^^^b-external'],
     [' a\tb\nc\u00a0d\u3000e ', '^a ^b ^c ^d ^e'],
     ['a a', '^a ^a'],
     ['^a ^^b', '^^a ^^^b'],
