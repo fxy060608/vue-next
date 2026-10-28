@@ -504,7 +504,7 @@ function resolveExternalClassesPropValue(
   ) {
     const opt = options[key]
     if (opt && opt[2 /* BooleanFlags.externalClasses */]) {
-      return normalizeExternalClasses(value)
+      return normalizeExternalClasses(value).join(' ')
     }
   }
   return value
@@ -680,7 +680,7 @@ export function normalizePropsOptions(
             comp.__externalClassesOptions.includes(key as string)
           ) {
             prop[BooleanFlags.externalClasses] = true
-            // 跳过类型检查，因为传入的是始终是个string[]，而开发者可能定义的是 string
+            // 外部样式支持多种输入并统一规范化，保留跳过声明类型检查的行为。
             prop.skipCheck = true
           }
           // if the prop needs boolean casting or default value

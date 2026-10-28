@@ -64,7 +64,8 @@ function transformAttr(
   value: unknown,
   instance: ComponentInternalInstance,
 ): [string, unknown] {
-  if (!value) {
+  // 空 class 仍需转换成空样式 Map，供原生层清除已有状态。
+  if (!value && value !== '') {
     return [key, value]
   }
   const opts = CLASS_AND_STYLES[el.tagName.toLowerCase()]
@@ -72,7 +73,9 @@ function transformAttr(
     const camelized = camelize(key)
     if (opts['class'].indexOf(camelized) > -1) {
       const classStyle = parseClassList(
-        Array.isArray(value) ? (value as string[]) : [value as string],
+        Array.isArray(value)
+          ? (value as string[])
+          : (value as string).split(/\s+/),
         instance,
         el,
       )
@@ -89,7 +92,7 @@ function transformAttr(
       }
       return [camelized, classStyle]
     }
-    if (opts['style'].indexOf(camelized) > -1) {
+    if (value && opts['style'].indexOf(camelized) > -1) {
       if (isString(value)) {
         const sytle = parseStringStyle(camelize(value))
         return [camelized, sytle]
